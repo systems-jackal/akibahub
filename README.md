@@ -1,83 +1,225 @@
-content = """# Akiba Hub: Secure Student Chama Management System
+<div align="center">
 
-Akiba Hub is a secure web-based student chama (savings group) management system designed to digitize, automate, and secure informal savings groups in Kenyan educational institutions.
+```
+ █████╗ ██╗  ██╗██╗██████╗  █████╗     ██╗  ██╗██╗   ██╗██████╗
+██╔══██╗██║ ██╔╝██║██╔══██╗██╔══██╗    ██║  ██║██║   ██║██╔══██╗
+███████║█████╔╝ ██║██████╔╝███████║    ███████║██║   ██║██████╔╝
+██╔══██║██╔═██╗ ██║██╔══██╗██╔══██║    ██╔══██║██║   ██║██╔══██╗
+██║  ██║██║  ██╗██║██████╔╝██║  ██║    ██║  ██║╚██████╔╝██████╔╝
+╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚═════╝
+```
 
-## 1. Introduction
+**Secure Student Chama Management System**
 
-### 1.1 Background
-In many institutions across Kenya, students participate in informal savings groups (chamas) to support personal savings and group financial activities. Currently, these systems are managed manually via mobile money confirmations, messaging platforms, and spreadsheets, leading to poor transparency, weak accountability, and high security risks.
+![Java](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-### 1.2 Problem Statement
-Students face challenges in securely managing both personal and group savings due to:
-* Lack of transparent, automated, and secure digital systems.
-* Manual tracking methods resulting in errors and fraud risks.
-* Unauthorized group access and disputes over contributions.
+*Digitizing informal student savings groups (Chamas) across Kenyan institutions — with security, transparency, and accountability at the core.*
 
-## 2. Proposed Solution
-Akiba Hub allows users to manage both personal and group savings digitally. It provides a choice between individual saving or joining a group system. Access is controlled through unique invite codes, and the system integrates **PayHero** for secure payment processing, ensuring real-time balance updates and transparent transaction recording.
+</div>
 
-## 3. Objectives
-* Develop a secure digital platform for student personal and group savings.
-* Implement secure group access using unique invite codes.
-* Integrate PayHero for seamless digital payments.
-* Provide transparent transaction tracking for accountability.
-* Improve financial discipline among students.
+---
 
-## 4. Target Users
-* University and college students.
-* Group administrators (Chama leaders/treasurers).
-* Members of student savings groups.
+## 🧩 What Is Akiba Hub?
 
-## 5. Functional Requirements
-* **User Authentication:** Registration and login system.
-* **Savings Modes:** Selection between personal and group savings.
-* **Group Management:** Creation and management of groups by administrators.
-* **Access Control:** Generation and validation of unique invite codes.
-* **Payment Integration:** Contributions via PayHero API.
-* **Transparency:** Automatic recording and history viewing for all transactions.
+**Akiba Hub** is a web-based platform that transforms how university and college students manage their savings groups (*chamas*). Instead of relying on WhatsApp messages, M-Pesa screenshots, and manual spreadsheets, Akiba Hub centralizes everything: contributions, group management, transaction history, and access control — securely and in real time.
 
-## 6. Non-Functional Requirements
-* **Security:** Password hashing (bcrypt), JWT authentication, secure APIs, and HTTPS encryption.
-* **Performance:** Fast processing of transactions and system requests.
-* **Reliability:** Consistent financial data storage without loss.
-* **Usability:** Simple, mobile-friendly interface for students.
-* **Maintainability:** Modular backend design using Spring Boot.
+---
 
-## 7. Proposed Technologies
-* **Frontend:** HTML, CSS, JavaScript (Vanilla JS).
-* **Backend:** Java with Spring Boot.
-* **Database:** MySQL.
-* **Payment Integration:** PayHero API.
-* **Security:** JWT, bcrypt, HTTPS.
-* **Version Control:** Git & GitHub.
+## ⚙️ Tech Stack
 
-## 8. System Overview (Architecture)
-* **Frontend:** User Interface built with web standards.
-* **Backend:** RESTful APIs and Business Logic.
-* **Database:** Persistent storage for users, groups, and transactions.
-* **Payment Gateway:** External PayHero API for payment confirmations.
+| Layer | Technology |
+|---|---|
+| 🖥️ Frontend | HTML5, CSS3, Vanilla JavaScript |
+| ⚙️ Backend | Java 17 + Spring Boot |
+| 🗄️ Database | MySQL |
+| 💳 Payments | PayHero API |
+| 🔐 Security | JWT + bcrypt + HTTPS |
+| 🔁 Version Control | Git & GitHub |
 
-## 9. Project Structure
+---
 
-```text
+## 🏗️ System Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                        CLIENT                           │
+│          HTML / CSS / Vanilla JavaScript                │
+│    index.html  |  dashboard.html  |  group.html         │
+└────────────────────────┬────────────────────────────────┘
+                         │  HTTPS / REST
+┌────────────────────────▼────────────────────────────────┐
+│                     BACKEND                             │
+│                  Spring Boot API                        │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
+│  │Controller│→ │ Service  │→ │Repository│              │
+│  └──────────┘  └──────────┘  └────┬─────┘              │
+│  ┌──────────────────────────┐      │                    │
+│  │  JWT + bcrypt + CORS     │      │                    │
+│  └──────────────────────────┘      │                    │
+└───────────────────────────────┬────┘                    │
+                                │                         │
+          ┌─────────────────────▼──────────────────────┐  │
+          │                  MySQL                     │  │
+          │   Users | Groups | Transactions | Codes    │  │
+          └────────────────────────────────────────────┘  │
+                                                          │
+┌─────────────────────────────────────────────────────────┘
+│                  PayHero API
+│         External Payment Gateway Integration
+└─────────────────────────────────────────────────────────
+```
+
+---
+
+## 📁 Project Structure
+
+```
 akiba-hub/
-├── backend/                  # Spring Boot Application
-│   ├── src/main/java/com/akibahub/
-│   │   ├── config/           # Security + CORS + JWT config
-│   │   ├── controller/       # REST APIs
-│   │   ├── service/          # Business logic
-│   │   ├── repository/       # Database access (JPA)
-│   │   ├── model/            # Entities (User, Group, Transaction)
-│   │   └── util/             # Helper classes (invite codes, etc.)
-│   └── pom.xml
-├── frontend/                 # Plain HTML/CSS/JS
-│   ├── index.html            # Landing page
-│   ├── dashboard.html        # Main interface
-│   ├── group.html            # Group savings view
-│   ├── assets/
-│   │   ├── css/              # Stylesheets
-│   │   └── js/               # API, Auth, and Payment logic
-├── database/                 # SQL Scripts
-│   ├── schema.sql
-│   └── seed.sql
+│
+├── backend/                        # Spring Boot Application
+│   └── src/main/java/com/akibahub/
+│       ├── config/                 # Security, CORS & JWT Config
+│       ├── controller/             # REST Endpoints
+│       ├── service/                # Business Logic Layer
+│       ├── repository/             # JPA / Database Access
+│       ├── model/                  # Entities: User, Group, Transaction
+│       └── util/                   # Invite Code Generators & Helpers
+│
+├── frontend/                       # Plain HTML/CSS/JS
+│   ├── index.html                  # Landing Page
+│   ├── dashboard.html              # Main User Interface
+│   ├── group.html                  # Group Savings View
+│   └── assets/
+│       ├── css/                    # Stylesheets
+│       └── js/                     # Auth, API & Payment Logic
+│
+├── database/
+│   ├── schema.sql                  # Table Definitions
+│   └── seed.sql                    # Sample/Seed Data
+│
 └── README.md
+```
+
+---
+
+## ✨ Core Features
+
+- 🔐 **Secure Auth** — Registration & login with bcrypt-hashed passwords and JWT sessions
+- 💰 **Savings Modes** — Choose between personal savings or joining a group (chama)
+- 👥 **Group Management** — Admins create and manage groups; members join via invite codes
+- 🎟️ **Invite Codes** — Unique, validated codes control who accesses each group
+- 📲 **PayHero Integration** — Real-time M-Pesa-style contributions via PayHero API
+- 📊 **Transaction History** — Every contribution is automatically recorded and viewable
+
+---
+
+## 🔒 Security Design
+
+```
+User Password  ──►  bcrypt hash  ──►  Stored in DB
+                                            │
+Login Request  ──►  Validate hash  ──►  Issue JWT Token
+                                            │
+API Requests   ──►  Verify JWT  ──►  Authorize or Reject
+                                            │
+All Traffic    ──►  HTTPS only  ──►  Encrypted in Transit
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Java 17+
+- Maven
+- MySQL 8+
+- A PayHero API account
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/akiba-hub.git
+cd akiba-hub
+```
+
+### 2. Configure the Database
+
+```bash
+mysql -u root -p < database/schema.sql
+mysql -u root -p < database/seed.sql
+```
+
+### 3. Set Environment Variables
+
+Update `backend/src/main/resources/application.properties`:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/akiba_hub
+spring.datasource.username=YOUR_DB_USER
+spring.datasource.password=YOUR_DB_PASSWORD
+
+jwt.secret=YOUR_JWT_SECRET
+payhero.api.key=YOUR_PAYHERO_KEY
+```
+
+### 4. Run the Backend
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+### 5. Open the Frontend
+
+Open `frontend/index.html` in your browser, or serve it with any static file server.
+
+---
+
+## 👤 User Roles
+
+| Role | Permissions |
+|---|---|
+| **Student** | Register, log in, save personally or join a group |
+| **Group Admin** | Create groups, generate invite codes, view all contributions |
+| **Member** | Join via invite code, contribute, view group history |
+
+---
+
+## 📌 Roadmap
+
+- [ ] Email/SMS contribution notifications
+- [ ] Group loan request module
+- [ ] Admin analytics dashboard
+- [ ] Mobile app (Android)
+- [ ] Multi-institution support
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, open an issue first to discuss what you'd like to change.
+
+```bash
+git checkout -b feature/your-feature-name
+git commit -m "feat: describe your change"
+git push origin feature/your-feature-name
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+<div align="center">
+
+Built with ❤️ for Kenyan students · Powered by Spring Boot & PayHero
+
+</div>
