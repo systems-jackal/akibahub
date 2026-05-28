@@ -80,29 +80,72 @@
 ```
 akiba-hub/
 │
-├── backend/                        # Spring Boot Application
-│   └── src/main/java/com/akibahub/
-│       ├── config/                 # Security, CORS & JWT Config
-│       ├── controller/             # REST Endpoints
-│       ├── service/                # Business Logic Layer
-│       ├── repository/             # JPA / Database Access
-│       ├── model/                  # Entities: User, Group, Transaction
-│       └── util/                   # Invite Code Generators & Helpers
+├── backend/
+│   │
+│   ├── pom.xml
+│   │
+│   └── src/
+│       └── main/
+│           ├── java/
+│           │   └── com/
+│           │       └── akibahub/
+│           │           │
+│           │           ├── AkibaHubApplication.java
+│           │           │
+│           │           ├── entity/
+│           │           │
+│           │           ├── repository/
+│           │           │
+│           │           ├── controller/
+│           │           │
+│           │           └── config/
+│           │
+│           └── resources/
+│               │
+│               └── application.properties
 │
-├── frontend/                       # Plain HTML/CSS/JS
-│   ├── index.html                  # Landing Page
-│   ├── dashboard.html              # Main User Interface
-│   ├── group.html                  # Group Savings View
+│
+├── frontend/
+│   │
+│   ├── pages/
+│   │   │
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   ├── dashboard.html
+│   │   ├── groups.html
+│   │   └── personal.html
+│   │
+│   ├── css/
+│   │   │
+│   │   └── styles.css
+│   │
+│   ├── js/
+│   │   │
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── groups.js
+│   │   └── savings.js
+│   │
 │   └── assets/
-│       ├── css/                    # Stylesheets
-│       └── js/                     # Auth, API & Payment Logic
+│
 │
 ├── database/
-│   ├── schema.sql                  # Table Definitions
-│   └── seed.sql                    # Sample/Seed Data
+│   │
+│   └── schema.sql
 │
-└── README.md
-```
+│
+├── docs/
+│   │
+│   ├── API.md
+│   └── SETUP.md
+│
+│
+├── .gitignore
+│
+├── README.md
+│
+└── .git/
 
 ---
 
