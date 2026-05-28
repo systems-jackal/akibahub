@@ -163,6 +163,8 @@ akiba-hub/
 ## 🔒 Security Design
 
 ```
+
+```
 User Password  ──►  bcrypt hash  ──►  Stored in DB
                                             │
 Login Request  ──►  Validate hash  ──►  Issue JWT Token
