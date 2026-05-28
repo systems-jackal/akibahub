@@ -265,6 +265,6 @@ This project is licensed under the **MIT License**.
 
 <div align="center">
 
-Built with ❤️ for Kenyan students · Powered by Spring Boot & PayHero
+Built with ❤️ for Kenyan students · Powered by UNITY BRIDGE
 
 </div>
