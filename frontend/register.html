@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akiba Hub | Create Your Account</title>
+
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Embedded Theme Styles (Unified CSS) -->
+    <style>
+        /* --- Core Variables & Reset --- */
+        :root {
+            --bg-dark: #061a13;
+            --bg-surface: #0a291e;
+            --bg-surface-glass: rgba(10, 41, 30, 0.75);
+            --gold-primary: #d4af37;
+            --gold-bright: #f3cd4a;
+            --gold-muted: #aa8c2c;
+            --text-main: #f8f9fa;
+            --text-muted: #a3b8b0;
+            --border-color: rgba(212, 175, 55, 0.25);
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- Particle Canvas Background --- */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, #0d3829 0%, #051610 100%);
+        }
+
+        /* --- Auth Card Wrapper --- */
+        .auth-container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem 1.5rem;
+            z-index: 10;
+        }
+
+        .auth-card {
+            background: var(--bg-surface-glass);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            border-radius: 24px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-header .logo span {
+            color: var(--gold-bright);
+        }
+
+        .auth-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* --- Form Fields --- */
+        .form-group {
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(4, 18, 13, 0.5);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            color: #fff;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold-bright);
+            box-shadow: 0 0 10px rgba(243, 205, 74, 0.15);
+            background: rgba(4, 18, 13, 0.8);
+        }
+
+        /* Highlight label when input is focused */
+        .form-input:focus~label,
+        .form-group:focus-within label {
+            color: var(--gold-bright);
+        }
+
+        /* --- Password Strength Meter --- */
+        .strength-container {
+            margin-top: 0.5rem;
+        }
+
+        .strength-meter {
+            height: 4px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+            gap: 2px;
+        }
+
+        .strength-bar {
+            height: 100%;
+            flex: 1;
+            background: transparent;
+            transition: background 0.3s ease;
+        }
+
+        .strength-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        /* --- Form Meta & Buttons --- */
+        .form-footer {
+            margin-top: 2rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-muted) 100%);
+            color: #051610;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(212, 175, 55, 0.5);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .auth-switch a {
+            color: var(--gold-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .auth-switch a:hover {
+            color: var(--gold-bright);
+        }
+
+        /* --- Frontend Error Feedback Box --- */
+        .error-alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Unified High-Visibility Dynamic Particle Layer -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="auth-container">
+        <div class="auth-card">
+
+            <div class="auth-header">
+                <div class="logo">Akiba<span>Hub</span></div>
+                <p>Join over your campus crew and save securely.</p>
+            </div>
+
+            <!-- Client-side Error Feedback Alert -->
+            <div class="error-alert" id="error-box"></div>
+
+            <form id="register-form">
+                <!-- Full Name Field -->
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="fullName" class="form-input" placeholder="e.g. John Doe" required
+                            autocomplete="name">
+                    </div>
+                </div>
+
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" class="form-input" placeholder="e.g. student@gmail.com"
+                            required autocomplete="email">
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="password">Create Secure Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required
+                            autocomplete="new-password">
+                    </div>
+                    <!-- Dynamic strength indicators -->
+                    <div class="strength-container">
+                        <div class="strength-meter">
+                            <div class="strength-bar" id="bar-1"></div>
+                            <div class="strength-bar" id="bar-2"></div>
+                            <div class="strength-bar" id="bar-3"></div>
+                        </div>
+                        <span class="strength-text" id="strength-label">Password Strength</span>
+                    </div>
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="confirmPassword" class="form-input" placeholder="••••••••" required
+                            autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <button type="submit" class="btn-primary">Create Student Account</button>
+                </div>
+            </form>
+
+            <div class="auth-switch">
+                Already have a hub? <a href="login.html">Log In</a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Unified Vanilla JS Script Logic -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            initParticleBackground();
+            initPasswordValidation();
+            initFormSubmission();
+        });
+
+        /* --- 1. Matching Majestic Floating Background Vectors --- */
+        function initParticleBackground() {
+            const canvas = document.getElementById("particle-canvas");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+
+            let particles = [];
+            const particleCount = 35; // Kept lower to prevent layout distraction during data entry
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2.0 + 1.0;
+                    this.speedX = Math.random() * 0.2 - 0.1;
+                    this.speedY = Math.random() * 0.2 - 0.1;
+                    this.color = `rgba(243, 205, 74, ${Math.random() * 0.3 + 0.2})`;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                        this.reset();
+                    }
+                }
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        /* --- 2. Live Password Strength Analysis Engine --- */
+        function initPasswordValidation() {
+            const passwordInput = document.getElementById("password");
+            const label = document.getElementById("strength-label");
+            const bars = [document.getElementById("bar-1"), document.getElementById("bar-2"), document.getElementById("bar-3")];
+
+            passwordInput.addEventListener("input", () => {
+                const val = passwordInput.value;
+                let score = 0;
+
+                if (val.length >= 6) score++;
+                if (val.match(/[A-Z]/) && val.match(/[0-9]/)) score++;
+                if (val.match(/[^A-Za-z0-9]/)) score++; // Special Character check
+
+                // Reset display states
+                bars.forEach(b => b.style.background = "transparent");
+
+                if (val.length === 0) {
+                    label.textContent = "Password Strength";
+                    label.style.color = "var(--text-muted)";
+                    return;
+                }
+
+                if (score === 1) {
+                    bars[0].style.background = "#ef4444"; // Weak - Red
+                    label.textContent = "Weak Password";
+                    label.style.color = "#ef4444";
+                } else if (score === 2) {
+                    bars[0].style.background = "#f59e0b"; // Medium - Orange/Yellow
+                    bars[1].style.background = "#f59e0b";
+                    label.textContent = "Moderate Security";
+                    label.style.color = "#f59e0b";
+                } else if (score === 3) {
+                    bars[0].style.background = "#10b981"; // Strong - Gold Green
+                    bars[1].style.background = "#10b981";
+                    bars[2].style.background = "#10b981";
+                    label.textContent = "Bulletproof Security";
+                    label.style.color = "#10b981";
+                }
+            });
+        }
+
+        /* --- 3. Frictionless Error Checking Submission --- */
+        function initFormSubmission() {
+            const form = document.getElementById("register-form");
+            const errorBox = document.getElementById("error-box");
+            const password = document.getElementById("password");
+            const confirmPassword = document.getElementById("confirmPassword");
+
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                errorBox.style.display = "none";
+
+                // Validation Guard: Match verification
+                if (password.value !== confirmPassword.value) {
+                    errorBox.textContent = "Security Validation Failed: Passwords do not match.";
+                    errorBox.style.display = "block";
+                    confirmPassword.focus();
+                    return;
+                }
+
+                // Validation Guard: Length constraint
+                if (password.value.length < 6) {
+                    errorBox.textContent = "Security Validation Failed: Password must be at least 6 characters long.";
+                    errorBox.style.display = "block";
+                    password.focus();
+                    return;
+                }
+
+                // If validations pass, mock redirect to dashboard
+                // This is where fetch authentication endpoints plug in later!
+                window.location.href = "dashboard.html";
+            });
+        }
+    </script>
+</body>
+
+</html>
