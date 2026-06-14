@@ -1,0 +1,19 @@
+# Maven
+target/
+backend/target/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# OS
+.DS_Store
+
+# Java
+*.class
