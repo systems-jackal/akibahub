@@ -6,239 +6,265 @@
 ███████║█████╔╝ ██║██████╔╝███████║    ███████║██║   ██║██████╔╝
 ██╔══██║██╔═██╗ ██║██╔══██╗██╔══██║    ██╔══██║██║   ██║██╔══██╗
 ██║  ██║██║  ██╗██║██████╔╝██║  ██║    ██║  ██║╚██████╔╝██████╔╝
-╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝
+╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚═════╝
 ```
 
 **Secure Student Chama Management System**
 
-![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.5-6DB33F?style=for-the-badge&logo=spring-boot)
-![MySQL](https://img.shields.io/badge/Aiven_MySQL-4479A1?style=for-the-badge&logo=mysql)
-![JWT](https://img.shields.io/badge/JWT_HS512-000000?style=for-the-badge&logo=JSON%20web%20tokens)
+![Java](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-*Digitizing informal student savings groups (chamas) — secure, transparent, and accountable.*
+*Digitizing informal student savings groups (Chamas) across Kenyan institutions — with security, transparency, and accountability at the core.*
 
 </div>
 
 ---
 
-## What is AkibaHub?
+## 🧩 What Is Akiba Hub?
 
-AkibaHub is a REST API backend for managing student savings groups (*chamas*) at Kenyan universities.
-It handles group creation, M-Pesa deposits via PayHero, multi-signature proposal voting, and a tamper-evident audit ledger — all behind Google OAuth2 + JWT authentication.
+**Akiba Hub** is a web-based platform that transforms how university and college students manage their savings groups (*chamas*). Instead of relying on WhatsApp messages, M-Pesa screenshots, and manual spreadsheets, Akiba Hub centralizes everything: contributions, group management, transaction history, and access control — securely and in real time.
 
 ---
 
-## Tech Stack
+## ⚙️ Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Runtime | Java 21, Spring Boot 3.5 |
-| Security | Google OAuth2, JWT (HS512), BCrypt |
-| Database | Aiven MySQL (cloud-managed) |
-| Payments | PayHero API (M-Pesa STK push) |
-| Build | Maven, multi-stage Docker |
-| Hosting | Render (backend), Vercel (frontend) |
+| 🖥️ Frontend | HTML5, CSS3, Vanilla JavaScript |
+| ⚙️ Backend | Java 17 + Spring Boot |
+| 🗄️ Database | MySQL |
+| 💳 Payments | PayHero API |
+| 🔐 Security | JWT + bcrypt + HTTPS |
+| 🔁 Version Control | Git & GitHub |
 
 ---
 
-## Architecture
+## 🏗️ System Architecture
 
 ```
-Google OAuth2
-     │
-     ▼
-AuthController ──► AuthService ──► JwtUtil ──► JWT token
-                                     │
-                                     ▼
-All other endpoints ◄── JwtAuthFilter (OncePerRequestFilter)
-     │
-     ├── GroupController     ──► GroupService
-     ├── TransactionController──► TransactionService ──► PayHeroService
-     ├── ProposalController  ──► ConsensusService ──► LedgerRepository
-     ├── LedgerController    ──► ConsensusService
-     └── WebhookController   ──► (PayHero payment callbacks)
+┌─────────────────────────────────────────────────────────┐
+│                        CLIENT                           │
+│          HTML / CSS / Vanilla JavaScript                │
+│    index.html  |  dashboard.html  |  group.html         │
+└────────────────────────┬────────────────────────────────┘
+                         │  HTTPS / REST
+┌────────────────────────▼────────────────────────────────┐
+│                     BACKEND                             │
+│                  Spring Boot API                        │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
+│  │Controller│→ │ Service  │→ │Repository│              │
+│  └──────────┘  └──────────┘  └────┬─────┘              │
+│  ┌──────────────────────────┐      │                    │
+│  │  JWT + bcrypt + CORS     │      │                    │
+│  └──────────────────────────┘      │                    │
+└───────────────────────────────┬────┘                    │
+                                │                         │
+          ┌─────────────────────▼──────────────────────┐  │
+          │                  MySQL                     │  │
+          │   Users | Groups | Transactions | Codes    │  │
+          └────────────────────────────────────────────┘  │
+                                                          │
+┌─────────────────────────────────────────────────────────┘
+│                  PayHero API
+│         External Payment Gateway Integration
+└─────────────────────────────────────────────────────────
 ```
 
 ---
 
-## API Reference
+## 📁 Project Structure
 
-All endpoints require `Authorization: Bearer <token>` except `/api/v1/auth/**`.
-
-### Auth
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/v1/auth/oauth2/callback/google` | Google OAuth2 callback — returns JWT |
-
-### Users
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/v1/users/me` | Authenticated user profile |
-
-### Groups
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/v1/groups/create` | Create a new group |
-| `POST` | `/api/v1/groups/join` | Join via invite code |
-| `GET` | `/api/v1/groups/my-groups` | List your groups |
-| `GET` | `/api/v1/groups/{id}` | Group details (members only) |
-
-### Transactions
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/v1/transactions/deposit` | Initiate M-Pesa STK push |
-| `GET` | `/api/v1/transactions/user` | Your transaction history |
-| `GET` | `/api/v1/transactions/group/{id}` | Group transactions (members only) |
-
-### Proposals & Voting
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/v1/proposals/create` | Create a proposal |
-| `POST` | `/api/v1/proposals/{id}/vote` | Cast a vote (once per user per proposal) |
-| `GET` | `/api/v1/proposals/group/{id}` | List group proposals |
-
-### Ledger
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/v1/ledger/group/{id}` | SHA-256 hash-chained audit log |
+```
+akiba-hub/
+│
+├── backend/
+│   │
+│   ├── pom.xml
+│   │
+│   └── src/
+│       └── main/
+│           ├── java/
+│           │   └── com/
+│           │       └── akibahub/
+│           │           │
+│           │           ├── AkibaHubApplication.java
+│           │           │
+│           │           ├── entity/
+│           │           │
+│           │           ├── repository/
+│           │           │
+│           │           ├── controller/
+│           │           │
+│           │           └── config/
+│           │
+│           └── resources/
+│               │
+│               └── application.properties
+│
+│
+├── frontend/
+│   │
+│   ├── pages/
+│   │   │
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   ├── dashboard.html
+│   │   ├── groups.html
+│   │   └── personal.html
+│   │
+│   ├── css/
+│   │   │
+│   │   └── styles.css
+│   │
+│   ├── js/
+│   │   │
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── groups.js
+│   │   └── savings.js
+│   │
+│   └── assets/
+│
+│
+├── database/
+│   │
+│   └── schema.sql
+│
+│
+├── docs/
+│   │
+│   ├── API.md
+│   └── SETUP.md
+│
+│
+├── .gitignore
+│
+├── README.md
+│
+└── .git/
 
 ---
 
-## Local Development
+## ✨ Core Features
+
+- 🔐 **Secure Auth** — Registration & login with bcrypt-hashed passwords and JWT sessions
+- 💰 **Savings Modes** — Choose between personal savings or joining a group (chama)
+- 👥 **Group Management** — Admins create and manage groups; members join via invite codes
+- 🎟️ **Invite Codes** — Unique, validated codes control who accesses each group
+- 📲 **PayHero Integration** — Real-time M-Pesa-style contributions via PayHero API
+- 📊 **Transaction History** — Every contribution is automatically recorded and viewable
+
+---
+
+## 🔒 Security Design
+
+```
+
+```
+User Password  ──►  bcrypt hash  ──►  Stored in DB
+                                            │
+Login Request  ──►  Validate hash  ──►  Issue JWT Token
+                                            │
+API Requests   ──►  Verify JWT  ──►  Authorize or Reject
+                                            │
+All Traffic    ──►  HTTPS only  ──►  Encrypted in Transit
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Java 21+
-- Maven 3.9+
-- MySQL 8+ (or use [Aiven free tier](https://aiven.io))
-- A Google OAuth2 app ([console.cloud.google.com](https://console.cloud.google.com))
-- A PayHero account ([payhero.co.ke](https://payhero.co.ke))
 
-### 1. Clone
+- Java 17+
+- Maven
+- MySQL 8+
+- A PayHero API account
 
-```bash
-git clone https://github.com/systems-jackal/akibahub.git
-cd akibahub
-```
-
-### 2. Configure environment
+### 1. Clone the Repository
 
 ```bash
-cp .env.example .env
-# Fill in all values in .env
+git clone https://github.com/your-username/akiba-hub.git
+cd akiba-hub
 ```
 
-### 3. Run
+### 2. Configure the Database
+
+```bash
+mysql -u root -p < database/schema.sql
+mysql -u root -p < database/seed.sql
+```
+
+### 3. Set Environment Variables
+
+Update `backend/src/main/resources/application.properties`:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/akiba_hub
+spring.datasource.username=YOUR_DB_USER
+spring.datasource.password=YOUR_DB_PASSWORD
+
+jwt.secret=YOUR_JWT_SECRET
+payhero.api.key=YOUR_PAYHERO_KEY
+```
+
+### 4. Run the Backend
 
 ```bash
 cd backend
 mvn spring-boot:run
-# API available at http://localhost:8080
 ```
 
-### 4. Test
+### 5. Open the Frontend
 
-```bash
-mvn test
-```
+Open `frontend/index.html` in your browser, or serve it with any static file server.
 
 ---
 
-## Docker
+## 👤 User Roles
 
-```bash
-cd backend
-docker build -t akibahub:latest .
-docker run -p 8080:8080 --env-file ../.env akibahub:latest
-```
-
-The image uses a **multi-stage build**: Maven compiles in stage 1, only the JRE + JAR ship in stage 2 (~180 MB vs ~600 MB).
-The container runs as a **non-root user** (`akiba`).
-
----
-
-## Deploying to Render
-
-1. Push to GitHub.
-2. Create a new **Web Service** on [render.com](https://render.com).
-3. Set root directory to `backend/`, Docker build command auto-detected.
-4. Add all variables from `.env.example` in Render's Environment tab.
-5. Deploy.
-
----
-
-## Security Design
-
-| Concern | Solution |
+| Role | Permissions |
 |---|---|
-| Authentication | Google OAuth2 → JWT (HS512, 512-bit key enforced at startup) |
-| Authorization | `JwtAuthFilter` on every request; `@AuthenticationPrincipal` in controllers |
-| CORS | Centralised `CorsConfigurationSource`; allowed origins from env var |
-| Input validation | Bean Validation (`@Valid`) on all request DTOs |
-| User enumeration | Generic 401 response for all auth failures |
-| IDOR | All data access scoped to `@AuthenticationPrincipal User` |
-| Duplicate votes | DB unique constraint `(proposalId, userId)` + service-layer check |
-| Ledger integrity | SHA-256 hash chain (`hash = SHA256(previousHash + content)`) |
-| Secrets | All via environment variables; `.env` in `.gitignore` |
-| Container | Non-root user, JRE-only image (no Maven/source in production) |
-| Money | `BigDecimal` (scale 4) everywhere; never `double` or `float` |
+| **Student** | Register, log in, save personally or join a group |
+| **Group Admin** | Create groups, generate invite codes, view all contributions |
+| **Member** | Join via invite code, contribute, view group history |
 
 ---
 
-## Project Structure
+## 📌 Roadmap
 
-```
-akibahub/
-├── .env.example
-├── .gitignore
-├── README.md
-└── backend/
-    ├── Dockerfile
-    ├── pom.xml
-    └── src/
-        ├── main/java/com/akibahub/
-        │   ├── AkibaHubApplication.java
-        │   ├── config/
-        │   │   └── SecurityConfig.java
-        │   ├── controller/
-        │   │   ├── AuthController.java
-        │   │   ├── GroupController.java
-        │   │   ├── LedgerController.java
-        │   │   ├── ProposalController.java
-        │   │   ├── TransactionController.java
-        │   │   ├── UserController.java
-        │   │   └── WebhookController.java
-        │   ├── dto/
-        │   │   ├── request/
-        │   │   └── response/
-        │   ├── exception/
-        │   │   └── GlobalExceptionHandler.java
-        │   ├── model/
-        │   ├── repository/
-        │   ├── security/
-        │   │   ├── JwtAuthFilter.java
-        │   │   └── JwtUtil.java
-        │   ├── service/
-        │   │   └── impl/
-        │   └── util/
-        │       ├── HashUtil.java
-        │       └── InviteCodeGenerator.java
-        └── main/resources/
-            └── application.properties
-```
-
----
-
-## Roadmap
-
-- [ ] SMS/email notifications on contribution
+- [ ] Email/SMS contribution notifications
 - [ ] Group loan request module
 - [ ] Admin analytics dashboard
-- [ ] PayHero webhook signature verification
-- [ ] Mobile app (Android / Flutter)
+- [ ] Mobile app (Android)
+- [ ] Multi-institution support
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, open an issue first to discuss what you'd like to change.
+
+```bash
+git checkout -b feature/your-feature-name
+git commit -m "feat: describe your change"
+git push origin feature/your-feature-name
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
 
 ---
 
 <div align="center">
-Built for Kenyan students · Powered by Unity Bridge
+
+Built with ❤️ for Kenyan students · Powered by UNITY BRIDGE
+
 </div>
