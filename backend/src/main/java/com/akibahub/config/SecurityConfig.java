@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 // Public actuator health endpoints (for monitoring)
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/ping").permitAll()   // <-- ADD THIS
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
