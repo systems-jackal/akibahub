@@ -21,3 +21,10 @@ jwt:
 
 server:
   port: ${PORT:8080}
+
+# Actuator endpoints configuration – health is now publicly accessible
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
