@@ -21,26 +21,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 255)
+    @Column(unique = true, nullable = true)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "phone_number", unique = true, nullable = true, length = 20)
+    private String phoneNumber;
+
+    @Column(nullable = false)
     private String name;
 
-    @Column(name = "password_hash", length = 255)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(length = 20)
-    private String provider = "LOCAL"; // LOCAL, GOOGLE
-
-    @Column(name = "provider_id", length = 255)
-    private String providerId;
-
-    @Column(name = "profile_pic", length = 500)
-    private String profilePic;
-
-    @Column(name = "phone_number", length = 20)
-    private String phoneNumber;
+    @Column(name = "provider")
+    private String provider = "LOCAL";
 
     @Column(name = "is_active")
     private boolean isActive = true;
@@ -53,16 +47,9 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Relations
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PersonalWallet personalWallet;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<GroupMember> groupMemberships = new HashSet<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Transaction> transactions = new HashSet<>();
-
-    @OneToMany(mappedBy = "actor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<LedgerEntry> ledgerEntries = new HashSet<>();
 }

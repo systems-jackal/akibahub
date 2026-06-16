@@ -1,14 +1,12 @@
 package com.akibahub.config;
 
 import com.akibahub.security.JwtAuthenticationFilter;
-import com.akibahub.security.OAuth2LoginSuccessHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,13 +21,12 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final OAuth2LoginSuccessHandler oAuth2SuccessHandler;
-    @Value("${cors.allowed.origins}")
+    @Value("${cors.allowed.origins:*}")
     private String allowedOrigins;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, OAuth2LoginSuccessHandler oAuth2SuccessHandler) {
+    // Remove OAuth2LoginSuccessHandler from constructor
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
-        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
@@ -39,11 +36,12 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2SuccessHandler))
+            // OAuth2 login removed for MVP
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -62,20 +60,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    // ✅ THIS BEAN FIXES THE ERROR
-    // Provides a dummy UserDetailsService – replace with real DB lookup later
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> {
-            // For now, return a dummy user with no password and USER authority
-            // In production, load from your UserRepository
-            return org.springframework.security.core.userdetails.User
-                .withUsername(username)
-                .password("")
-                .authorities("USER")
-                .build();
-        };
     }
 }

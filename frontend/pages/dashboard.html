@@ -40,29 +40,31 @@
     <script src="../js/api.js"></script>
     <script src="../js/auth.js"></script>
     <script>
-        async function loadDashboard() {
-            // Auth check is now handled in auth.js
+        (function() {
+            // Check authentication
             if (!auth.isAuthenticated()) {
-                window.location.href = 'login.html';
+                window.location.replace('login.html');
                 return;
             }
             
+            // Display user info
             const user = auth.getUser();
-            document.getElementById('userNameDisplay').innerText = user?.email || 'User';
-            document.querySelector('#userName').innerText = user?.email || 'User';
+            document.getElementById('userNameDisplay').textContent = user?.email || 'User';
+            document.getElementById('userName').textContent = user?.email || 'User';
             
-            try {
-                const response = await api.getBalance();
-                if (response.success) {
-                    document.getElementById('balanceDisplay').textContent = `KES ${parseFloat(response.data).toFixed(2)}`;
+            // Load balance
+            (async function() {
+                try {
+                    const response = await api.getBalance();
+                    if (response.success) {
+                        document.getElementById('balanceDisplay').textContent = 
+                            `KES ${parseFloat(response.data).toFixed(2)}`;
+                    }
+                } catch (e) {
+                    console.error('Error loading balance:', e);
                 }
-            } catch(e) {
-                console.error('Error loading balance:', e);
-                document.getElementById('balanceDisplay').textContent = 'KES 0.00';
-            }
-        }
-        
-        window.onload = loadDashboard;
+            })();
+        })();
     </script>
 </body>
 </html>

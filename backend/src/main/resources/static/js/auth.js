@@ -6,6 +6,8 @@ class AuthManager {
     constructor() {
         this.token = localStorage.getItem('token');
         this.user = null;
+        this.isLoading = false;
+        
         if (this.token) {
             this.decodeToken();
         }
@@ -21,14 +23,16 @@ class AuthManager {
             };
             return true;
         } catch (e) {
-            console.error('Failed to decode token:', e);
+            console.warn('Invalid token:', e);
+            this.token = null;
             this.user = null;
+            localStorage.removeItem('token');
             return false;
         }
     }
 
     isAuthenticated() {
-        return !!this.token && this.user !== null;
+        return !!this.token && !!this.user;
     }
 
     getToken() {
@@ -39,22 +43,42 @@ class AuthManager {
         return this.user;
     }
 
+    // Store token from URL (OAuth redirect)
+    handleOAuthRedirect() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        
+        if (token) {
+            localStorage.setItem('token', token);
+            this.token = token;
+            this.decodeToken();
+            // Remove token from URL without reloading
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            return true;
+        }
+        return false;
+    }
+
     logout() {
         this.token = null;
         this.user = null;
         localStorage.removeItem('token');
-        window.location.href = 'login.html';
+        window.location.replace('login.html');
     }
 }
 
-// Create global instance
+// Create single instance
 const auth = new AuthManager();
 
-// Redirect to login if not authenticated (except on login page)
-document.addEventListener('DOMContentLoaded', () => {
-    if (!window.location.pathname.includes('login.html')) {
-        if (!auth.isAuthenticated()) {
-            window.location.href = 'login.html';
-        }
+// Handle OAuth redirect immediately
+auth.handleOAuthRedirect();
+
+// Redirect to login if not authenticated (for protected pages)
+function requireAuth() {
+    if (!auth.isAuthenticated() && !window.location.pathname.includes('login.html')) {
+        window.location.replace('login.html');
+        return false;
     }
-});
+    return true;
+}
