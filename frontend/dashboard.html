@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard – AkibaHub</title>
+    <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+    <header>
+        <h1>AkibaHub</h1>
+        <button id="logoutBtn">Logout</button>
+    </header>
+    <main>
+        <section id="groups">
+            <h2>My Groups</h2>
+            <ul id="groupList"></ul>
+            <button id="createGroupBtn">Create Group</button>
+        </section>
+        <section id="transactions">
+            <h2>Recent Transactions</h2>
+            <ul id="transactionList"></ul>
+        </section>
+    </main>
+
+    <script type="module">
+        import { getGroups, getToken } from './js/api.js';
+        import { logout } from './js/auth.js';
+
+        // If no token, redirect to login
+        if (!getToken()) {
+            window.location.href = 'index.html';
+        }
+
+        // Load groups
+        (async () => {
+            try {
+                const groups = await getGroups();
+                const list = document.getElementById('groupList');
+                groups.forEach(g => {
+                    const li = document.createElement('li');
+                    li.textContent = g.name;
+                    list.appendChild(li);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            logout();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
