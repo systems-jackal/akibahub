@@ -10,8 +10,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET =
-            "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_KEY_32+_CHARS_MINIMUM";
+    private static final String SECRET = "CHANGE_THIS_TO_A_VERY_LONG_SECRET_KEY_123456789";
 
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
@@ -20,13 +19,12 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24h
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String extractEmail(String token) {
-
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -35,7 +33,7 @@ public class JwtService {
                 .getSubject();
     }
 
-    public boolean isTokenValid(String token) {
+    public boolean isValid(String token) {
         try {
             extractEmail(token);
             return true;
