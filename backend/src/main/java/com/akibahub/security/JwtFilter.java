@@ -1,19 +1,16 @@
 package com.akibahub.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
 
 @Component
-public class JwtFilter extends OncePerRequestFilter {
+public class JwtFilter implements Filter {
 
     private final JwtService jwtService;
 
@@ -21,35 +18,46 @@ public class JwtFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
-   @Override
-protected void doFilterInternal(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        FilterChain filterChain
-) throws ServletException, IOException {
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
 
-    String header = request.getHeader("Authorization");
+        HttpServletRequest req = (HttpServletRequest) request;
 
-    if (header != null && header.startsWith("Bearer ")) {
-        try {
-            String token = header.substring(7);
-            String email = jwtService.extractEmail(token);
+        String path = req.getRequestURI();
 
-            var auth = new UsernamePasswordAuthenticationToken(
-                    email,
-                    null,
-                    Collections.emptyList()
-            );
+        // 🔴 HARD BYPASS FOR PUBLIC ROUTES
+        if (path.startsWith("/auth")
+                || path.equals("/health")
+                || path.equals("/")
+                || path.startsWith("/oauth2")) {
 
-            SecurityContextHolder.getContext().setAuthentication(auth);
-
-        } catch (Exception e) {
-            // IMPORTANT: ignore bad tokens completely
-            SecurityContextHolder.clearContext();
+            chain.doFilter(request, response);
+            return;
         }
-    }
 
-    // ALWAYS continue request (this is critical)
-    filterChain.doFilter(request, response);
-}
+        String header = req.getHeader("Authorization");
+
+        if (header != null && header.startsWith("Bearer ")) {
+
+            String token = header.substring(7);
+
+            try {
+                String email = jwtService.extractEmail(token);
+
+                var auth = new UsernamePasswordAuthenticationToken(
+                        email,
+                        null,
+                        Collections.emptyList()
+                );
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+            } catch (Exception e) {
+                SecurityContextHolder.clearContext();
+            }
+        }
+
+        chain.doFilter(request, response);
+    }
 }
