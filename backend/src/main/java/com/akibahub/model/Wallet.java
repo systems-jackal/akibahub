@@ -17,6 +17,7 @@ public class Wallet extends BaseEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private WalletType walletType;
 
     @Column(nullable = false)
