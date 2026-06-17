@@ -1,6 +1,6 @@
 package com.akibahub.controller;
 
-import com.akibahub.model.User;
+import com.akibahub.dto.request.LoginRequest;
 import com.akibahub.service.AuthService;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,16 +16,19 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public Map<String, String> register(@RequestBody User user) {
-        return Map.of("token", authService.register(user));
+    @PostMapping("/login")
+    public Map<String, String> login(@RequestBody LoginRequest request) {
+
+        String token = authService.login(
+                request.getEmail(),
+                request.getPassword()
+        );
+
+        return Map.of("token", token);
     }
 
-    @PostMapping("/login")
-    public Map<String, String> login(@RequestBody Map<String, String> req) {
-        return Map.of(
-                "token",
-                authService.login(req.get("email"), req.get("password"))
-        );
+    @GetMapping("/test")
+    public Map<String, String> test() {
+        return Map.of("status", "auth endpoint working");
     }
 }
