@@ -21,33 +21,35 @@ public class JwtFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
-    @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+   @Override
+protected void doFilterInternal(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain
+) throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
+    String header = request.getHeader("Authorization");
 
-        if (header != null && header.startsWith("Bearer ")) {
+    if (header != null && header.startsWith("Bearer ")) {
+        try {
             String token = header.substring(7);
+            String email = jwtService.extractEmail(token);
 
-            try {
-                String email = jwtService.extractEmail(token);
+            var auth = new UsernamePasswordAuthenticationToken(
+                    email,
+                    null,
+                    Collections.emptyList()
+            );
 
-                var auth = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        Collections.emptyList()
-                );
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception ignored) {
-                // invalid token → ignore request authentication
-            }
+        } catch (Exception e) {
+            // IMPORTANT: ignore bad tokens completely
+            SecurityContextHolder.clearContext();
         }
-
-        filterChain.doFilter(request, response);
     }
+
+    // ALWAYS continue request (this is critical)
+    filterChain.doFilter(request, response);
+}
 }
