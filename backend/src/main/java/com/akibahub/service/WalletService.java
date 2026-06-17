@@ -16,6 +16,6 @@ public class WalletService {
 
     public Wallet getWalletByUser(User user) {
         return walletRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Wallet not found for user"));
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
     }
 }

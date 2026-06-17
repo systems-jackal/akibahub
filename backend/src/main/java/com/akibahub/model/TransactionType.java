@@ -1,7 +1,11 @@
 package com.akibahub.model;
 
 public enum TransactionType {
-    DEPOSIT,
-    WITHDRAWAL,
-    TRANSFER
+
+    PERSONAL_DEPOSIT,
+    PERSONAL_WITHDRAWAL,
+
+    GROUP_CONTRIBUTION,
+    GROUP_WITHDRAWAL_REQUEST,
+    GROUP_WITHDRAWAL_EXECUTED
 }

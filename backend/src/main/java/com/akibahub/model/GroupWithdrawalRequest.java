@@ -7,25 +7,24 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "transactions")
+@Table(name = "group_withdrawal_requests")
 @Getter
 @Setter
-public class Transaction extends BaseEntity {
+public class GroupWithdrawalRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Wallet wallet;
+    private BigDecimal amount;
+    private String reason;
 
     @ManyToOne
     private Group group;
 
-    @Enumerated(EnumType.STRING)
-    private TransactionType type;
+    @ManyToOne
+    private User requestedBy;
 
-    private BigDecimal amount;
-
-    private String reference;
+    private boolean approved;
+    private boolean executed;
 }
