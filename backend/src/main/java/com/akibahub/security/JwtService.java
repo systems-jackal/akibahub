@@ -1,6 +1,8 @@
 package com.akibahub.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
@@ -10,28 +12,28 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private final String SECRET = "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069";
+    private static final String SECRET = "THIS_IS_A_VERY_LONG_SECRET_KEY_CHANGE_ME_123456789";
 
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes());
-    }
+    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
     public String generateToken(String email) {
-
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String extractEmail(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    private Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
     }
 }

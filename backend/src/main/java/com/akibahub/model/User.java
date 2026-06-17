@@ -6,12 +6,12 @@ import lombok.Setter;
 
 @Entity
 @Table(
-    name = "users",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = "email"),
-        @UniqueConstraint(columnNames = "phone_number"),
-        @UniqueConstraint(columnNames = "member_code")
-    }
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "email"),
+                @UniqueConstraint(columnNames = "phone_number"),
+                @UniqueConstraint(columnNames = "member_code")
+        }
 )
 @Getter
 @Setter
@@ -33,8 +33,15 @@ public class User extends BaseEntity {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
+    // REQUIRED for JWT login
+    @Column(nullable = true)
+    private String password;
+
     private String profilePicture;
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    // OAuth support
+    private String provider;   // GOOGLE, LOCAL
 }
