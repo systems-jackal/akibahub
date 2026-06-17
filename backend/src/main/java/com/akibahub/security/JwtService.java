@@ -1,8 +1,6 @@
 package com.akibahub.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
@@ -12,28 +10,36 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET = "THIS_IS_A_VERY_LONG_SECRET_KEY_CHANGE_ME_123456789";
+    private final String SECRET = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_KEY_32+_CHARS";
 
-    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private Key getKey() {
+        return Keys.hmacShaKeyFor(SECRET.getBytes());
+    }
 
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String extractEmail(String token) {
-        return getClaims(token).getSubject();
-    }
-
-    private Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token)
-                .getBody();
+                .getBody()
+                .getSubject();
+    }
+
+    public boolean isValid(String token) {
+        try {
+            extractEmail(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

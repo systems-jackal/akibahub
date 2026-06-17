@@ -3,7 +3,6 @@ package com.akibahub.service;
 import com.akibahub.model.User;
 import com.akibahub.repository.UserRepository;
 import com.akibahub.security.JwtService;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,28 +21,20 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    public String register(String email, String rawPassword, String fullName) {
-
-        User user = new User();
-        user.setEmail(email);
-        user.setFullName(fullName);
-        user.setProvider("LOCAL");
-        user.setPassword(passwordEncoder.encode(rawPassword));
-
+    public String register(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
-
-        return jwtService.generateToken(email);
+        return jwtService.generateToken(user.getEmail());
     }
 
-    public String login(String email, String rawPassword) {
-
+    public String login(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid password");
         }
 
-        return jwtService.generateToken(email);
+        return jwtService.generateToken(user.getEmail());
     }
 }

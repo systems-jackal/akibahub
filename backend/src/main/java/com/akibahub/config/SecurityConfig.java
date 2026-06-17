@@ -29,13 +29,9 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/",
-                    "/health",
-                    "/auth/**",
-                    "/oauth2/**",
-                    "/secure/test"   // 👈 ADD THIS (for testing)
+                        "/auth/**",
+                        "/health"
                 ).permitAll()
-
                 .anyRequest().authenticated()
             )
 

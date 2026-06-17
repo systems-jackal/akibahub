@@ -5,43 +5,27 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(
-        name = "users",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = "email"),
-                @UniqueConstraint(columnNames = "phone_number"),
-                @UniqueConstraint(columnNames = "member_code")
-        }
-)
+@Table(name = "users")
 @Getter
 @Setter
-public class User extends BaseEntity {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "member_code", nullable = false, unique = true)
-    private String memberCode;
-
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
-
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "phone_number", nullable = false)
-    private String phoneNumber;
-
-    // REQUIRED for JWT login
     @Column(nullable = true)
     private String password;
 
-    private String profilePicture;
+    private String fullName;
 
-    @Column(nullable = false)
-    private Boolean active = true;
+    private String phoneNumber;
 
-    // OAuth support
-    private String provider;   // GOOGLE, LOCAL
+    @Column(unique = true)
+    private String memberCode;
+
+    private String provider; // LOCAL, GOOGLE, etc
 }
