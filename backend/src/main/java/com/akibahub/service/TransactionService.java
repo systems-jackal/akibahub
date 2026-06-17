@@ -26,16 +26,11 @@ public class TransactionService {
     // =========================
     public void deposit(Wallet wallet, BigDecimal amount, String reference) {
 
-        // 1. Idempotency check
-        if (transactionRepository.existsByReference(reference)) {
-            return;
-        }
+        if (transactionRepository.existsByReference(reference)) return;
 
-        // 2. Update wallet balance
         wallet.setBalance(wallet.getBalance().add(amount));
         walletRepository.save(wallet);
 
-        // 3. Transaction record
         Transaction tx = new Transaction();
         tx.setWallet(wallet);
         tx.setAmount(amount);
@@ -43,10 +38,40 @@ public class TransactionService {
         tx.setReference(reference);
         transactionRepository.save(tx);
 
-        // 4. Ledger entry (immutable audit trail)
         LedgerEntry ledger = new LedgerEntry();
-        ledger.setWallet(wallet);
+        ledger.setUser(wallet.getUser());
         ledger.setAction(TransactionType.PERSONAL_DEPOSIT.name());
+        ledger.setAmount(amount);
+        ledger.setBalanceAfter(wallet.getBalance());
+        ledger.setReference(reference);
+
+        ledgerRepository.save(ledger);
+    }
+
+    // =========================
+    // PERSONAL WITHDRAWAL
+    // =========================
+    public void withdraw(Wallet wallet, BigDecimal amount, String reference) {
+
+        if (transactionRepository.existsByReference(reference)) return;
+
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        walletRepository.save(wallet);
+
+        Transaction tx = new Transaction();
+        tx.setWallet(wallet);
+        tx.setAmount(amount);
+        tx.setType(TransactionType.PERSONAL_WITHDRAWAL);
+        tx.setReference(reference);
+        transactionRepository.save(tx);
+
+        LedgerEntry ledger = new LedgerEntry();
+        ledger.setUser(wallet.getUser());
+        ledger.setAction(TransactionType.PERSONAL_WITHDRAWAL.name());
         ledger.setAmount(amount);
         ledger.setBalanceAfter(wallet.getBalance());
         ledger.setReference(reference);

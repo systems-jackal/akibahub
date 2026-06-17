@@ -17,6 +17,7 @@ public class GroupWithdrawalRequest {
     private Long id;
 
     private BigDecimal amount;
+
     private String reason;
 
     @ManyToOne
@@ -26,5 +27,6 @@ public class GroupWithdrawalRequest {
     private User requestedBy;
 
     private boolean approved;
+
     private boolean executed;
 }

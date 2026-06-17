@@ -36,7 +36,7 @@ public class PersonalFinanceService {
         transactionRepository.save(tx);
 
         LedgerEntry ledger = new LedgerEntry();
-        ledger.setWallet(wallet);
+        ledger.setUser(wallet.getUser());
         ledger.setAmount(amount);
         ledger.setAction("PERSONAL_DEPOSIT");
         ledger.setBalanceAfter(wallet.getBalance());
@@ -63,7 +63,7 @@ public class PersonalFinanceService {
         transactionRepository.save(tx);
 
         LedgerEntry ledger = new LedgerEntry();
-        ledger.setWallet(wallet);
+        ledger.setUser(wallet.getUser());
         ledger.setAmount(amount);
         ledger.setAction("PERSONAL_WITHDRAWAL");
         ledger.setBalanceAfter(wallet.getBalance());

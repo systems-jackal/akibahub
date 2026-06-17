@@ -9,46 +9,68 @@ import java.math.BigDecimal;
 @Service
 public class GroupFinanceService {
 
+    private final GroupWithdrawalRepository groupWithdrawalRepository;
     private final TransactionRepository transactionRepository;
-    private final GroupWithdrawalRepository withdrawalRepository;
+    private final LedgerRepository ledgerRepository;
 
-    public GroupFinanceService(TransactionRepository transactionRepository,
-                               GroupWithdrawalRepository withdrawalRepository) {
+    public GroupFinanceService(GroupWithdrawalRepository groupWithdrawalRepository,
+                               TransactionRepository transactionRepository,
+                               LedgerRepository ledgerRepository) {
+        this.groupWithdrawalRepository = groupWithdrawalRepository;
         this.transactionRepository = transactionRepository;
-        this.withdrawalRepository = withdrawalRepository;
+        this.ledgerRepository = ledgerRepository;
     }
 
-    // CONTRIBUTION (money into group)
-    public void contribute(Wallet wallet, Group group, BigDecimal amount, String reference) {
+    // =========================
+    // REQUEST GROUP WITHDRAWAL
+    // =========================
+    public GroupWithdrawalRequest requestGroupWithdrawal(
+            Group group,
+            User user,
+            BigDecimal amount,
+            String reason
+    ) {
 
-        if (transactionRepository.existsByReference(reference)) return;
+        GroupWithdrawalRequest request = new GroupWithdrawalRequest();
+        request.setGroup(group);
+        request.setRequestedBy(user);
+        request.setAmount(amount);
+        request.setReason(reason);
+        request.setApproved(false);
+        request.setExecuted(false);
 
-        wallet.setBalance(wallet.getBalance().subtract(amount));
+        return groupWithdrawalRepository.save(request);
+    }
+
+    // =========================
+    // EXECUTE GROUP WITHDRAWAL
+    // (ONLY AFTER APPROVAL)
+    // =========================
+    public void executeGroupWithdrawal(GroupWithdrawalRequest request, String reference) {
+
+        if (request.isExecuted()) return;
+
+        if (!request.isApproved()) {
+            throw new RuntimeException("Request not approved");
+        }
+
+        request.setExecuted(true);
+        groupWithdrawalRepository.save(request);
 
         Transaction tx = new Transaction();
-        tx.setWallet(wallet);
-        tx.setGroup(group);
-        tx.setAmount(amount);
-        tx.setType(TransactionType.GROUP_CONTRIBUTION);
+        tx.setGroup(request.getGroup());
+        tx.setAmount(request.getAmount());
+        tx.setType(TransactionType.GROUP_WITHDRAWAL_EXECUTED);
         tx.setReference(reference);
 
         transactionRepository.save(tx);
-    }
 
-    // REQUEST WITHDRAWAL (NO EXECUTION HERE)
-    public GroupWithdrawalRequest requestWithdrawal(Group group,
-                                                    User user,
-                                                    BigDecimal amount,
-                                                    String reason) {
+        LedgerEntry ledger = new LedgerEntry();
+        ledger.setGroup(request.getGroup());
+        ledger.setAction(TransactionType.GROUP_WITHDRAWAL_EXECUTED.name());
+        ledger.setAmount(request.getAmount());
+        ledger.setReference(reference);
 
-        GroupWithdrawalRequest req = new GroupWithdrawalRequest();
-        req.setGroup(group);
-        req.setRequestedBy(user);
-        req.setAmount(amount);
-        req.setReason(reason);
-        req.setApproved(false);
-        req.setExecuted(false);
-
-        return withdrawalRepository.save(req);
+        ledgerRepository.save(ledger);
     }
 }

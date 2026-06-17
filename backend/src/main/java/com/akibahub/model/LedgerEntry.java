@@ -10,21 +10,25 @@ import java.math.BigDecimal;
 @Table(name = "ledger_entries")
 @Getter
 @Setter
-public class LedgerEntry extends BaseEntity {
+public class LedgerEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String action; // DEPOSIT, WITHDRAWAL, etc
+    private String action;
 
     private BigDecimal amount;
 
     private BigDecimal balanceAfter;
 
-    @ManyToOne
-    @JoinColumn(name = "wallet_id", nullable = false)
-    private Wallet wallet;
-
     private String reference;
+
+    // PERSONAL SIDE
+    @ManyToOne
+    private User user;
+
+    // GROUP SIDE
+    @ManyToOne
+    private Group group;
 }
