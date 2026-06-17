@@ -1,7 +1,13 @@
 package com.akibahub.security;
 
-import jakarta.servlet.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.Filter;
+
 import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,8 +25,11 @@ public class JwtFilter implements Filter {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    public void doFilter(
+            ServletRequest request,
+            ServletResponse response,
+            FilterChain chain
+    ) throws IOException, ServletException {
 
         HttpServletRequest req = (HttpServletRequest) request;
 
@@ -29,15 +38,25 @@ public class JwtFilter implements Filter {
         if (header != null && header.startsWith("Bearer ")) {
 
             String token = header.substring(7);
-            String email = jwtService.extractEmail(token);
 
-            var auth = new UsernamePasswordAuthenticationToken(
-                    email,
-                    null,
-                    Collections.emptyList()
-            );
+            try {
 
-            SecurityContextHolder.getContext().setAuthentication(auth);
+                String email =
+                        jwtService.extractEmail(token);
+
+                var auth =
+                        new UsernamePasswordAuthenticationToken(
+                                email,
+                                null,
+                                Collections.emptyList()
+                        );
+
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(auth);
+
+            } catch (Exception ignored) {
+            }
         }
 
         chain.doFilter(request, response);
