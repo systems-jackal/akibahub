@@ -37,8 +37,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                     .requestMatchers(
-                            "/auth/**"
-                    ).permitAll()
+                 "/",
+                        "/health",
+                       "/auth/**"
+                   ).permitAll()
 
                     .anyRequest()
                     .authenticated()
