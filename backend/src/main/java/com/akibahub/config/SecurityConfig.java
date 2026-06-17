@@ -18,7 +18,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
@@ -32,16 +32,15 @@ public class SecurityConfig {
                     "/",
                     "/health",
                     "/auth/**",
-                    "/oauth2/**"
+                    "/oauth2/**",
+                    "/secure/test"   // 👈 ADD THIS (for testing)
                 ).permitAll()
+
                 .anyRequest().authenticated()
             )
-
-            // COMMENT OUT OAuth for now until stable
-            // .oauth2Login(oauth -> {})
 
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-}       
+}
