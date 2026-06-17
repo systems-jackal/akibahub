@@ -73,4 +73,17 @@ public class GroupFinanceService {
 
         ledgerRepository.save(ledger);
     }
+
+    public void executeApprovedProposal(Proposal proposal) {
+
+    GroupWithdrawalRequest request = new GroupWithdrawalRequest();
+    request.setGroup(proposal.getGroup());
+    request.setRequestedBy(proposal.getCreatedBy());
+    request.setAmount(proposal.getAmount());
+    request.setReason(proposal.getDescription());
+    request.setApproved(true);
+    request.setExecuted(false);
+
+    executeGroupWithdrawal(request, "PROP-" + proposal.getId());
+}
 }
