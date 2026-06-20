@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -39,21 +37,22 @@ public class User {
 
     private String provider;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;  // Add this to match database
 
     @PrePersist
     protected void onCreate() {
+        createdAt = LocalDateTime.now();
         if (memberCode == null) {
             memberCode = "MBR-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 10000);
         }
         if (provider == null) {
             provider = "LOCAL";
         }
+        // active is already defaulted to true via @Builder.Default
     }
 }
