@@ -4,12 +4,6 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      connection-timeout: 30000
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 600000
-      max-lifetime: 1800000
 
   jpa:
     hibernate:
@@ -19,15 +13,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
 
 server:
   port: ${PORT:8080}
-  servlet:
-    context-path: /
 
 # JWT Configuration
 jwt:
@@ -39,24 +27,3 @@ logging:
   level:
     com.akibahub: DEBUG
     org.springframework.security: INFO
-    org.springframework.web: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-
-# Actuator
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
-
-# Springdoc OpenAPI
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operationsSorter: method
