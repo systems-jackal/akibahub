@@ -3,16 +3,25 @@ spring:
     url: ${DB_URL}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
-
   jpa:
     hibernate:
       ddl-auto: update
-
     show-sql: true
-
     properties:
       hibernate:
         format_sql: true
 
 server:
   port: 8080
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-very-secure-secret-key-that-is-at-least-32-characters-long-1234567890}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Logging for debugging
+logging:
+  level:
+    com.akibahub: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG

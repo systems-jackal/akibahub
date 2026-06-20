@@ -21,11 +21,13 @@ public class User {
     private String password;
 
     private String fullName;
-
     private String phoneNumber;
 
     @Column(unique = true)
     private String memberCode;
 
     private String provider; // LOCAL, GOOGLE, etc
+
+    @Column(name = "username", unique = true)  // nullable by default for migration
+    private String username;
 }

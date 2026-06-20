@@ -2,6 +2,7 @@ package com.akibahub.security;
 
 import com.akibahub.model.User;
 import com.akibahub.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +23,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found"));
+                        new UsernameNotFoundException("User not found with email: " + email));
 
         return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
+                user.getEmail(),  // Using email as username
                 user.getPassword(),
-                Collections.emptyList()
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
     }
 }

@@ -1,10 +1,13 @@
 package com.akibahub.controller;
 
+import com.akibahub.dto.request.CreateUserRequest;
 import com.akibahub.dto.request.LoginRequest;
-import com.akibahub.model.User;
 import com.akibahub.service.AuthService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -18,14 +21,32 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public Map<String, String> register(@RequestBody User user) {
-        String token = authService.register(user);
-        return Map.of("token", token);
+    public ResponseEntity<Map<String, String>> register(@RequestBody CreateUserRequest request) {
+        try {
+            String token = authService.register(request);
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
+            response.put("message", "Registration successful");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody LoginRequest request) {
-        String token = authService.login(request.getEmail(), request.getPassword());
-        return Map.of("token", token);
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
+        try {
+            String token = authService.login(request.getEmail(), request.getPassword());
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
+            response.put("message", "Login successful");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
     }
 }
