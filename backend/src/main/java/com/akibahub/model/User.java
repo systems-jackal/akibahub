@@ -23,7 +23,7 @@ public class User {
     private String fullName;
     private String phoneNumber;
 
-    @Column(unique = true)
+    @Column(unique = true,nullable = true)
     private String memberCode;
 
     private String provider; // LOCAL, GOOGLE, etc
