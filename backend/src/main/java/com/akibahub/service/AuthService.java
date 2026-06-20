@@ -7,18 +7,15 @@ import com.akibahub.model.User;
 import com.akibahub.repository.UserRepository;
 import com.akibahub.security.JwtService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -27,37 +24,29 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
 
-    @Transactional
     public AuthResponse register(RegisterRequest request) {
         // Check if user exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered");
         }
-
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new RuntimeException("Username already taken");
         }
 
-        // Create new user
+        // Create user
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .phoneNumber(request.getPhoneNumber())
-                .provider("LOCAL")
-                .enabled(true)
-                .accountNonLocked(true)
                 .build();
 
-        // Member code is auto-generated in @PrePersist
         userRepository.save(user);
 
         // Generate token
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);
-
-        log.info("User registered successfully: {}", user.getEmail());
 
         return AuthResponse.builder()
                 .token(token)
@@ -83,8 +72,6 @@ public class AuthService {
         // Generate token
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);
-
-        log.info("User logged in successfully: {}", user.getEmail());
 
         return AuthResponse.builder()
                 .token(token)

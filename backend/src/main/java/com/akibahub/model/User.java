@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -22,41 +20,34 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(length = 100)
     private String fullName;
-
-    @Column(length = 20)
     private String phoneNumber;
 
     @Column(unique = true)
     private String memberCode;
 
-    @Column(length = 20)
-    @Builder.Default
-    private String provider = "LOCAL";  // Fixed with @Builder.Default
+    private String provider;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean enabled = true;  // Fixed with @Builder.Default
-
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean accountNonLocked = true;  // Fixed with @Builder.Default
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (memberCode == null) {
+            memberCode = "MBR-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 10000);
+        }
+        if (provider == null) {
+            provider = "LOCAL";
+        }
+    }
 }
