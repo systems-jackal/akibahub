@@ -40,6 +40,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .phoneNumber(request.getPhoneNumber())
+                .active(true)
                 .build();
 
         userRepository.save(user);

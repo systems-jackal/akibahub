@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "users")
 @Data
@@ -31,28 +29,29 @@ public class User {
 
     private String fullName;
     private String phoneNumber;
-
-    @Column(unique = true)
     private String memberCode;
-
     private String provider;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
+    
+    // Add this if your database has it
     @Column(nullable = false)
     @Builder.Default
-    private boolean active = true;  // Add this to match database
+    private boolean active = true;
+    
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt;
 
+    // REMOVE updated_at - it's causing the error
+    
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = java.time.LocalDateTime.now();
+        }
         if (memberCode == null) {
             memberCode = "MBR-" + System.currentTimeMillis() + "-" + (int)(Math.random() * 10000);
         }
         if (provider == null) {
             provider = "LOCAL";
         }
-        // active is already defaulted to true via @Builder.Default
     }
 }
