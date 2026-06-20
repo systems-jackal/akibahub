@@ -1,73 +1,83 @@
 package com.akibahub.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:CHANGE_THIS_TO_A_VERY_LONG_SECRET_KEY_12345678901234567890}")
+    @Value("${jwt.secret:defaultSecretKeyThatIsAtLeast32CharactersLong}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}")
     private Long expiration;
 
-    private Key key;
+    private SecretKey key;
 
     @PostConstruct
     public void init() {
-        // Ensure secret is long enough for HS256 (at least 32 bytes)
+        // Ensure secret is at least 32 characters
         if (secret.length() < 32) {
             secret = secret + "12345678901234567890123456789012";
         }
+        // Use Keys.hmacShaKeyFor() which returns SecretKey
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email) {
+    public String extractEmail(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", userDetails.getAuthorities().toString());
+        return createToken(claims, userDetails.getUsername());
+    }
+
+    private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .claims(claims)  // New API in 0.12.x
+                .subject(subject)  // New API
+                .issuedAt(new Date(System.currentTimeMillis()))  // New API
+                .expiration(new Date(System.currentTimeMillis() + expiration))  // New API
+                .signWith(key)  // New API - just the key
                 .compact();
     }
 
-    public String extractEmail(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .getSubject();
-        } catch (Exception e) {
-            System.err.println("Error extracting email: " + e.getMessage());
-            return null;
-        }
-    }
-
-    public boolean isValid(String token) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (ExpiredJwtException e) {
-            System.err.println("Token expired: " + e.getMessage());
-            return false;
-        } catch (JwtException e) {
-            System.err.println("JWT validation error: " + e.getMessage());
-            return false;
-        } catch (Exception e) {
-            System.err.println("Validation error: " + e.getMessage());
-            return false;
-        }
+    public Boolean validateToken(String token, UserDetails userDetails) {
+        final String email = extractEmail(token);
+        return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }

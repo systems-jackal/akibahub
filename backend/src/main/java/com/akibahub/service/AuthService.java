@@ -1,93 +1,99 @@
 package com.akibahub.service;
 
-import com.akibahub.dto.request.CreateUserRequest;
+import com.akibahub.dto.request.LoginRequest;
+import com.akibahub.dto.request.RegisterRequest;
+import com.akibahub.dto.response.AuthResponse;
 import com.akibahub.model.User;
 import com.akibahub.repository.UserRepository;
 import com.akibahub.security.JwtService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-
-import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserDetailsService userDetailsService;
 
-    public AuthService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            JwtService jwtService,
-            AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-        this.authenticationManager = authenticationManager;
-    }
-
-    public String register(CreateUserRequest request) {
+    @Transactional
+    public AuthResponse register(RegisterRequest request) {
         // Check if user exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered");
         }
 
-        // Check if username exists
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new RuntimeException("Username already taken");
         }
 
         // Create new user
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhoneNumber(request.getPhoneNumber());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setProvider("LOCAL");
-        
-        // Generate a unique member code
-        String memberCode = generateMemberCode();
-        user.setMemberCode(memberCode);
-        
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .phoneNumber(request.getPhoneNumber())
+                .provider("LOCAL")
+                .enabled(true)
+                .accountNonLocked(true)
+                .build();
+
+        // Member code is auto-generated in @PrePersist
         userRepository.save(user);
-        
-        return jwtService.generateToken(user.getEmail());
+
+        // Generate token
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String token = jwtService.generateToken(userDetails);
+
+        log.info("User registered successfully: {}", user.getEmail());
+
+        return AuthResponse.builder()
+                .token(token)
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .memberCode(user.getMemberCode())
+                .message("Registration successful")
+                .success(true)
+                .build();
     }
 
-    public String login(String email, String password) {
-        // Use AuthenticationManager for proper authentication
+    public AuthResponse login(LoginRequest request) {
+        // Authenticate
         authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(email, password)
+            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        // If authentication successful, generate token
-        User user = userRepository.findByEmail(email)
+        // Get user
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return jwtService.generateToken(user.getEmail());
-    }
+        // Generate token
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String token = jwtService.generateToken(userDetails);
 
-    /**
-     * Generates a unique member code in format: MBR-XXXXX-XXXXX
-     * Example: MBR-A1B2C-D3E4F
-     */
-    private String generateMemberCode() {
-        String prefix = "MBR";
-        String uniqueId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        String code = prefix + "-" + uniqueId.substring(0, 4) + "-" + uniqueId.substring(4);
-        
-        // Check if code already exists (very unlikely but just in case)
-        while (userRepository.findByMemberCode(code).isPresent()) {
-            uniqueId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            code = prefix + "-" + uniqueId.substring(0, 4) + "-" + uniqueId.substring(4);
-        }
-        
-        return code;
+        log.info("User logged in successfully: {}", user.getEmail());
+
+        return AuthResponse.builder()
+                .token(token)
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .memberCode(user.getMemberCode())
+                .message("Login successful")
+                .success(true)
+                .build();
     }
 }
