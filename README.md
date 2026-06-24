@@ -1,6 +1,6 @@
 <div align="center">
 
-```
+```text
  █████╗ ██╗  ██╗██╗██████╗  █████╗     ██╗  ██╗██╗   ██╗██████╗
 ██╔══██╗██║ ██╔╝██║██╔══██╗██╔══██╗    ██║  ██║██║   ██║██╔══██╗
 ███████║█████╔╝ ██║██████╔╝███████║    ███████║██║   ██║██████╔╝
@@ -9,262 +9,295 @@
 ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚═════╝
 ```
 
-**Secure Student Chama Management System**
+# AKIBA HUB
 
-![Java](https://img.shields.io/badge/Java-17+-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+### Secure Community Savings & Governance Platform
 
-*Digitizing informal student savings groups (Chamas) across Kenyan institutions — with security, transparency, and accountability at the core.*
+![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![MariaDB](https://img.shields.io/badge/MariaDB-10.11-003545?style=for-the-badge&logo=mariadb&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.12-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-25.x-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+
+**Distributed Savings • Democratic Governance • Immutable Auditing**
+
+*Built for community savings groups, investment clubs, and digital chamas that require transparency, accountability, and secure financial operations.*
 
 </div>
 
 ---
 
-## 🧩 What Is Akiba Hub?
+# Overview
 
-**Akiba Hub** is a web-based platform that transforms how university and college students manage their savings groups (*chamas*). Instead of relying on WhatsApp messages, M-Pesa screenshots, and manual spreadsheets, Akiba Hub centralizes everything: contributions, group management, transaction history, and access control — securely and in real time.
+Akiba Hub is a cloud-native financial collaboration platform that enables users and groups to:
+
+- Manage personal savings wallets
+- Create and administer savings groups
+- Propose and vote on withdrawals
+- Process contributions through PayHero
+- Maintain immutable financial records
+- Operate through a secure microservices ecosystem
+
+The platform is currently transitioning from a monolithic architecture to a fully distributed microservices platform with automated SecDevOps workflows.
 
 ---
 
-## ⚙️ Tech Stack
+# Architecture
+
+```text
+Browser / Mobile Client
+           │
+           ▼
+     Nginx (SSL)
+           │
+           ▼
+     API Gateway
+           │
+ ┌─────────┼─────────┐
+ │         │         │
+ ▼         ▼         ▼
+
+Auth    Savings    Group
+Service Service   Service
+
+ │         │         │
+ └────┬────┴────┬────┘
+      │         │
+
+      ▼         ▼
+
+ Payment   Proposal
+ Service   Service
+
+      │
+      ▼
+
+ Audit Service
+(Immutable Ledger)
+```
+
+---
+
+# Core Services
+
+| Service | Responsibility |
+|----------|---------------|
+| Auth Service | Google OAuth2, JWT issuance, token validation |
+| API Gateway | Routing, authorization, rate limiting |
+| Savings Service | Personal wallet management |
+| Group Service | Group lifecycle and membership |
+| Payment Service | PayHero integration and callback processing |
+| Proposal Service | Voting, consensus, withdrawal approvals |
+| Audit Service | Immutable financial ledger |
+
+---
+
+# Technology Stack
 
 | Layer | Technology |
-|---|---|
-| 🖥️ Frontend | HTML5, CSS3, Vanilla JavaScript |
-| ⚙️ Backend | Java 17 + Spring Boot |
-| 🗄️ Database | MySQL |
-| 💳 Payments | PayHero API |
-| 🔐 Security | JWT + bcrypt + HTTPS |
-| 🔁 Version Control | Git & GitHub |
+|---------|------------|
+| Frontend | HTML5, CSS3, Vanilla JavaScript |
+| Backend | Java 21, Spring Boot 3.3 |
+| Security | Spring Security, OAuth2, JWT |
+| Database | MariaDB |
+| Messaging | RabbitMQ (CloudAMQP) |
+| Payments | PayHero |
+| Infrastructure | Docker, Nginx |
+| CI/CD | GitHub Actions |
+| Hosting | Ubuntu 24.04 VPS |
 
 ---
 
-## 🏗️ System Architecture
+# Repository Structure
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                        CLIENT                           │
-│          HTML / CSS / Vanilla JavaScript                │
-│    index.html  |  dashboard.html  |  group.html         │
-└────────────────────────┬────────────────────────────────┘
-                         │  HTTPS / REST
-┌────────────────────────▼────────────────────────────────┐
-│                     BACKEND                             │
-│                  Spring Boot API                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
-│  │Controller│→ │ Service  │→ │Repository│              │
-│  └──────────┘  └──────────┘  └────┬─────┘              │
-│  ┌──────────────────────────┐      │                    │
-│  │  JWT + bcrypt + CORS     │      │                    │
-│  └──────────────────────────┘      │                    │
-└───────────────────────────────┬────┘                    │
-                                │                         │
-          ┌─────────────────────▼──────────────────────┐  │
-          │                  MySQL                     │  │
-          │   Users | Groups | Transactions | Codes    │  │
-          └────────────────────────────────────────────┘  │
-                                                          │
-┌─────────────────────────────────────────────────────────┘
-│                  PayHero API
-│         External Payment Gateway Integration
-└─────────────────────────────────────────────────────────
-```
-
----
-
-## 📁 Project Structure
-
-```
-akiba-hub/
+```text
+akibahub/
 │
-├── backend/
-│   │
-│   ├── pom.xml
-│   │
-│   └── src/
-│       └── main/
-│           ├── java/
-│           │   └── com/
-│           │       └── akibahub/
-│           │           │
-│           │           ├── AkibaHubApplication.java
-│           │           │
-│           │           ├── entity/
-│           │           │
-│           │           ├── repository/
-│           │           │
-│           │           ├── controller/
-│           │           │
-│           │           └── config/
-│           │
-│           └── resources/
-│               │
-│               └── application.properties
-│
+├── services/
+│   ├── auth-service/
+│   ├── api-gateway/
+│   ├── savings-service/
+│   ├── group-service/
+│   ├── payment-service/
+│   ├── proposal-service/
+│   └── audit-service/
 │
 ├── frontend/
-│   │
-│   ├── pages/
-│   │   │
-│   │   ├── index.html
-│   │   ├── login.html
-│   │   ├── register.html
-│   │   ├── dashboard.html
-│   │   ├── groups.html
-│   │   └── personal.html
-│   │
-│   ├── css/
-│   │   │
-│   │   └── styles.css
-│   │
-│   ├── js/
-│   │   │
-│   │   ├── api.js
-│   │   ├── auth.js
-│   │   ├── groups.js
-│   │   └── savings.js
-│   │
-│   └── assets/
 │
-│
-├── database/
-│   │
-│   └── schema.sql
-│
+├── infrastructure/
+│   ├── docker-compose.yml
+│   ├── docker-compose.dev.yml
+│   ├── nginx/
+│   └── database/
 │
 ├── docs/
-│   │
+│   ├── ARCHITECTURE.md
 │   ├── API.md
-│   └── SETUP.md
+│   ├── DATABASE.md
+│   └── DEPLOYMENT.md
 │
-│
-├── .gitignore
-│
-├── README.md
-│
-└── .git/
-
----
-
-## ✨ Core Features
-
-- 🔐 **Secure Auth** — Registration & login with bcrypt-hashed passwords and JWT sessions
-- 💰 **Savings Modes** — Choose between personal savings or joining a group (chama)
-- 👥 **Group Management** — Admins create and manage groups; members join via invite codes
-- 🎟️ **Invite Codes** — Unique, validated codes control who accesses each group
-- 📲 **PayHero Integration** — Real-time M-Pesa-style contributions via PayHero API
-- 📊 **Transaction History** — Every contribution is automatically recorded and viewable
-
----
-
-## 🔒 Security Design
-
-```
-
-```
-User Password  ──►  bcrypt hash  ──►  Stored in DB
-                                            │
-Login Request  ──►  Validate hash  ──►  Issue JWT Token
-                                            │
-API Requests   ──►  Verify JWT  ──►  Authorize or Reject
-                                            │
-All Traffic    ──►  HTTPS only  ──►  Encrypted in Transit
+└── .github/
+    └── workflows/
 ```
 
 ---
 
-## 🚀 Getting Started
+# Security Architecture
 
-### Prerequisites
+### Authentication Flow
 
-- Java 17+
-- Maven
-- MySQL 8+
-- A PayHero API account
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/your-username/akiba-hub.git
-cd akiba-hub
+```text
+Google OAuth2
+      │
+      ▼
+ Auth Service
+      │
+      ▼
+ JWT Token
+      │
+      ▼
+ API Gateway
+      │
+      ▼
+ Microservices
 ```
 
-### 2. Configure the Database
+### Security Controls
 
-```bash
-mysql -u root -p < database/schema.sql
-mysql -u root -p < database/seed.sql
+- OAuth2 Authentication
+- JWT Access Tokens
+- Refresh Tokens
+- HTTPS Enforcement
+- Gateway Rate Limiting
+- OWASP Dependency Scanning
+- Environment-Based Secrets
+- Internal Service Isolation
+- Audit Log Immutability
+
+---
+
+# Audit-First Design
+
+Every financial and governance action is recorded in an immutable ledger.
+
+### Recorded Events
+
+- AUTH_LOGIN
+- GROUP_CREATED
+- MEMBER_JOINED
+- PERSONAL_DEPOSIT
+- GROUP_CONTRIBUTION
+- PROPOSAL_CREATED
+- VOTE_CAST
+- PROPOSAL_APPROVED
+- WITHDRAWAL_EXECUTED
+
+### Ledger Rules
+
+```text
+INSERT  ✓ Allowed
+UPDATE  ✗ Forbidden
+DELETE  ✗ Forbidden
 ```
 
-### 3. Set Environment Variables
+---
 
-Update `backend/src/main/resources/application.properties`:
+# CI/CD Pipeline
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/akiba_hub
-spring.datasource.username=YOUR_DB_USER
-spring.datasource.password=YOUR_DB_PASSWORD
-
-jwt.secret=YOUR_JWT_SECRET
-payhero.api.key=YOUR_PAYHERO_KEY
+```text
+Push
+ │
+ ▼
+Build
+ │
+ ▼
+Test
+ │
+ ▼
+OWASP Scan
+ │
+ ▼
+Docker Build
+ │
+ ▼
+Push to GHCR
+ │
+ ▼
+Deploy to VPS
+ │
+ ▼
+Health Checks
 ```
 
-### 4. Run the Backend
+---
+
+# Development
+
+### Start Development Environment
 
 ```bash
-cd backend
+cd infrastructure
+
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+### Run Individual Service
+
+```bash
+cd services/auth-service
+
 mvn spring-boot:run
 ```
 
-### 5. Open the Frontend
-
-Open `frontend/index.html` in your browser, or serve it with any static file server.
-
----
-
-## 👤 User Roles
-
-| Role | Permissions |
-|---|---|
-| **Student** | Register, log in, save personally or join a group |
-| **Group Admin** | Create groups, generate invite codes, view all contributions |
-| **Member** | Join via invite code, contribute, view group history |
-
----
-
-## 📌 Roadmap
-
-- [ ] Email/SMS contribution notifications
-- [ ] Group loan request module
-- [ ] Admin analytics dashboard
-- [ ] Mobile app (Android)
-- [ ] Multi-institution support
-
----
-
-## 🤝 Contributing
-
-Pull requests are welcome. For major changes, open an issue first to discuss what you'd like to change.
+### Run Tests
 
 ```bash
-git checkout -b feature/your-feature-name
-git commit -m "feat: describe your change"
-git push origin feature/your-feature-name
+mvn clean test
 ```
 
 ---
 
-## 📄 License
+# Roadmap
 
-This project is licensed under the **MIT License**.
+- [x] Architecture Redesign
+- [x] Microservices Planning
+- [ ] Auth Service Extraction
+- [ ] Audit Service Deployment
+- [ ] API Gateway Integration
+- [ ] Payment Service Isolation
+- [ ] RabbitMQ Event Integration
+- [ ] CI/CD Automation
+- [ ] End-to-End Testing
+- [ ] Production Launch
+
+---
+
+# Engineering Standards
+
+```text
+feat(service): new feature
+fix(service): bug fix
+refactor(service): code improvement
+test(service): tests
+security(service): security enhancement
+docs: documentation update
+```
+
+---
+
+# License
+
+Internal / Confidential
+
+© Akiba Hub Platform
 
 ---
 
 <div align="center">
 
-Built with ❤️ for Kenyan students · Powered by UNITY BRIDGE
+### Transparent Savings • Democratic Decisions • Secure Finance
+
+Built for modern digital chamas.
 
 </div>
