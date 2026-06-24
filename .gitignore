@@ -1,32 +1,20 @@
-# =========================
-# Maven / Build Outputs
-# =========================
-target/
-backend/target/
+# Environment
+.env
+*.env
 
-# =========================
-# IDE Files
-# =========================
+# Java / Maven
+**/target/
+**/*.class
+**/*.jar
+
+# IDE
 .idea/
+*.iml
 .vscode/
 
-# =========================
-# Logs
-# =========================
-*.log
+# Docker
+**/.docker/
 
-# =========================
-# Environment Variables
-# =========================
-.env
-backend/.env
-
-# =========================
-# OS Files
-# =========================
+# OS
 .DS_Store
-
-# =========================
-# Java Compiled Files
-# =========================
-*.class
+Thumbs.db
