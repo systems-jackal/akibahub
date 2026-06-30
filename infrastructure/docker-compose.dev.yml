@@ -1,0 +1,206 @@
+version: '3.9'
+
+# Dev compose — builds from source, single MariaDB, exposes all ports
+services:
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: akiba-dev-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: devroot
+      MYSQL_USER: akiba
+      MYSQL_PASSWORD: akiba
+    ports:
+      - "3306:3306"
+    volumes:
+      - dev-db:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    networks: [akiba-dev]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: akiba-dev-rabbit
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks: [akiba-dev]
+
+  auth-service:
+    build: ../services/auth-service
+    container_name: akiba-dev-auth
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: akiba_auth
+      DB_USER: akiba
+      DB_PASSWORD: akiba
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_BASE_URL: http://localhost:8081
+      FRONTEND_URL: http://localhost:3000
+    networks: [akiba-dev]
+
+  audit-service:
+    build: ../services/audit-service
+    container_name: akiba-dev-audit
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: akiba_audit
+      DB_USER: akiba
+      DB_PASSWORD: akiba
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+    networks: [akiba-dev]
+
+  savings-service:
+    build: ../services/savings-service
+    container_name: akiba-dev-savings
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: akiba_savings
+      DB_USER: akiba
+      DB_PASSWORD: akiba
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      PAYMENT_SERVICE_HOST: payment-service
+      INTERNAL_SERVICE_KEY: dev-internal-key
+    networks: [akiba-dev]
+
+  group-service:
+    build: ../services/group-service
+    container_name: akiba-dev-group
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: akiba_groups
+      DB_USER: akiba
+      DB_PASSWORD: akiba
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      INTERNAL_SERVICE_KEY: dev-internal-key
+    networks: [akiba-dev]
+
+  payment-service:
+    build: ../services/payment-service
+    container_name: akiba-dev-payment
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: akiba_payments
+      DB_USER: akiba
+      DB_PASSWORD: akiba
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      PAYHERO_USERNAME: ${PAYHERO_USERNAME:-sandbox}
+      PAYHERO_PASSWORD: ${PAYHERO_PASSWORD:-sandbox}
+      PAYHERO_CHANNEL_ID: ${PAYHERO_CHANNEL_ID:-0}
+      APP_BASE_URL: http://localhost:8084
+      SAVINGS_SERVICE_HOST: savings-service
+      GROUP_SERVICE_HOST: group-service
+      INTERNAL_SERVICE_KEY: dev-internal-key
+    networks: [akiba-dev]
+
+  proposal-service:
+    build: ../services/proposal-service
+    container_name: akiba-dev-proposal
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      DB_HOST: mariadb
+      DB_NAME: akiba_proposals
+      DB_USER: akiba
+      DB_PASSWORD: akiba
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      GROUP_SERVICE_HOST: group-service
+      PAYMENT_SERVICE_HOST: payment-service
+      INTERNAL_SERVICE_KEY: dev-internal-key
+    networks: [akiba-dev]
+
+  api-gateway:
+    build: ../services/api-gateway
+    container_name: akiba-dev-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - savings-service
+      - group-service
+      - payment-service
+      - proposal-service
+      - audit-service
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_SERVICE_HOST: auth-service
+      SAVINGS_SERVICE_HOST: savings-service
+      GROUP_SERVICE_HOST: group-service
+      PAYMENT_SERVICE_HOST: payment-service
+      PROPOSAL_SERVICE_HOST: proposal-service
+      AUDIT_SERVICE_HOST: audit-service
+      FRONTEND_URL: http://localhost:3000
+    networks: [akiba-dev]
+
+networks:
+  akiba-dev:
+    driver: bridge
+
+volumes:
+  dev-db:
