@@ -11,8 +11,6 @@ spring:
           uri: http://${AUTH_SERVICE_HOST:localhost}:8081
           predicates:
             - Path=/auth/**
-          filters:
-            - name: RequestRateLimiter
 
         - id: savings-service
           uri: http://${SAVINGS_SERVICE_HOST:localhost}:8082
@@ -28,19 +26,17 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: payment-callback
+          uri: http://${PAYMENT_SERVICE_HOST:localhost}:8084
+          predicates:
+            - Path=/payments/callback/**
+
         - id: payment-service
           uri: http://${PAYMENT_SERVICE_HOST:localhost}:8084
           predicates:
             - Path=/payments/**
           filters:
             - AuthenticationFilter
-
-        - id: payment-callback
-          uri: http://${PAYMENT_SERVICE_HOST:localhost}:8084
-          predicates:
-            - Path=/payments/callback/**
-          filters:
-            - name: RequestRateLimiter
 
         - id: proposal-service
           uri: http://${PROPOSAL_SERVICE_HOST:localhost}:8085
