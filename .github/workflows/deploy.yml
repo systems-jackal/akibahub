@@ -85,38 +85,49 @@ jobs:
           script: |
             cd ~/akibahub/infrastructure
 
-            # Pull latest images
-            echo ${{ secrets.GITHUB_TOKEN }} | \
-              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Login to ghcr
+            echo "${{ secrets.CR_PAT }}" | \
+              docker login ghcr.io -u systems-jackal --password-stdin
 
+            # Set repo for compose
             export GITHUB_REPO=${{ github.repository }}
+
+            # Pull latest images
             docker compose pull
 
             # Rolling restart
             docker compose up -d --remove-orphans
 
-            # Wait and health check
-            sleep 30
-            services=(auth-service:8081 audit-service:8086 savings-service:8082 \
-                      group-service:8083 payment-service:8084 \
-                      proposal-service:8085 api-gateway:8080)
+            # Wait for startup
+            sleep 45
 
-            for svc in "${services[@]}"; do
-              name="${svc%%:*}"
-              port="${svc##*:}"
-              if wget -qO- "http://localhost:$port/actuator/health" | grep -q '"UP"'; then
+            # Health check all services
+            declare -A services=(
+              [auth-service]=8081
+              [audit-service]=8086
+              [savings-service]=8082
+              [group-service]=8083
+              [payment-service]=8084
+              [proposal-service]=8085
+              [api-gateway]=8080
+            )
+
+            failed=0
+            for name in "${!services[@]}"; do
+              port="${services[$name]}"
+              if wget -qO- "http://localhost:$port/actuator/health" \
+                  2>/dev/null | grep -q '"status":"UP"'; then
                 echo "✓ $name healthy"
               else
-                echo "✗ $name UNHEALTHY"
-                docker compose logs --tail=50 $name
-                exit 1
+                echo "✗ $name UNHEALTHY — check logs:"
+                docker compose logs --tail=30 $name
+                failed=1
               fi
             done
 
-            echo "✓ All services healthy — deployment complete"
+            if [ $failed -eq 1 ]; then
+              echo "Deployment completed with unhealthy services"
+              exit 1
+            fi
 
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "Deployment failed on commit ${{ github.sha }}"
-          echo "Check GitHub Actions logs for details"
+            echo "✓ All services healthy — deployment complete"
