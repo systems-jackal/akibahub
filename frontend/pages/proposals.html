@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proposals — Akiba Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div id="app" class="app">
+
+  <header class="topnav">
+    <div class="topnav-left">
+      <a href="groups.html" class="btn-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="#FFF9FA" stroke-width="2" stroke-linecap="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <span class="app-name">Proposals</span>
+    </div>
+    <div class="topnav-right">
+      <button class="btn-icon" onclick="openCreateModal()" title="New proposal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="#FFF9FA" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Proposal list -->
+    <div id="list-view">
+      <div id="proposals-list">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </div>
+
+    <!-- Proposal detail -->
+    <div id="detail-view" style="display:none;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;">
+        <button class="back-btn" onclick="showList()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+        </button>
+        <h2 class="page-title" id="detail-title">Proposal</h2>
+      </div>
+
+      <div class="card card-highlight" style="margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                    margin-bottom:0.75rem;">
+          <div>
+            <p class="card-label">Requested amount</p>
+            <p class="card-amount" id="detail-amount">KES —</p>
+          </div>
+          <span id="detail-status" class="badge">—</span>
+        </div>
+        <p id="detail-desc"
+           style="font-size:13px;color:var(--muted);line-height:1.5;
+                  margin-bottom:0.75rem;"></p>
+        <div class="stat-row">
+          <div class="stat">
+            <p class="stat-lbl">Recipient</p>
+            <p class="stat-val" id="detail-phone" style="font-size:13px;">—</p>
+          </div>
+          <div class="stat">
+            <p class="stat-lbl">Deadline</p>
+            <p class="stat-val" id="detail-deadline" style="font-size:13px;">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vote progress -->
+      <div class="card" style="margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;
+                    font-size:13px;margin-bottom:8px;">
+          <span style="color:var(--muted);">Votes cast</span>
+          <span id="vote-summary" style="font-weight:500;color:var(--dark);">0 / 0</span>
+        </div>
+        <div style="background:var(--border);border-radius:4px;
+                    height:8px;overflow:hidden;margin-bottom:6px;">
+          <div id="vote-bar" style="background:var(--pink);width:0%;
+                                    height:100%;border-radius:4px;
+                                    transition:width 0.4s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;
+                    color:var(--muted);">
+          <span id="yes-pct">0% yes</span>
+          <span id="threshold-lbl">needs 51%</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);
+                    gap:8px;margin-top:1rem;">
+          <div class="stat" style="text-align:center;">
+            <p class="stat-val" id="yes-count" style="color:#166534;">0</p>
+            <p class="stat-lbl">Yes</p>
+          </div>
+          <div class="stat" style="text-align:center;">
+            <p class="stat-val" id="no-count" style="color:#fd1843;">0</p>
+            <p class="stat-lbl">No</p>
+          </div>
+          <div class="stat" style="text-align:center;">
+            <p class="stat-val" id="abstain-count" style="color:var(--muted);">0</p>
+            <p class="stat-lbl">Abstain</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vote buttons -->
+      <div id="vote-actions" style="display:grid;grid-template-columns:repeat(3,1fr);
+                                    gap:8px;margin-bottom:1.5rem;">
+        <button class="btn btn-primary" onclick="castVote('YES')"
+                style="background:#166534;font-size:13px;">
+          ✓ Yes
+        </button>
+        <button class="btn btn-danger" onclick="castVote('NO')"
+                style="font-size:13px;">
+          ✗ No
+        </button>
+        <button class="btn btn-ghost" onclick="castVote('ABSTAIN')"
+                style="font-size:13px;">
+          Abstain
+        </button>
+      </div>
+
+      <!-- Voters list -->
+      <div class="section-header" style="margin-bottom:10px;">
+        <h3 class="section-title">Votes cast</h3>
+      </div>
+      <div id="voters-list"></div>
+    </div>
+
+  </main>
+
+  <nav class="bottomnav">
+    <a href="dashboard.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="wallet.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+      </svg>
+      <span>Wallet</span>
+    </a>
+    <a href="groups.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+        <path d="M16 3.13a4 4 0 010 7.75"/>
+      </svg>
+      <span>Groups</span>
+    </a>
+    <a href="proposals.html" class="bnav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M9 11l3 3L22 4"/>
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+      <span>Votes</span>
+    </a>
+  </nav>
+
+</div>
+
+<!-- Create proposal modal -->
+<div id="create-modal" class="modal-overlay" style="display:none;"
+     onclick="if(event.target===this)closeCreateModal()">
+  <div class="modal">
+    <h3 class="modal-title">New withdrawal proposal</h3>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input id="p-title" class="form-input" type="text"
+             placeholder="e.g. School trip transport fund">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount (KES)</label>
+      <input id="p-amount" class="form-input" type="number"
+             min="1" placeholder="e.g. 5000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Recipient M-Pesa number</label>
+      <input id="p-phone" class="form-input" type="tel"
+             placeholder="07XXXXXXXX">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <input id="p-desc" class="form-input" type="text"
+             placeholder="What is this withdrawal for?">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" style="flex:1;"
+              onclick="closeCreateModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;"
+              onclick="submitCreate()">Submit proposal</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  const fmt = n =>
+    `KES ${Number(n).toLocaleString('en-KE',{minimumFractionDigits:2})}`;
+
+  const statusBadge = s => {
+    const map = {
+      ACTIVE:'badge-voting',APPROVED:'badge-success',
+      EXECUTED:'badge-success',REJECTED:'badge-danger',
+      EXPIRED:'badge-warning',CANCELLED:'badge-danger'
+    };
+    return `<span class="badge ${map[s]||'badge-active'}">${s}</span>`;
+  };
+
+  const voteColor = v =>
+    ({YES:'#166534',NO:'#fd1843',ABSTAIN:'var(--muted)'}[v]||'var(--muted)');
+
+  let currentGroupId = null;
+  let currentProposalId = null;
+
+  function renderProposal(p) {
+    const pct = p.totalEligibleVoters > 0
+      ? Math.round(p.yesCount / p.totalEligibleVoters * 100) : 0;
+    return `
+      <div class="list-item" onclick="showDetail('${p.id}')"
+           style="cursor:pointer;">
+        <div class="list-item-body">
+          <p class="list-item-title">${p.title}</p>
+          <p class="list-item-sub">
+            ${fmt(p.amount)} &nbsp;·&nbsp; ${statusBadge(p.status)}
+          </p>
+          <div style="margin-top:6px;">
+            <div style="background:var(--border);border-radius:4px;
+                        height:4px;overflow:hidden;">
+              <div style="background:var(--pink);width:${pct}%;
+                          height:100%;border-radius:4px;"></div>
+            </div>
+            <p style="font-size:11px;color:var(--muted);margin-top:3px;">
+              ${pct}% yes &nbsp;·&nbsp;
+              ${p.yesCount}/${p.totalEligibleVoters} voted
+            </p>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="#9B0026" stroke-width="2" stroke-linecap="round">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </div>`;
+  }
+
+  async function loadProposals() {
+    if (!currentGroupId) {
+      document.getElementById('proposals-list').innerHTML =
+        '<p class="empty-state">Open a group to see its proposals</p>';
+      return;
+    }
+    try {
+      const data = await api.proposals.list(currentGroupId);
+      const items = data.content || [];
+      document.getElementById('proposals-list').innerHTML = items.length
+        ? items.map(renderProposal).join('')
+        : '<p class="empty-state">No proposals yet — create the first one</p>';
+    } catch { showToast('Could not load proposals'); }
+  }
+
+  async function showDetail(id) {
+    currentProposalId = id;
+    document.getElementById('list-view').style.display   = 'none';
+    document.getElementById('detail-view').style.display = 'block';
+
+    try {
+      const p = await api.proposals.get(id);
+      document.getElementById('detail-title').textContent    = p.title;
+      document.getElementById('detail-amount').textContent   = fmt(p.amount);
+      document.getElementById('detail-status').outerHTML =
+        statusBadge(p.status).replace('class="badge', 'id="detail-status" class="badge');
+      document.getElementById('detail-desc').textContent     =
+        p.description || 'No description provided.';
+      document.getElementById('detail-phone').textContent    =
+        p.recipientPhone || '—';
+      document.getElementById('detail-deadline').textContent =
+        new Date(p.votingDeadline).toLocaleDateString('en-KE',
+          {day:'numeric',month:'short',year:'numeric'});
+
+      const pct = p.totalEligibleVoters > 0
+        ? Math.round(p.yesCount / p.totalEligibleVoters * 100) : 0;
+      document.getElementById('vote-bar').style.width    = `${pct}%`;
+      document.getElementById('vote-summary').textContent =
+        `${p.yesCount + p.noCount + p.abstainCount} / ${p.totalEligibleVoters}`;
+      document.getElementById('yes-pct').textContent       = `${pct}% yes`;
+      document.getElementById('threshold-lbl').textContent =
+        `needs ${p.thresholdPercent}%`;
+      document.getElementById('yes-count').textContent     = p.yesCount;
+      document.getElementById('no-count').textContent      = p.noCount;
+      document.getElementById('abstain-count').textContent = p.abstainCount;
+
+      const va = document.getElementById('vote-actions');
+      va.style.display = p.status === 'ACTIVE' ? 'grid' : 'none';
+
+      const votes = await api.proposals.votes(id);
+      document.getElementById('voters-list').innerHTML = votes.length
+        ? votes.map(v => `
+            <div class="list-item">
+              <div class="list-item-icon"
+                   style="background:#FFD6DF;font-size:13px;
+                          font-weight:500;color:#9B0026;">
+                ${(v.voterEmail||'?')[0].toUpperCase()}
+              </div>
+              <div class="list-item-body">
+                <p class="list-item-title">${v.voterEmail||'Member'}</p>
+                <p class="list-item-sub">
+                  ${new Date(v.castAt).toLocaleDateString('en-KE')}
+                </p>
+              </div>
+              <span style="font-size:13px;font-weight:500;
+                           color:${voteColor(v.value)};">
+                ${v.value}
+              </span>
+            </div>`).join('')
+        : '<p class="empty-state">No votes cast yet</p>';
+    } catch { showToast('Could not load proposal'); }
+  }
+
+  function showList() {
+    currentProposalId = null;
+    document.getElementById('detail-view').style.display = 'none';
+    document.getElementById('list-view').style.display   = 'block';
+  }
+
+  async function castVote(value) {
+    try {
+      await api.proposals.vote(currentProposalId, value);
+      showToast(`Vote cast: ${value} ✓`);
+      await showDetail(currentProposalId);
+    } catch(e) { showToast(e.message || 'Could not cast vote'); }
+  }
+
+  function openCreateModal() {
+    if (!currentGroupId) return showToast('Open a group first to create a proposal');
+    document.getElementById('create-modal').style.display = 'flex';
+  }
+  function closeCreateModal() {
+    document.getElementById('create-modal').style.display = 'none';
+  }
+
+  async function submitCreate() {
+    const title  = document.getElementById('p-title').value.trim();
+    const amount = parseFloat(document.getElementById('p-amount').value);
+    const phone  = document.getElementById('p-phone').value.trim();
+    const desc   = document.getElementById('p-desc').value.trim();
+
+    if (!title)          return showToast('Enter a proposal title');
+    if (!amount || amount < 1) return showToast('Enter a valid amount');
+    if (!phone)          return showToast('Enter the recipient phone number');
+
+    try {
+      await api.proposals.create({
+        groupId: currentGroupId,
+        title, amount,
+        recipientPhone: phone,
+        description: desc
+      });
+      closeCreateModal();
+      showToast('Proposal submitted ✓');
+      await loadProposals();
+    } catch(e) { showToast(e.message || 'Could not create proposal'); }
+  }
+
+  (async () => {
+    const user = await initAuth();
+    if (!requireAuth(user)) return;
+
+    const params = new URLSearchParams(window.location.search);
+    currentGroupId = params.get('groupId');
+    await loadProposals();
+
+    const pid = params.get('proposalId');
+    if (pid) await showDetail(pid);
+  })();
+</script>
+</body>
+</html>

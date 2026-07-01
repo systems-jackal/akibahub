@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet — Akiba Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div id="app" class="app">
+
+  <header class="topnav">
+    <div class="topnav-left">
+      <a href="dashboard.html" class="btn-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="#FFF9FA" stroke-width="2" stroke-linecap="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <span class="app-name">My wallet</span>
+    </div>
+    <div class="topnav-right">
+      <div class="avatar" id="user-avatar">?</div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Balance card -->
+    <div class="card card-highlight" style="margin-bottom:1.5rem;">
+      <p class="card-label">Available balance</p>
+      <p class="card-amount" id="balance">KES —</p>
+      <div class="stat-row" style="margin-top:1rem;">
+        <div class="stat">
+          <p class="stat-lbl">Total deposited</p>
+          <p class="stat-val" id="deposited">—</p>
+        </div>
+        <div class="stat">
+          <p class="stat-lbl">Total withdrawn</p>
+          <p class="stat-val" id="withdrawn">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deposit button -->
+    <button class="btn btn-primary btn-full"
+            style="margin-bottom:1.5rem;"
+            onclick="openDepositModal()">
+      + Deposit via M-Pesa
+    </button>
+
+    <!-- Transactions -->
+    <div class="section-header" style="margin-bottom:10px;">
+      <h2 class="section-title">Transactions</h2>
+      <span id="tx-count" style="font-size:12px;color:var(--muted);"></span>
+    </div>
+
+    <div id="tx-list">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+
+    <div id="load-more-wrap" style="text-align:center;padding:1rem 0;display:none;">
+      <button class="btn btn-ghost" onclick="loadMore()">Load more</button>
+    </div>
+
+  </main>
+
+  <nav class="bottomnav">
+    <a href="dashboard.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="wallet.html" class="bnav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+      </svg>
+      <span>Wallet</span>
+    </a>
+    <a href="groups.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+        <path d="M16 3.13a4 4 0 010 7.75"/>
+      </svg>
+      <span>Groups</span>
+    </a>
+    <a href="proposals.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M9 11l3 3L22 4"/>
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+      <span>Votes</span>
+    </a>
+  </nav>
+
+</div>
+
+<!-- Deposit modal -->
+<div id="deposit-modal" class="modal-overlay" style="display:none;"
+     onclick="if(event.target===this)closeDepositModal()">
+  <div class="modal">
+    <h3 class="modal-title">Deposit via M-Pesa</h3>
+    <div class="form-group">
+      <label class="form-label">Amount (KES)</label>
+      <input id="dep-amount" class="form-input" type="number"
+             min="10" max="150000" placeholder="e.g. 500">
+      <p class="form-hint">Min KES 10 · Max KES 150,000</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">M-Pesa phone number</label>
+      <input id="dep-phone" class="form-input" type="tel"
+             placeholder="07XXXXXXXX">
+      <p class="form-hint">You will receive an STK push on this number</p>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:0.5rem;">
+      <button class="btn btn-ghost" style="flex:1;"
+              onclick="closeDepositModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;"
+              id="dep-btn" onclick="submitDeposit()">Send STK push</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  const fmt = n =>
+    `KES ${Number(n).toLocaleString('en-KE',{minimumFractionDigits:2})}`;
+
+  const statusBadge = s => {
+    const map = {
+      COMPLETED:'badge-success',PENDING:'badge-warning',FAILED:'badge-danger'
+    };
+    return `<span class="badge ${map[s]||'badge-warning'}">${s}</span>`;
+  };
+
+  let page = 0;
+  let totalPages = 1;
+
+  function renderTx(tx) {
+    const isIn = tx.type === 'DEPOSIT';
+    return `
+      <div class="list-item">
+        <div class="list-item-icon"
+             style="background:${isIn?'#FFD6DF':'#FFF0F3'};">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="#fd1843" stroke-width="2" stroke-linecap="round">
+            ${isIn
+              ? '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>'
+              : '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>'}
+          </svg>
+        </div>
+        <div class="list-item-body">
+          <p class="list-item-title">${tx.description||tx.type}</p>
+          <p class="list-item-sub">
+            ${new Date(tx.createdAt).toLocaleDateString('en-KE',
+              {day:'numeric',month:'short',year:'numeric'})}
+            &nbsp;·&nbsp;${statusBadge(tx.status)}
+          </p>
+        </div>
+        <p class="list-item-amount ${isIn?'amount-in':'amount-out'}">
+          ${isIn?'+':'−'}${fmt(tx.amount)}
+        </p>
+      </div>`;
+  }
+
+  async function loadTransactions(reset = false) {
+    if (reset) {
+      page = 0;
+      document.getElementById('tx-list').innerHTML =
+        '<div class="skeleton"></div>'.repeat(3);
+    }
+    try {
+      const data = await api.wallet.transactions(page);
+      const items = data.content || [];
+      totalPages = data.totalPages || 1;
+
+      const list = document.getElementById('tx-list');
+      if (reset) list.innerHTML = '';
+
+      if (!items.length && reset) {
+        list.innerHTML =
+          '<p class="empty-state">No transactions yet — make your first deposit</p>';
+      } else {
+        list.innerHTML += items.map(renderTx).join('');
+      }
+
+      const lm = document.getElementById('load-more-wrap');
+      lm.style.display = page < totalPages - 1 ? 'block' : 'none';
+    } catch (e) {
+      showToast('Could not load transactions');
+    }
+  }
+
+  async function loadMore() {
+    page++;
+    await loadTransactions();
+  }
+
+  function openDepositModal() {
+    document.getElementById('deposit-modal').style.display = 'flex';
+  }
+  function closeDepositModal() {
+    document.getElementById('deposit-modal').style.display = 'none';
+    document.getElementById('dep-amount').value = '';
+    document.getElementById('dep-phone').value  = '';
+  }
+
+  async function submitDeposit() {
+    const amount = parseFloat(document.getElementById('dep-amount').value);
+    const phone  = document.getElementById('dep-phone').value.trim();
+
+    if (!amount || amount < 10) return showToast('Enter a valid amount (min KES 10)');
+    if (!phone)                  return showToast('Enter your M-Pesa number');
+
+    const btn = document.getElementById('dep-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      await api.wallet.deposit({ amount, phoneNumber: phone });
+      closeDepositModal();
+      showToast('STK push sent — check your phone ✓');
+      setTimeout(() => loadWallet(), 3000);
+    } catch (e) {
+      showToast(e.message || 'Deposit failed');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send STK push';
+    }
+  }
+
+  async function loadWallet() {
+    try {
+      const w = await api.wallet.balance();
+      document.getElementById('balance').textContent   = fmt(w.balance);
+      document.getElementById('deposited').textContent = fmt(w.totalDeposited);
+      document.getElementById('withdrawn').textContent = fmt(w.totalWithdrawn);
+    } catch {}
+  }
+
+  (async () => {
+    const user = await initAuth();
+    if (!requireAuth(user)) return;
+    document.getElementById('user-avatar').textContent =
+      (user.displayName || user.email || 'U')[0].toUpperCase();
+    await loadWallet();
+    await loadTransactions(true);
+  })();
+</script>
+</body>
+</html>

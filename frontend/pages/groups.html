@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Groups — Akiba Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div id="app" class="app">
+
+  <header class="topnav">
+    <div class="topnav-left">
+      <a href="dashboard.html" class="btn-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="#FFF9FA" stroke-width="2" stroke-linecap="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <span class="app-name">My chamas</span>
+    </div>
+    <div class="topnav-right">
+      <button class="btn-icon" onclick="openCreateModal()" title="Create group">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="#FFF9FA" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Action buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem;">
+      <button class="btn btn-primary" onclick="openJoinModal()">
+        Join with code
+      </button>
+      <button class="btn btn-secondary" onclick="openCreateModal()">
+        Create group
+      </button>
+    </div>
+
+    <!-- Group detail view (hidden by default) -->
+    <div id="group-detail" style="display:none;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;">
+        <button class="back-btn" onclick="showList()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+        </button>
+        <h2 class="page-title" id="detail-name">Group</h2>
+      </div>
+
+      <div class="card card-highlight" style="margin-bottom:1rem;">
+        <p class="card-label">Group wallet</p>
+        <p class="card-amount" id="detail-balance">KES —</p>
+        <div class="stat-row" style="margin-top:1rem;">
+          <div class="stat">
+            <p class="stat-lbl">Members</p>
+            <p class="stat-val" id="detail-members">—</p>
+          </div>
+          <div class="stat">
+            <p class="stat-lbl">Vote threshold</p>
+            <p class="stat-val" id="detail-threshold">—</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem;">
+        <button class="btn btn-primary" id="contribute-btn"
+                onclick="openContributeModal()">Contribute</button>
+        <button class="btn btn-secondary" id="invite-btn"
+                onclick="generateInvite()">Share invite</button>
+      </div>
+
+      <div class="section-header" style="margin-bottom:10px;">
+        <h3 class="section-title">Members</h3>
+      </div>
+      <div id="members-list">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+
+      <div class="section-header" style="margin-top:1.5rem;margin-bottom:10px;">
+        <h3 class="section-title">Proposals</h3>
+        <a id="proposals-link" href="proposals.html" class="link-sm">See all</a>
+      </div>
+      <div id="group-proposals-list">
+        <div class="skeleton"></div>
+      </div>
+    </div>
+
+    <!-- Groups list -->
+    <div id="groups-list-view">
+      <div id="groups-list">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <nav class="bottomnav">
+    <a href="dashboard.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="wallet.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+      </svg>
+      <span>Wallet</span>
+    </a>
+    <a href="groups.html" class="bnav-item active">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+        <path d="M16 3.13a4 4 0 010 7.75"/>
+      </svg>
+      <span>Groups</span>
+    </a>
+    <a href="proposals.html" class="bnav-item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M9 11l3 3L22 4"/>
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+      <span>Votes</span>
+    </a>
+  </nav>
+
+</div>
+
+<!-- Join modal -->
+<div id="join-modal" class="modal-overlay" style="display:none;"
+     onclick="if(event.target===this)closeJoinModal()">
+  <div class="modal">
+    <h3 class="modal-title">Join a chama</h3>
+    <div class="form-group">
+      <label class="form-label">Invite code</label>
+      <input id="join-code" class="form-input" type="text"
+             placeholder="e.g. AKIBA2026" style="text-transform:uppercase;">
+      <p class="form-hint">Ask your group admin for the invite code</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Display name in group</label>
+      <input id="join-name" class="form-input" type="text"
+             placeholder="How members will see you">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" style="flex:1;"
+              onclick="closeJoinModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;"
+              onclick="submitJoin()">Join group</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create modal -->
+<div id="create-modal" class="modal-overlay" style="display:none;"
+     onclick="if(event.target===this)closeCreateModal()">
+  <div class="modal">
+    <h3 class="modal-title">Create a chama</h3>
+    <div class="form-group">
+      <label class="form-label">Group name</label>
+      <input id="create-name" class="form-input" type="text"
+             placeholder="e.g. Hostels Savings Club">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <input id="create-desc" class="form-input" type="text"
+             placeholder="What is this group for?">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" style="flex:1;"
+              onclick="closeCreateModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;"
+              onclick="submitCreate()">Create group</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contribute modal -->
+<div id="contribute-modal" class="modal-overlay" style="display:none;"
+     onclick="if(event.target===this)closeContributeModal()">
+  <div class="modal">
+    <h3 class="modal-title">Contribute to group</h3>
+    <div class="form-group">
+      <label class="form-label">Amount (KES)</label>
+      <input id="con-amount" class="form-input" type="number"
+             min="10" placeholder="e.g. 1000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">M-Pesa phone number</label>
+      <input id="con-phone" class="form-input" type="tel"
+             placeholder="07XXXXXXXX">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" style="flex:1;"
+              onclick="closeContributeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:2;"
+              id="con-btn" onclick="submitContribute()">Send STK push</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  const fmt = n =>
+    `KES ${Number(n).toLocaleString('en-KE',{minimumFractionDigits:2})}`;
+
+  let currentGroupId = null;
+
+  const roleLabel = r => ({ADMIN:'Admin',TREASURER:'Treasurer',MEMBER:'Member'}[r]||r);
+  const roleColor = r => ({ADMIN:'badge-danger',TREASURER:'badge-warning',MEMBER:'badge-active'}[r]||'badge-active');
+
+  const statusBadge = s => {
+    const map = {
+      ACTIVE:'badge-voting',APPROVED:'badge-success',
+      EXECUTED:'badge-success',REJECTED:'badge-danger',
+      EXPIRED:'badge-warning',CANCELLED:'badge-danger'
+    };
+    return `<span class="badge ${map[s]||'badge-active'}">${s}</span>`;
+  };
+
+  async function loadGroups() {
+    try {
+      const groups = await api.groups.list();
+      const gl = document.getElementById('groups-list');
+      if (!groups.length) {
+        gl.innerHTML = `<p class="empty-state">No groups yet — create one or join with an invite code</p>`;
+        return;
+      }
+      gl.innerHTML = groups.map(g => `
+        <div class="list-item" onclick="showGroup('${g.id}')"
+             style="cursor:pointer;">
+          <div class="list-item-icon" style="background:#FFD6DF;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="#fd1843" stroke-width="2" stroke-linecap="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="list-item-body">
+            <p class="list-item-title">${g.name}</p>
+            <p class="list-item-sub">${fmt(g.groupWalletBalance)} group wallet</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="#9B0026" stroke-width="2" stroke-linecap="round">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>`).join('');
+    } catch(e) {
+      showToast('Could not load groups');
+    }
+  }
+
+  async function showGroup(id) {
+    currentGroupId = id;
+    document.getElementById('groups-list-view').style.display = 'none';
+    document.getElementById('group-detail').style.display = 'block';
+    document.getElementById('proposals-link').href =
+      `proposals.html?groupId=${id}`;
+
+    try {
+      const g = await api.groups.get(id);
+      document.getElementById('detail-name').textContent      = g.name;
+      document.getElementById('detail-balance').textContent   = fmt(g.groupWalletBalance);
+      document.getElementById('detail-threshold').textContent = `${g.contributionThreshold}%`;
+
+      const members = await api.groups.members(id);
+      document.getElementById('detail-members').textContent = members.length;
+      document.getElementById('members-list').innerHTML =
+        members.map(m => `
+          <div class="list-item">
+            <div class="list-item-icon" style="background:#FFD6DF;font-size:13px;font-weight:500;color:#9B0026;">
+              ${(m.displayName||m.userEmail||'?')[0].toUpperCase()}
+            </div>
+            <div class="list-item-body">
+              <p class="list-item-title">${m.displayName||m.userEmail||'Member'}</p>
+              <p class="list-item-sub">
+                Joined ${new Date(m.joinedAt).toLocaleDateString('en-KE')}
+              </p>
+            </div>
+            <span class="badge ${roleColor(m.role)}">${roleLabel(m.role)}</span>
+          </div>`).join('');
+
+      const props = await api.proposals.list(id);
+      const items = (props.content||[]).slice(0,3);
+      document.getElementById('group-proposals-list').innerHTML =
+        items.length
+          ? items.map(p => `
+              <div class="list-item" onclick="window.location.href='proposals.html?groupId=${id}'"
+                   style="cursor:pointer;">
+                <div class="list-item-body">
+                  <p class="list-item-title">${p.title}</p>
+                  <p class="list-item-sub">${fmt(p.amount)} · ${statusBadge(p.status)}</p>
+                </div>
+                <p class="list-item-amount" style="color:var(--muted);font-size:13px;">
+                  ${p.yesCount}/${p.totalEligibleVoters} yes
+                </p>
+              </div>`).join('')
+          : '<p class="empty-state">No proposals yet</p>';
+    } catch(e) {
+      showToast('Could not load group details');
+    }
+  }
+
+  function showList() {
+    currentGroupId = null;
+    document.getElementById('group-detail').style.display = 'none';
+    document.getElementById('groups-list-view').style.display = 'block';
+  }
+
+  // Join
+  function openJoinModal()  { document.getElementById('join-modal').style.display='flex'; }
+  function closeJoinModal() { document.getElementById('join-modal').style.display='none'; }
+
+  async function submitJoin() {
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    const name = document.getElementById('join-name').value.trim();
+    if (!code) return showToast('Enter an invite code');
+    try {
+      await api.groups.join({ inviteCode: code, displayName: name });
+      closeJoinModal();
+      showToast('Joined group successfully ✓');
+      await loadGroups();
+    } catch(e) { showToast(e.message || 'Could not join group'); }
+  }
+
+  // Create
+  function openCreateModal()  { document.getElementById('create-modal').style.display='flex'; }
+  function closeCreateModal() { document.getElementById('create-modal').style.display='none'; }
+
+  async function submitCreate() {
+    const name = document.getElementById('create-name').value.trim();
+    const desc = document.getElementById('create-desc').value.trim();
+    if (!name) return showToast('Enter a group name');
+    try {
+      await api.groups.create({ name, description: desc });
+      closeCreateModal();
+      showToast('Group created ✓');
+      await loadGroups();
+    } catch(e) { showToast(e.message || 'Could not create group'); }
+  }
+
+  // Contribute
+  function openContributeModal()  { document.getElementById('contribute-modal').style.display='flex'; }
+  function closeContributeModal() { document.getElementById('contribute-modal').style.display='none'; }
+
+  async function submitContribute() {
+    const amount = parseFloat(document.getElementById('con-amount').value);
+    const phone  = document.getElementById('con-phone').value.trim();
+    if (!amount || amount < 10) return showToast('Enter a valid amount');
+    if (!phone) return showToast('Enter your M-Pesa number');
+    const btn = document.getElementById('con-btn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await api.post('/payments/contribute',
+        { amount, phoneNumber: phone, groupId: currentGroupId });
+      closeContributeModal();
+      showToast('STK push sent — check your phone ✓');
+    } catch(e) {
+      showToast(e.message || 'Contribution failed');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Send STK push';
+    }
+  }
+
+  async function generateInvite() {
+    try {
+      const inv = await api.groups.generateInvite(currentGroupId);
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Join my Akiba Hub chama',
+          text: `Use code ${inv.code} to join. Expires ${new Date(inv.expiresAt).toLocaleDateString('en-KE')}.`
+        });
+      } else {
+        await navigator.clipboard.writeText(inv.code);
+        showToast(`Invite code copied: ${inv.code}`);
+      }
+    } catch(e) { showToast(e.message || 'Could not generate invite'); }
+  }
+
+  (async () => {
+    const user = await initAuth();
+    if (!requireAuth(user)) return;
+    document.getElementById('user-avatar') &&
+      (document.getElementById('user-avatar').textContent =
+        (user.displayName||user.email||'U')[0].toUpperCase());
+
+    const params = new URLSearchParams(window.location.search);
+    const gid = params.get('id');
+    await loadGroups();
+    if (gid) showGroup(gid);
+  })();
+</script>
+</body>
+</html>
