@@ -1,53 +1,32 @@
 const API_BASE = 'https://akibahub.unitybridge.dev';
 
-let accessToken = null;
-let refreshToken = null;
-
-function setTokens(access, refresh) {
-  accessToken = access;
-  refreshToken = refresh;
-  sessionStorage.setItem('akiba_refresh', refresh);
-}
-
-function clearTokens() {
-  accessToken = null;
-  refreshToken = null;
-  sessionStorage.removeItem('akiba_refresh');
-}
-
-function getRefreshToken() {
-  return refreshToken || sessionStorage.getItem('akiba_refresh');
-}
-
 async function refreshAccessToken() {
-  const rt = getRefreshToken();
-  if (!rt) throw new Error('No refresh token');
-
   const res = await fetch(`${API_BASE}/auth/refresh`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken: rt })
+    credentials: 'include', // sends HttpOnly cookie automatically
+    headers: { 'Content-Type': 'application/json' }
   });
 
   if (!res.ok) {
-    clearTokens();
+    window.accessToken = null;
     window.location.href = '/index.html';
     throw new Error('Session expired');
   }
 
   const data = await res.json();
-  setTokens(data.accessToken, data.refreshToken);
+  window.accessToken = data.accessToken;
   return data.accessToken;
 }
 
 async function request(method, path, body = null, retry = true) {
-  if (!accessToken) await refreshAccessToken();
+  if (!window.accessToken) await refreshAccessToken();
 
   const opts = {
     method,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`
+      'Authorization': `Bearer ${window.accessToken}`
     }
   };
   if (body) opts.body = JSON.stringify(body);
@@ -69,17 +48,16 @@ async function request(method, path, body = null, retry = true) {
 }
 
 const api = {
-  get:    (path)        => request('GET',    path),
-  post:   (path, body)  => request('POST',   path, body),
-  put:    (path, body)  => request('PUT',    path, body),
-  delete: (path)        => request('DELETE', path),
+  get:    (path)       => request('GET',    path),
+  post:   (path, body) => request('POST',   path, body),
+  put:    (path, body) => request('PUT',    path, body),
+  delete: (path)       => request('DELETE', path),
 
   auth: {
     loginUrl: () => `${API_BASE}/auth/login`,
-    refresh:  ()  => refreshAccessToken(),
-    logout:   async () => {
+    logout: async () => {
       await request('POST', '/auth/logout').catch(() => {});
-      clearTokens();
+      window.accessToken = null;
       window.location.href = '/index.html';
     }
   },
@@ -111,10 +89,6 @@ const api = {
   }
 };
 
-window.api = api;
-window.setTokens = setTokens;
-window.clearTokens = clearTokens;
-
 function showToast(msg, dur = 2500) {
   const t = document.createElement('div');
   t.className = 'toast';
@@ -126,4 +100,6 @@ function showToast(msg, dur = 2500) {
     setTimeout(() => t.remove(), 200);
   }, dur);
 }
+
+window.api       = api;
 window.showToast = showToast;

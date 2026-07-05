@@ -56,3 +56,7 @@ management:
   endpoint:
     health:
       show-details: never
+
+payhero:
+  callback:
+    secret: ${PAYHERO_CALLBACK_SECRET:}

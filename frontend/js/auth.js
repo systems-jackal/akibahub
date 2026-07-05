@@ -6,40 +6,35 @@ function parseJwt(token) {
   } catch { return null; }
 }
 
-function isTokenExpired(token) {
-  const payload = parseJwt(token);
-  if (!payload) return true;
-  return Date.now() >= payload.exp * 1000;
-}
-
 async function initAuth() {
-  // Handle OAuth callback
-  const params = new URLSearchParams(window.location.search);
-  const token   = params.get('token');
-  const refresh = params.get('refresh');
-
-  if (token && refresh) {
-    setTokens(token, refresh);
-    window.history.replaceState({}, '', window.location.pathname);
-    return parseJwt(token);
+  // Handle OAuth callback — token comes in URL fragment (#token=...)
+  // Fragment is never sent to servers — safe from log leakage
+  const hash = window.location.hash;
+  if (hash && hash.includes('token=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const token  = params.get('token');
+    if (token) {
+      window.accessToken = token;
+      // Clear fragment from URL immediately
+      window.history.replaceState({}, '', window.location.pathname);
+      return parseJwt(token);
+    }
   }
 
-  // Try existing session
-  const rt = sessionStorage.getItem('akiba_refresh');
-  if (!rt) return null;
-
+  // Try refreshing via HttpOnly cookie
+  // Cookie is sent automatically — no JS access needed
   try {
     const res = await fetch(`${AUTH_BASE}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: rt })
+      credentials: 'include', // sends HttpOnly cookie
+      headers: { 'Content-Type': 'application/json' }
     });
     if (!res.ok) throw new Error('expired');
     const data = await res.json();
-    setTokens(data.accessToken, data.refreshToken);
+    window.accessToken = data.accessToken;
     return parseJwt(data.accessToken);
   } catch {
-    clearTokens();
+    window.accessToken = null;
     return null;
   }
 }
@@ -50,12 +45,6 @@ function requireAuth(user) {
     return false;
   }
   return true;
-}
-
-function getUser() {
-  const rt = sessionStorage.getItem('akiba_refresh');
-  if (!rt) return null;
-  return null;
 }
 
 window.initAuth    = initAuth;
