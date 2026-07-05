@@ -78,61 +78,50 @@ jobs:
             set -e
 
             cd ~/akibahub
-
-            # Pull latest code
             git fetch origin && git reset --hard origin/main
 
-            # Deploy frontend to web root
             cp -r frontend/* /var/www/html/
             chown -R www-data:www-data /var/www/html
             chmod -R 755 /var/www/html
             echo "✓ Frontend deployed"
 
             cd infrastructure
-
-            # Login to ghcr
             echo "${{ secrets.CR_PAT }}" | \
               docker login ghcr.io -u systems-jackal --password-stdin
 
             export GITHUB_REPO=${{ github.repository }}
-
-            # Pull new images
             docker compose pull
-
-            # Rolling restart
             docker compose up -d --remove-orphans
             echo "✓ Containers restarted"
 
-            # Wait for JVM startup
-            echo "Waiting for services to start..."
+            echo "Waiting 180s for JVM startup..."
             sleep 180
 
-            # Health check all services
-            declare -A services=(
-              [auth-service]=8081
-              [audit-service]=8086
-              [savings-service]=8082
-              [group-service]=8083
-              [payment-service]=8084
-              [proposal-service]=8085
-              [api-gateway]=8080
-            )
+            check_service() {
+              svc_name=$1
+              svc_port=$2
+              result=$(wget -qO- "http://localhost:${svc_port}/actuator/health" 2>/dev/null || echo "")
+              if echo "$result" | grep -q "UP"; then
+                echo "✓ ${svc_name} healthy"
+                return 0
+              else
+                echo "✗ ${svc_name} UNHEALTHY"
+                docker compose logs --tail=20 "${svc_name}"
+                return 1
+              fi
+            }
 
             failed=0
-            for name in "${!services[@]}"; do
-              port="${services[$name]}"
-              if wget -qO- "http://localhost:$port/actuator/health" \
-                  2>/dev/null | grep -q '"status":"UP"'; then
-                echo "✓ $name healthy"
-              else
-                echo "✗ $name UNHEALTHY"
-                docker compose logs --tail=20 $name
-                failed=1
-              fi
-            done
+            check_service auth-service     8081 || failed=1
+            check_service audit-service    8086 || failed=1
+            check_service savings-service  8082 || failed=1
+            check_service group-service    8083 || failed=1
+            check_service payment-service  8084 || failed=1
+            check_service proposal-service 8085 || failed=1
+            check_service api-gateway      8080 || failed=1
 
-            if [ $failed -eq 1 ]; then
-              echo "Deployment failed — unhealthy services detected"
+            if [ "$failed" = "1" ]; then
+              echo "Deployment failed — unhealthy services"
               exit 1
             fi
 
