@@ -331,7 +331,7 @@ services:
       AUDIT_SERVICE_HOST: audit-service
       FRONTEND_URL: ${FRONTEND_URL}
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     networks: [akiba-internal]
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
