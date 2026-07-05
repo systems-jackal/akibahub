@@ -67,39 +67,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy infrastructure to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "infrastructure/"
-          target: "~/akibahub/"
-
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 20m
           script: |
-            cd ~/akibahub/infrastructure
+            set -e
+
+            cd ~/akibahub
+
+            # Pull latest code
+            git pull origin main
+
+            # Deploy frontend to web root
+            cp -r frontend/* /var/www/html/
+            chown -R www-data:www-data /var/www/html
+            chmod -R 755 /var/www/html
+            echo "✓ Frontend deployed"
+
+            cd infrastructure
 
             # Login to ghcr
             echo "${{ secrets.CR_PAT }}" | \
               docker login ghcr.io -u systems-jackal --password-stdin
 
-            # Set repo for compose
             export GITHUB_REPO=${{ github.repository }}
 
-            # Pull latest images
+            # Pull new images
             docker compose pull
 
             # Rolling restart
             docker compose up -d --remove-orphans
+            echo "✓ Containers restarted"
 
-            # Wait for startup
-            sleep 45
+            # Wait for JVM startup
+            echo "Waiting for services to start..."
+            sleep 120
 
             # Health check all services
             declare -A services=(
@@ -119,14 +125,14 @@ jobs:
                   2>/dev/null | grep -q '"status":"UP"'; then
                 echo "✓ $name healthy"
               else
-                echo "✗ $name UNHEALTHY — check logs:"
-                docker compose logs --tail=30 $name
+                echo "✗ $name UNHEALTHY"
+                docker compose logs --tail=20 $name
                 failed=1
               fi
             done
 
             if [ $failed -eq 1 ]; then
-              echo "Deployment completed with unhealthy services"
+              echo "Deployment failed — unhealthy services detected"
               exit 1
             fi
 
