@@ -105,7 +105,7 @@ jobs:
 
             # Wait for JVM startup
             echo "Waiting for services to start..."
-            sleep 120
+            sleep 180
 
             # Health check all services
             declare -A services=(
