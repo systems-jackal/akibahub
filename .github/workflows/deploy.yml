@@ -67,6 +67,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Write .env file
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            cat > ~/akibahub/infrastructure/.env << 'ENVEOF'
+            GITHUB_REPO=systems-jackal/akibahub
+            DOMAIN_NAME=akibahub.unitybridge.dev
+            APP_BASE_URL=https://akibahub.unitybridge.dev
+            FRONTEND_URL=https://akibahub.unitybridge.dev
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            INTERNAL_SERVICE_KEY=${{ secrets.INTERNAL_SERVICE_KEY }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            PAYHERO_USERNAME=${{ secrets.PAYHERO_USERNAME }}
+            PAYHERO_PASSWORD=${{ secrets.PAYHERO_PASSWORD }}
+            PAYHERO_CHANNEL_ID=${{ secrets.PAYHERO_CHANNEL_ID }}
+            PAYHERO_CALLBACK_SECRET=${{ secrets.PAYHERO_CALLBACK_SECRET }}
+            RABBITMQ_USER=akiba
+            RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+            MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }}
+            MARIADB_AUTH_PASSWORD=${{ secrets.MARIADB_AUTH_PASSWORD }}
+            MARIADB_SAVINGS_PASSWORD=${{ secrets.MARIADB_SAVINGS_PASSWORD }}
+            MARIADB_GROUPS_PASSWORD=${{ secrets.MARIADB_GROUPS_PASSWORD }}
+            MARIADB_PAYMENTS_PASSWORD=${{ secrets.MARIADB_PAYMENTS_PASSWORD }}
+            MARIADB_PROPOSALS_PASSWORD=${{ secrets.MARIADB_PROPOSALS_PASSWORD }}
+            MARIADB_AUDIT_PASSWORD=${{ secrets.MARIADB_AUDIT_PASSWORD }}
+            ENVEOF
+            echo "✓ .env written from GitHub Secrets"
+
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
