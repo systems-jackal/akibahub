@@ -1,11 +1,11 @@
-
+cat > ~/akibahub/infrastructure/docker-compose.yml << 'EOF'
 services:
 
   # ── Databases ──────────────────────────────────────────────────────────────
   mariadb-auth:
     image: mariadb:10.11
     container_name: akiba-db-auth
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MYSQL_DATABASE: akiba_auth
@@ -16,15 +16,17 @@ services:
       - ./database/auth-schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   mariadb-savings:
     image: mariadb:10.11
     container_name: akiba-db-savings
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MYSQL_DATABASE: akiba_savings
@@ -35,15 +37,17 @@ services:
       - ./database/savings-schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   mariadb-groups:
     image: mariadb:10.11
     container_name: akiba-db-groups
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MYSQL_DATABASE: akiba_groups
@@ -54,15 +58,17 @@ services:
       - ./database/groups-schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   mariadb-payments:
     image: mariadb:10.11
     container_name: akiba-db-payments
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MYSQL_DATABASE: akiba_payments
@@ -73,15 +79,17 @@ services:
       - ./database/payments-schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   mariadb-proposals:
     image: mariadb:10.11
     container_name: akiba-db-proposals
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MYSQL_DATABASE: akiba_proposals
@@ -92,15 +100,17 @@ services:
       - ./database/proposals-schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   mariadb-audit:
     image: mariadb:10.11
     container_name: akiba-db-audit
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MYSQL_DATABASE: akiba_audit
@@ -111,16 +121,18 @@ services:
       - ./database/audit-schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "root", "--password=$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # ── Message Broker ─────────────────────────────────────────────────────────
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     container_name: akiba-rabbitmq
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
@@ -132,13 +144,15 @@ services:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # ── Services ───────────────────────────────────────────────────────────────
   auth-service:
     image: ghcr.io/${GITHUB_REPO}/auth-service:latest
     container_name: akiba-auth
-    restart: unless-stopped
+    restart: on-failure:5
+    stop_grace_period: 30s
     depends_on:
       mariadb-auth:
         condition: service_healthy
@@ -152,17 +166,21 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       APP_BASE_URL: ${APP_BASE_URL}
       FRONTEND_URL: ${FRONTEND_URL}
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseContainerSupport"
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      test: ["CMD-SHELL",
+             "wget -qO- http://localhost:8081/actuator/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   audit-service:
     image: ghcr.io/${GITHUB_REPO}/audit-service:latest
     container_name: akiba-audit
-    restart: unless-stopped
+    restart: on-failure:5
+    stop_grace_period: 30s
     depends_on:
       mariadb-audit:
         condition: service_healthy
@@ -176,17 +194,21 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseContainerSupport"
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health || exit 1"]
+      test: ["CMD-SHELL",
+             "wget -qO- http://localhost:8086/actuator/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   savings-service:
     image: ghcr.io/${GITHUB_REPO}/savings-service:latest
     container_name: akiba-savings
-    restart: unless-stopped
+    restart: on-failure:5
+    stop_grace_period: 30s
     depends_on:
       mariadb-savings:
         condition: service_healthy
@@ -204,17 +226,21 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       PAYMENT_SERVICE_HOST: payment-service
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseContainerSupport"
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      test: ["CMD-SHELL",
+             "wget -qO- http://localhost:8082/actuator/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   group-service:
     image: ghcr.io/${GITHUB_REPO}/group-service:latest
     container_name: akiba-group
-    restart: unless-stopped
+    restart: on-failure:5
+    stop_grace_period: 30s
     depends_on:
       mariadb-groups:
         condition: service_healthy
@@ -231,17 +257,21 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseContainerSupport"
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      test: ["CMD-SHELL",
+             "wget -qO- http://localhost:8083/actuator/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   payment-service:
     image: ghcr.io/${GITHUB_REPO}/payment-service:latest
     container_name: akiba-payment
-    restart: unless-stopped
+    restart: on-failure:5
+    stop_grace_period: 30s
     depends_on:
       mariadb-payments:
         condition: service_healthy
@@ -264,17 +294,21 @@ services:
       SAVINGS_SERVICE_HOST: savings-service
       GROUP_SERVICE_HOST: group-service
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseContainerSupport"
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
+      test: ["CMD-SHELL",
+             "wget -qO- http://localhost:8084/actuator/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   proposal-service:
     image: ghcr.io/${GITHUB_REPO}/proposal-service:latest
     container_name: akiba-proposal
-    restart: unless-stopped
+    restart: on-failure:5
+    stop_grace_period: 30s
     depends_on:
       mariadb-proposals:
         condition: service_healthy
@@ -297,17 +331,21 @@ services:
       GROUP_SERVICE_HOST: group-service
       PAYMENT_SERVICE_HOST: payment-service
       INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseContainerSupport"
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
+      test: ["CMD-SHELL",
+             "wget -qO- http://localhost:8085/actuator/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 90s
 
   api-gateway:
     image: ghcr.io/${GITHUB_REPO}/api-gateway:latest
     container_name: akiba-gateway
-    restart: unless-stopped
+    restart: on-failure:5
+    stop_grace_period: 30s
     depends_on:
       auth-service:
         condition: service_healthy
@@ -330,14 +368,17 @@ services:
       PROPOSAL_SERVICE_HOST: proposal-service
       AUDIT_SERVICE_HOST: audit-service
       FRONTEND_URL: ${FRONTEND_URL}
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseContainerSupport"
     ports:
       - "127.0.0.1:8080:8080"
     networks: [akiba-internal]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL",
+             "wget -qO- http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
 networks:
   akiba-internal:
@@ -351,3 +392,4 @@ volumes:
   db-proposals:
   db-audit:
   rabbitmq-data:
+EOF
