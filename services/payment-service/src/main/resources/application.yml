@@ -26,10 +26,12 @@ spring:
 payhero:
   api:
     url: https://backend.payhero.co.ke/api/v2
-    username: ${PAYHERO_USERNAME}
-    password: ${PAYHERO_PASSWORD}
-    channel-id: ${PAYHERO_CHANNEL_ID}
+    username: ${PAYHERO_USERNAME:}
+    password: ${PAYHERO_PASSWORD:}
+    channel-id: ${PAYHERO_CHANNEL_ID:}
     callback-url: ${APP_BASE_URL:http://localhost:8084}/payments/callback
+  callback:
+    secret: ${PAYHERO_CALLBACK_SECRET:}
 
 audit:
   exchange: akibahub.events
@@ -56,7 +58,3 @@ management:
   endpoint:
     health:
       show-details: never
-
-payhero:
-  callback:
-    secret: ${PAYHERO_CALLBACK_SECRET:}
