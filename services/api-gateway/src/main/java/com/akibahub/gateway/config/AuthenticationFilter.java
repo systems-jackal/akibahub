@@ -2,7 +2,6 @@ package com.akibahub.gateway.config;
 
 import com.akibahub.gateway.security.JwtValidator;
 import io.jsonwebtoken.Claims;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
