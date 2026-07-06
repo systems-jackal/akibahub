@@ -12,6 +12,16 @@ spring:
           predicates:
             - Path=/auth/**
 
+        - id: oauth2-authorization
+          uri: http://${AUTH_SERVICE_HOST:localhost}:8081
+          predicates:
+            - Path=/oauth2/**
+
+        - id: login-oauth2
+          uri: http://${AUTH_SERVICE_HOST:localhost}:8081
+          predicates:
+            - Path=/login/**
+
         - id: savings-service
           uri: http://${SAVINGS_SERVICE_HOST:localhost}:8082
           predicates:
