@@ -31,7 +31,7 @@ jobs:
         run: mvn -B package --file backend/pom.xml
 
       - name: OWASP Dependency Check
-        run: mvn -B dependency-check:check --file backend/pom.xml -Dowasp.skip=false || true
+        run: mvn -B dependency-check:check --file backend/pom.xml -DnvdApiKey=${{ secrets.NVD_API_KEY }} || true
         continue-on-error: true
 
       - name: Upload OWASP report
