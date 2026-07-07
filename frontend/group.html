@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group - Akiba Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">🏦 Akiba Hub</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="wallet.html">My Wallet</a>
+      <a href="groups.html">Groups</a>
+      <a href="proposals.html">Proposals</a>
+      <a href="transactions.html">Transactions</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logout-btn">Logout</a>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <h1 id="group-name"></h1>
+    <p id="group-desc"></p>
+    <div class="card">
+      <h3>Group Wallet: <span id="group-balance">0.00</span> KES</h3>
+      <button id="contribute-btn" class="btn-primary">Contribute</button>
+    </div>
+    <div class="card mt-20">
+      <h3>Members</h3>
+      <div id="members-list"></div>
+    </div>
+    <div class="card mt-20">
+      <h3>Proposals</h3>
+      <div id="proposals-list"></div>
+      <button id="new-proposal-btn" class="btn-primary mt-20">New Proposal</button>
+    </div>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pages/group.js"></script>
+</body>
+</html>
