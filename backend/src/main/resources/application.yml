@@ -19,6 +19,11 @@ jwt:
   secret: change-this-to-a-very-long-random-secret-key!!
   expiration: 3600000
 
+rate-limit:
+  auth:
+    capacity: 10          # max burst
+    refill-period-seconds: 60   # period in seconds
+
 springdoc:
   api-docs:
     path: /api-docs

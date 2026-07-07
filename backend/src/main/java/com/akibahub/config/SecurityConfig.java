@@ -16,13 +16,16 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
-    private final JwtAuthenticationFilter jwtFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+    private final JwtAuthenticationFilter jwtFilter;
+    private final RateLimitFilter rateLimitFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter, RateLimitFilter rateLimitFilter) {
         this.jwtFilter = jwtFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
-   @Bean
+    @Bean
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -32,7 +35,10 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .requestMatchers("/api/auth/**").permitAll()
             .anyRequest().authenticated()
         )
-        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        // Order matters: add JwtFilter first, then RateLimitFilter before the same target.
+        // This results in chain: RateLimitFilter → JwtAuthenticationFilter → UsernamePasswordAuthenticationFilter
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
 }
 
