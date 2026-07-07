@@ -3,50 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Akiba Hub</title>
+  <title>Dashboard – Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="dashboard-container">
     <header class="dashboard-header">
       <div class="logo">🏦 Akiba Hub</div>
-      <div>
-        <span>Welcome, <strong id="user-name"></strong></span>
-        <button id="logout-btn" class="secondary-btn">Logout</button>
-      </div>
+      <nav>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="#" id="logout-btn">Logout</a>
+      </nav>
     </header>
 
     <div class="dashboard-grid">
-      <!-- Wallets -->
+      <!-- Wallets Card -->
       <div class="card">
         <h3>Your Wallets</h3>
         <div id="wallets"></div>
       </div>
 
-      <!-- Actions -->
+      <!-- Quick Actions -->
       <div class="card">
         <h3>Quick Actions</h3>
-        <button id="deposit-btn" class="primary-btn">Deposit to Personal</button>
+        <button id="deposit-btn" class="btn-primary">Deposit to Personal</button>
         <div id="deposit-form" class="hidden inline-form">
           <input type="number" id="deposit-amount" placeholder="Amount" step="0.0001">
-          <button id="do-deposit" class="primary-btn small">Deposit</button>
+          <button id="do-deposit" class="btn-primary small">Deposit</button>
         </div>
 
-        <button id="create-group-btn" class="primary-btn">Create Group</button>
+        <button id="create-group-btn" class="btn-primary">Create Group</button>
         <div id="create-group-form" class="hidden inline-form">
           <input type="text" id="group-name" placeholder="Group Name">
           <input type="text" id="group-desc" placeholder="Description (optional)">
-          <button id="do-create-group" class="primary-btn small">Create</button>
+          <button id="do-create-group" class="btn-primary small">Create</button>
         </div>
 
         <h4>Join Group</h4>
         <div class="inline-form">
           <input type="number" id="join-group-id" placeholder="Group ID">
-          <button id="do-join-group" class="primary-btn small">Join</button>
+          <button id="do-join-group" class="btn-primary small">Join</button>
         </div>
       </div>
 
-      <!-- Groups -->
+      <!-- Groups List -->
       <div class="card">
         <h3>Your Groups</h3>
         <div id="groups-list"></div>
@@ -54,63 +54,21 @@
 
       <!-- Proposals -->
       <div class="card">
-        <h3>Group Proposals</h3>
+        <h3>Recent Proposals</h3>
         <div id="proposals-list"></div>
+        <button id="create-proposal-btn" class="btn-primary">New Proposal</button>
         <div id="create-proposal-form" class="hidden inline-form">
-          <h4>New Proposal</h4>
           <input type="number" id="proposal-group-id" placeholder="Group ID">
           <input type="text" id="proposal-title" placeholder="Title">
           <input type="text" id="proposal-desc" placeholder="Description (optional)">
           <input type="number" id="proposal-amount" placeholder="Amount" step="0.0001">
-          <button id="do-create-proposal" class="primary-btn small">Create Proposal</button>
+          <button id="do-create-proposal" class="btn-primary small">Create</button>
         </div>
       </div>
     </div>
   </div>
 
   <script src="js/app.js"></script>
-  <script>
-    // Check for token and redirect if missing
-    const token = localStorage.getItem('akiba_token');
-    if (!token) {
-      window.location.href = 'login.html';
-    }
-
-    document.getElementById('logout-btn').addEventListener('click', function() {
-      localStorage.removeItem('akiba_token');
-      window.location.href = 'index.html';
-    });
-
-    // Load dashboard data using shared functions
-    loadDashboardData(token);
-
-    // Button listeners
-    document.getElementById('deposit-btn').addEventListener('click', function() {
-      document.getElementById('deposit-form').classList.toggle('hidden');
-    });
-    document.getElementById('do-deposit').addEventListener('click', function() {
-      const amount = document.getElementById('deposit-amount').value;
-      deposit(token, amount);
-    });
-    document.getElementById('create-group-btn').addEventListener('click', function() {
-      document.getElementById('create-group-form').classList.toggle('hidden');
-    });
-    document.getElementById('do-create-group').addEventListener('click', function() {
-      const name = document.getElementById('group-name').value;
-      const desc = document.getElementById('group-desc').value;
-      createGroup(token, name, desc);
-    });
-    document.getElementById('do-join-group').addEventListener('click', function() {
-      const id = document.getElementById('join-group-id').value;
-      joinGroup(token, id);
-    });
-    document.getElementById('do-create-proposal').addEventListener('click', function() {
-      const groupId = document.getElementById('proposal-group-id').value;
-      const title = document.getElementById('proposal-title').value;
-      const desc = document.getElementById('proposal-desc').value;
-      const amount = document.getElementById('proposal-amount').value;
-      createProposal(token, groupId, title, desc, amount);
-    });
-  </script>
+  <script src="js/dashboard.js"></script>
 </body>
 </html>

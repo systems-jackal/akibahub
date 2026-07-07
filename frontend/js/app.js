@@ -1,112 +1,82 @@
-// app.js – Reusable Akiba Hub API functions
+const API_BASE = '';
 
-async function loadDashboardData(token) {
-  const headers = { 'Authorization': `Bearer ${token}` };
-  try {
-    const [walletsRes, groupsRes] = await Promise.all([
-      fetch('/api/wallets/me', { headers }),
-      fetch('/api/groups', { headers })
-    ]);
-    const wallets = await walletsRes.json();
-    const groups = await groupsRes.json();
-
-    renderWallets(wallets);
-    renderGroups(groups, token);
-  } catch (err) {
-    console.error(err);
-  }
+function getToken() {
+  return localStorage.getItem('akiba_token');
 }
 
-function renderWallets(wallets) {
-  const container = document.getElementById('wallets');
-  if (!container) return;
-  container.innerHTML = wallets.map(w => `
-    <div class="wallet-item">
-      <strong>${w.type}</strong> – Balance: ${w.balance}
-    </div>
-  `).join('');
+function authHeaders() {
+  return { 'Authorization': `Bearer ${getToken()}` };
 }
 
-function renderGroups(groups, token) {
-  const container = document.getElementById('groups-list');
-  if (!container) return;
-  container.innerHTML = groups.map(g => `
-    <div class="group-item">
-      <strong>${g.name}</strong> (ID: ${g.id}) – ${g.description || ''}
-      <button class="primary-btn small" onclick="contributeToGroup(${g.id}, '${token}')">Contribute</button>
-      <button class="primary-btn small" onclick="loadProposals(${g.id}, '${token}')">View Proposals</button>
-    </div>
-  `).join('');
+async function fetchWallets() {
+  const res = await fetch('/api/wallets/me', { headers: authHeaders() });
+  return await res.json();
 }
 
-async function deposit(token, amount) {
-  if (!amount || amount <= 0) return alert('Enter a valid amount');
+async function fetchGroups() {
+  const res = await fetch('/api/groups', { headers: authHeaders() });
+  return await res.json();
+}
+
+async function fetchGroup(groupId) {
+  const res = await fetch(`/api/groups/${groupId}`, { headers: authHeaders() });
+  if (!res.ok) throw new Error('Group not found');
+  return await res.json();
+}
+
+async function fetchMembers(groupId) {
+  const res = await fetch(`/api/groups/${groupId}/members`, { headers: authHeaders() });
+  return await res.json();
+}
+
+async function fetchProposals(groupId) {
+  const res = await fetch(`/api/groups/${groupId}/proposals`, { headers: authHeaders() });
+  return await res.json();
+}
+
+async function deposit(amount) {
   await fetch('/api/wallets/me/personal/deposit', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount: parseFloat(amount) })
   });
-  loadDashboardData(token);
 }
 
-async function createGroup(token, name, description) {
+async function createGroup(name, description) {
   await fetch('/api/groups', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, description })
   });
-  loadDashboardData(token);
 }
 
-async function joinGroup(token, groupId) {
+async function joinGroup(groupId) {
   await fetch(`/api/groups/${groupId}/join`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: authHeaders()
   });
-  loadDashboardData(token);
 }
 
-async function contributeToGroup(groupId, token) {
-  const amount = prompt('Amount to contribute:');
-  if (!amount) return;
+async function contributeToGroup(groupId, amount) {
   await fetch(`/api/wallets/groups/${groupId}/contribute`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount: parseFloat(amount) })
   });
-  loadDashboardData(token);
 }
 
-async function loadProposals(groupId, token) {
-  const res = await fetch(`/api/groups/${groupId}/proposals`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  const proposals = await res.json();
-  const container = document.getElementById('proposals-list');
-  if (container) {
-    container.innerHTML = proposals.map(p => `
-      <div class="proposal-item">
-        <strong>${p.title}</strong> – Amount: ${p.amount}, Status: ${p.status}
-        ${p.status === 'OPEN' ? `<button class="primary-btn small" onclick="voteOnProposal(${p.id}, '${token}')">Vote YES</button>` : ''}
-      </div>
-    `).join('');
-  }
-}
-
-async function createProposal(token, groupId, title, description, amount) {
+async function createProposal(groupId, title, description, amount) {
   await fetch(`/api/groups/${groupId}/proposals`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, description, amount: parseFloat(amount) })
   });
-  loadDashboardData(token);
 }
 
-async function voteOnProposal(proposalId, token) {
+async function voteOnProposal(proposalId) {
   await fetch(`/api/proposals/${proposalId}/vote`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ vote: 'YES' })
   });
-  loadDashboardData(token);
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register - Akiba Hub</title>
+  <title>Register – Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -24,34 +24,13 @@
           <label for="password">Password</label>
           <input type="password" id="password" required>
         </div>
-        <button type="submit" class="primary-btn full-width">Register</button>
+        <button type="submit" class="btn-primary full-width">Register</button>
       </form>
       <p id="auth-message" class="message"></p>
       <p class="switch-page">Already have an account? <a href="login.html">Login</a></p>
-      <a href="index.html" class="text-btn">← Back to Home</a>
+      <a href="index.html" class="text-link">← Back to Home</a>
     </div>
   </div>
-  <script src="js/app.js"></script>
-  <script>
-    document.getElementById('register-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const phone = document.getElementById('phone').value;
-      const password = document.getElementById('password').value;
-      const fullname = document.getElementById('fullname').value;
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: phone, password, fullName: fullname })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('akiba_token', data.token);
-        window.location.href = 'dashboard.html';
-      } else {
-        document.getElementById('auth-message').textContent = data.error || 'Registration failed';
-        document.getElementById('auth-message').style.color = 'red';
-      }
-    });
-  </script>
+  <script src="js/register.js"></script>
 </body>
 </html>

@@ -26,6 +26,11 @@ public class GroupService {
         this.auditLog = auditLog;
     }
 
+    public Group getGroup(Long groupId) {
+    return groupRepo.findById(groupId)
+            .orElseThrow(() -> new RuntimeException("Group not found"));
+    }
+
     @Transactional
     public Group createGroup(String name, String description, User creator) {
         Group group = Group.builder().name(name).description(description).createdBy(creator).build();
