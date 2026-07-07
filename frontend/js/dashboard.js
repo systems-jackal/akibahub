@@ -47,8 +47,36 @@ document.getElementById('do-create-proposal').addEventListener('click', async ()
   const title = document.getElementById('proposal-title').value;
   const desc = document.getElementById('proposal-desc').value;
   const amount = document.getElementById('proposal-amount').value;
-  await createProposal(groupId, title, desc, amount);
-  await renderDashboard();
+
+  const msgEl = document.getElementById('proposal-message');
+  if (!msgEl) {
+    // create a message element if not present (add in HTML or dynamically)
+    const p = document.createElement('p');
+    p.id = 'proposal-message';
+    p.style.marginTop = '10px';
+    document.getElementById('create-proposal-form').appendChild(p);
+  }
+
+  try {
+    await createProposal(groupId, title, desc, amount);
+    // Success
+    document.getElementById('proposal-message').textContent = 'Proposal created successfully!';
+    document.getElementById('proposal-message').style.color = 'green';
+    // Clear inputs
+    document.getElementById('proposal-group-id').value = '';
+    document.getElementById('proposal-title').value = '';
+    document.getElementById('proposal-desc').value = '';
+    document.getElementById('proposal-amount').value = '';
+    // Hide form after a short delay (optional)
+    setTimeout(() => {
+      document.getElementById('create-proposal-form').classList.add('hidden');
+      document.getElementById('proposal-message').textContent = '';
+    }, 2000);
+    await renderDashboard();
+  } catch (err) {
+    document.getElementById('proposal-message').textContent = err.message;
+    document.getElementById('proposal-message').style.color = 'red';
+  }
 });
 
 async function renderDashboard() {

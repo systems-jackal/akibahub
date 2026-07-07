@@ -71,11 +71,16 @@ async function contributeToGroup(groupId, amount) {
 }
 
 async function createProposal(groupId, title, description, amount) {
-  await fetch(`/api/groups/${groupId}/proposals`, {
+  const res = await fetch(`/api/groups/${groupId}/proposals`, {
     method: 'POST',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, description, amount: parseFloat(amount) })
   });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Failed to create proposal');
+  }
+  return await res.json();
 }
 
 async function voteOnProposal(proposalId) {
