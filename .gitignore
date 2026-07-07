@@ -1,3 +1,4 @@
+cat > .gitignore << 'EOF'
 # Environment
 .env
 *.env
@@ -6,15 +7,27 @@
 **/target/
 **/*.class
 **/*.jar
+!.mvn/wrapper/maven-wrapper.jar
+*.log
+*.war
 
 # IDE
 .idea/
 *.iml
 .vscode/
+*.swp
+*.swo
+*~
 
 # Docker
 **/.docker/
+docker-compose.override.yml
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Application
+application-local.yml
+src/main/resources/application-local.yml
+EOF
