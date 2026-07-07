@@ -2,6 +2,7 @@ package com.akibahub.group;
 
 import com.akibahub.group.entity.Group;
 import com.akibahub.group.entity.GroupMember;
+import com.akibahub.shared.dto.ApiResponse;
 import com.akibahub.user.entity.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,35 +21,72 @@ public class GroupController {
     }
 
     @PostMapping
-    public ResponseEntity<Group> createGroup(@RequestBody Map<String, String> body,
-                                             @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<Group>> createGroup(@RequestBody Map<String, String> body,
+                                                          @AuthenticationPrincipal User user) {
         Group group = groupService.createGroup(body.get("name"), body.get("description"), user);
-        return ResponseEntity.ok(group);
+        return ResponseEntity.ok(ApiResponse.<Group>builder()
+                .success(true).message("Group created").data(group).build());
     }
 
     @PostMapping("/{groupId}/join")
-    public ResponseEntity<?> joinGroup(@PathVariable Long groupId, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<String>> joinGroup(@PathVariable Long groupId,
+                                                         @AuthenticationPrincipal User user) {
         groupService.joinGroup(groupId, user);
-        return ResponseEntity.ok(Map.of("message", "Joined group"));
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .success(true).message("Joined group").build());
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<Group>> getMyGroups(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(groupService.getMyGroups(user));
+    public ResponseEntity<ApiResponse<List<Group>>> getMyGroups(@AuthenticationPrincipal User user) {
+        List<Group> groups = groupService.getMyGroups(user);
+        return ResponseEntity.ok(ApiResponse.<List<Group>>builder()
+                .success(true).data(groups).build());
     }
 
     @GetMapping("/{groupId}")
-    public ResponseEntity<Group> getGroup(@PathVariable Long groupId) {
-        return ResponseEntity.ok(groupService.getGroup(groupId));
+    public ResponseEntity<ApiResponse<Group>> getGroup(@PathVariable Long groupId) {
+        Group group = groupService.getGroup(groupId);
+        return ResponseEntity.ok(ApiResponse.<Group>builder()
+                .success(true).data(group).build());
     }
 
-    @GetMapping
-    public ResponseEntity<List<Group>> getAllGroups() {
-        return ResponseEntity.ok(groupService.getAllGroups());
+    @PutMapping("/{groupId}")
+    public ResponseEntity<ApiResponse<Group>> updateGroup(@PathVariable Long groupId,
+                                                          @RequestBody Map<String, String> body,
+                                                          @AuthenticationPrincipal User user) {
+        Group updated = groupService.updateGroup(groupId, body.get("name"), body.get("description"), user);
+        return ResponseEntity.ok(ApiResponse.<Group>builder()
+                .success(true).message("Group updated").data(updated).build());
+    }
+
+    @DeleteMapping("/{groupId}")
+    public ResponseEntity<ApiResponse<Void>> deleteGroup(@PathVariable Long groupId,
+                                                         @AuthenticationPrincipal User user) {
+        groupService.deleteGroup(groupId, user);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true).message("Group deleted").build());
+    }
+
+    @PostMapping("/{groupId}/invite")
+    public ResponseEntity<ApiResponse<String>> generateInvite(@PathVariable Long groupId,
+                                                              @AuthenticationPrincipal User user) {
+        String code = groupService.generateInviteCode(groupId, user);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .success(true).data(code).build());
+    }
+
+    @GetMapping("/{groupId}/stats")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getGroupStats(@PathVariable Long groupId,
+                                                                          @AuthenticationPrincipal User user) {
+        Map<String, Object> stats = groupService.getGroupStats(groupId, user);
+        return ResponseEntity.ok(ApiResponse.<Map<String, Object>>builder()
+                .success(true).data(stats).build());
     }
 
     @GetMapping("/{groupId}/members")
-    public ResponseEntity<List<GroupMember>> getMembers(@PathVariable Long groupId) {
-        return ResponseEntity.ok(groupService.getGroupMembers(groupId));
+    public ResponseEntity<ApiResponse<List<GroupMember>>> getMembers(@PathVariable Long groupId) {
+        List<GroupMember> members = groupService.getGroupMembers(groupId);
+        return ResponseEntity.ok(ApiResponse.<List<GroupMember>>builder()
+                .success(true).data(members).build());
     }
 }

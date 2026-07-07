@@ -1,7 +1,6 @@
 package com.akibahub.wallet;
 
 import com.akibahub.audit.AuditLogService;
-
 import com.akibahub.group.entity.GroupMemberRepository;
 import com.akibahub.user.entity.User;
 import com.akibahub.wallet.entity.*;
@@ -42,6 +41,19 @@ public class WalletService {
         transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
                 .reference("Personal deposit").build());
         auditLog.logEvent("PERSONAL_DEPOSIT", Map.of("user", user.getPhoneNumber(), "amount", amount));
+        return wallet;
+    }
+
+    @Transactional
+    public Wallet withdrawFromPersonal(User user, BigDecimal amount) {
+        Wallet wallet = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
+                .orElseThrow(() -> new RuntimeException("Personal wallet not found"));
+        if (wallet.getBalance().compareTo(amount) < 0) throw new RuntimeException("Insufficient balance");
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+        walletRepo.save(wallet);
+        transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.WITHDRAWAL)
+                .reference("Personal withdrawal").build());
+        auditLog.logEvent("PERSONAL_WITHDRAWAL", Map.of("user", user.getPhoneNumber(), "amount", amount));
         return wallet;
     }
 

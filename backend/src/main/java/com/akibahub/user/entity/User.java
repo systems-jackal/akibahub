@@ -14,6 +14,9 @@ public class User {
     @Column(unique = true, nullable = false, length = 15)
     private String phoneNumber;
 
+    @Column(unique = true, nullable = false, length = 8)
+    private String idNumber;
+
     @Column(nullable = false)
     private String passwordHash;
 
@@ -27,4 +30,10 @@ public class User {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public UserDto toDto() {
+        return new UserDto(id, fullName, phoneNumber, idNumber);
+    }
+
+    public record UserDto(Long id, String fullName, String phoneNumber, String idNumber) {}
 }

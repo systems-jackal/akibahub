@@ -36,8 +36,12 @@ public class AuthService {
         if (userRepo.existsByPhoneNumber(request.getPhoneNumber())) {
             throw new RuntimeException("Phone number already registered");
         }
+        if (userRepo.existsByIdNumber(request.getIdNumber())) {
+            throw new RuntimeException("ID number already registered");
+        }
         User user = User.builder()
                 .phoneNumber(request.getPhoneNumber())
+                .idNumber(request.getIdNumber())
                 .passwordHash(encoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .build();
@@ -52,17 +56,25 @@ public class AuthService {
 
         auditLog.logEvent("USER_REGISTERED", user);
         String token = jwtUtil.generateToken(user.getPhoneNumber());
-        return AuthResponse.builder().token(token).phoneNumber(user.getPhoneNumber()).build();
+        return AuthResponse.builder().token(token).user(user.toDto()).build();
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = userRepo.findByPhoneNumber(request.getPhoneNumber())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        // try phone first, then ID
+        User user = userRepo.findByPhoneNumber(request.getLogin())
+                .orElseGet(() -> userRepo.findByIdNumber(request.getLogin())
+                        .orElseThrow(() -> new RuntimeException("Invalid credentials")));
+
         if (!encoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
         auditLog.logEvent("USER_LOGGED_IN", user);
         String token = jwtUtil.generateToken(user.getPhoneNumber());
-        return AuthResponse.builder().token(token).phoneNumber(user.getPhoneNumber()).build();
+        return AuthResponse.builder().token(token).user(user.toDto()).build();
+    }
+
+    public User getUserByPhone(String phone) {
+        return userRepo.findByPhoneNumber(phone)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

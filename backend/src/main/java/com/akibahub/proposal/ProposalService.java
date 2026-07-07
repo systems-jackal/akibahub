@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +32,8 @@ public class ProposalService {
         this.transactionRepo = transactionRepo;
         this.auditLog = auditLog;
     }
+
+    // ---------- existing methods ----------
 
     @Transactional
     public Proposal createProposal(Long groupId, String title, String description,
@@ -86,25 +88,64 @@ public class ProposalService {
         groupWallet.setBalance(groupWallet.getBalance().subtract(proposal.getAmount()));
         walletRepo.save(groupWallet);
         transactionRepo.save(Transaction.builder().wallet(groupWallet).amount(proposal.getAmount())
-                .type(Transaction.TransactionType.WITHDRAWAL).reference("Approved proposal: " + proposal.getTitle()).build());
+                .type(Transaction.TransactionType.WITHDRAWAL)
+                .reference("Approved proposal: " + proposal.getTitle()).build());
 
         Wallet personal = walletRepo.findByUserIdAndType(proposal.getCreatedBy().getId(), Wallet.WalletType.PERSONAL)
                 .orElseThrow();
         personal.setBalance(personal.getBalance().add(proposal.getAmount()));
         walletRepo.save(personal);
         transactionRepo.save(Transaction.builder().wallet(personal).amount(proposal.getAmount())
-                .type(Transaction.TransactionType.DEPOSIT).reference("Withdrawal from group " + proposal.getGroup().getId()).build());
+                .type(Transaction.TransactionType.DEPOSIT)
+                .reference("Withdrawal from group " + proposal.getGroup().getId()).build());
     }
 
     public List<Proposal> getProposalsForGroup(Long groupId) {
         return proposalRepo.findByGroupId(groupId);
     }
 
-    // New method – get proposals for all groups the user belongs to
     public List<Proposal> getProposalsForUserGroups(User user) {
         List<Long> groupIds = memberRepo.findByUserId(user.getId())
                 .stream().map(m -> m.getGroup().getId()).collect(Collectors.toList());
         if (groupIds.isEmpty()) return List.of();
         return proposalRepo.findByGroupIdIn(groupIds);
+    }
+
+    // ---------- new methods ----------
+
+    public Proposal getProposal(Long proposalId) {
+        return proposalRepo.findById(proposalId)
+                .orElseThrow(() -> new RuntimeException("Proposal not found"));
+    }
+
+    @Transactional
+    public Proposal updateProposal(Long proposalId, Map<String, Object> body, User user) {
+        Proposal proposal = proposalRepo.findById(proposalId)
+                .orElseThrow(() -> new RuntimeException("Proposal not found"));
+        if (!proposal.getCreatedBy().getId().equals(user.getId()))
+            throw new RuntimeException("Only creator can edit");
+        if (proposal.getStatus() != Proposal.ProposalStatus.OPEN)
+            throw new RuntimeException("Cannot edit a closed proposal");
+
+        if (body.containsKey("title")) proposal.setTitle((String) body.get("title"));
+        if (body.containsKey("description")) proposal.setDescription((String) body.get("description"));
+        if (body.containsKey("amount"))
+            proposal.setAmount(new BigDecimal(body.get("amount").toString()));
+
+        return proposalRepo.save(proposal);
+    }
+
+    @Transactional
+    public void deleteProposal(Long proposalId, User user) {
+        Proposal proposal = proposalRepo.findById(proposalId)
+                .orElseThrow(() -> new RuntimeException("Proposal not found"));
+        if (!proposal.getCreatedBy().getId().equals(user.getId()))
+            throw new RuntimeException("Only creator can delete");
+        if (proposal.getStatus() != Proposal.ProposalStatus.OPEN)
+            throw new RuntimeException("Cannot delete a closed proposal");
+
+        voteRepo.deleteByProposalId(proposalId);
+        proposalRepo.delete(proposal);
+        auditLog.logEvent("PROPOSAL_DELETED", proposal);
     }
 }

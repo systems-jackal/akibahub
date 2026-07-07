@@ -6,7 +6,8 @@ import lombok.*;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class LoginRequest {
     @NotBlank
-    private String phoneNumber;
+    private String login;   // can be phoneNumber or idNumber
+
     @NotBlank
     private String password;
 }
