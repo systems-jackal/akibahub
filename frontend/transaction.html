@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions - Akiba Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">🏦 Akiba Hub</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="wallet.html">My Wallet</a>
+      <a href="groups.html">Groups</a>
+      <a href="proposals.html">Proposals</a>
+      <a href="transactions.html" class="active">Transactions</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logout-btn">Logout</a>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <h1>Transaction History</h1>
+    <div class="card">
+      <div class="form-group" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input type="text" id="filter-type" placeholder="Type (DEPOSIT/WITHDRAWAL)" style="flex:1;">
+        <input type="number" id="filter-group" placeholder="Group ID" style="flex:1;">
+        <input type="date" id="filter-start" style="flex:1;">
+        <input type="date" id="filter-end" style="flex:1;">
+        <button id="apply-filter" class="btn-primary" style="flex:0 0 auto;">Filter</button>
+      </div>
+    </div>
+    <div id="transactions-table" class="mt-20"></div>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pages/transactions.js"></script>
+</body>
+</html>

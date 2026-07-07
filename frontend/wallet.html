@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Wallet - Akiba Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">🏦 Akiba Hub</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="wallet.html" class="active">My Wallet</a>
+      <a href="groups.html">Groups</a>
+      <a href="proposals.html">Proposals</a>
+      <a href="transactions.html">Transactions</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logout-btn">Logout</a>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <h1>My Wallet</h1>
+    <div class="card">
+      <h3>Personal Balance: <span id="balance">0.00</span> KES</h3>
+      <div class="mt-20">
+        <input type="number" id="amount" placeholder="Amount" step="0.01" class="form-group" style="width:200px;display:inline-block;margin-right:10px;">
+        <button id="deposit-btn" class="btn-primary">Deposit</button>
+        <button id="withdraw-btn" class="btn-primary">Withdraw</button>
+      </div>
+    </div>
+    <div class="card mt-20">
+      <h3>Recent Transactions</h3>
+      <div id="recent-transactions"></div>
+    </div>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pages/wallet.js"></script>
+</body>
+</html>

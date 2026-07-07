@@ -1,73 +1,44 @@
-if (!getToken()) {
-  window.location.href = 'login.html';
+requireAuth();
+
+async function loadGroups() {
+  try {
+    const groups = await fetchMyGroups();
+    const list = document.getElementById('groups-list');
+    if (groups.length === 0) {
+      list.innerHTML = '<p>No groups yet. Create or join one!</p>';
+    } else {
+      list.innerHTML = groups.map(g => `
+        <div class="group-card">
+          <h4><a href="group.html?id=${g.id}">${g.name}</a></h4>
+          <p>${g.description || ''}</p>
+          <p>ID: ${g.id}</p>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    showAlert(err.message, 'error');
+  }
 }
 
-const params = new URLSearchParams(window.location.search);
-const groupId = params.get('id');
-if (!groupId) {
-  window.location.href = 'dashboard.html';
-}
-
-document.getElementById('logout-btn').addEventListener('click', () => {
-  localStorage.removeItem('akiba_token');
-  localStorage.removeItem('akiba_phone');
-  window.location.href = 'index.html';
+document.getElementById('create-btn').addEventListener('click', async () => {
+  const name = document.getElementById('group-name').value.trim();
+  const desc = document.getElementById('group-desc').value.trim();
+  if (!name) return showAlert('Group name required', 'error');
+  try {
+    await createGroup(name, desc);
+    showAlert('Group created!');
+    loadGroups();
+  } catch (e) { showAlert(e.message, 'error'); }
 });
 
-async function loadGroup() {
-  const group = await fetchGroup(groupId);
-  document.getElementById('group-name').textContent = group.name;
-  document.getElementById('group-desc').textContent = group.description || '';
+document.getElementById('join-btn').addEventListener('click', async () => {
+  const id = document.getElementById('join-group-id').value;
+  if (!id) return showAlert('Enter a Group ID', 'error');
+  try {
+    await joinGroup(id);
+    showAlert('Joined group!');
+    loadGroups();
+  } catch (e) { showAlert(e.message, 'error'); }
+});
 
-  // Get group wallet
-  const wallets = await fetchWallets();
-  const groupWallet = wallets.find(w => w.type === 'GROUP' && w.groupId == groupId);
-  document.getElementById('group-balance').textContent = groupWallet ? groupWallet.balance : '0.0000';
-
-  // Members
-  const members = await fetchMembers(groupId);
-  document.getElementById('members-list').innerHTML = members.map(m => `
-    <div class="member-item">${m.user ? m.user.phoneNumber : 'Unknown'}</div>
-  `).join('');
-
-  // Proposals
-  const proposals = await fetchProposals(groupId);
-  const proposalsDiv = document.getElementById('proposals-list');
-  if (proposals.length === 0) {
-    proposalsDiv.innerHTML = '<p>No proposals yet.</p>';
-  } else {
-    proposalsDiv.innerHTML = proposals.map(p => `
-      <div class="proposal-item">
-        <strong>${p.title}</strong> – Amount: ${p.amount}, Status: ${p.status}
-        ${p.status === 'OPEN' ? `<button class="btn-primary small" onclick="vote(${p.id})">Vote YES</button>` : ''}
-      </div>
-    `).join('');
-  }
-
-  // Contribute
-  document.getElementById('contribute-btn').addEventListener('click', async () => {
-    const amount = prompt('Amount to contribute:');
-    if (amount) {
-      await contributeToGroup(groupId, amount);
-      loadGroup();
-    }
-  });
-
-  // New proposal
-  document.getElementById('new-proposal-btn').addEventListener('click', async () => {
-    const title = prompt('Proposal title:');
-    const desc = prompt('Description (optional):');
-    const amount = prompt('Amount:');
-    if (title && amount) {
-      await createProposal(groupId, title, desc, amount);
-      loadGroup();
-    }
-  });
-}
-
-window.vote = async function(proposalId) {
-  await voteOnProposal(proposalId);
-  loadGroup();
-};
-
-loadGroup();
+loadGroups();

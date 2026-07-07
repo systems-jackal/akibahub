@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Groups - Akiba Hub</title>
+  <title>Settings - Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,37 +12,46 @@
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="wallet.html">My Wallet</a>
-      <a href="groups.html" class="active">Groups</a>
+      <a href="groups.html">Groups</a>
       <a href="proposals.html">Proposals</a>
       <a href="transactions.html">Transactions</a>
-      <a href="settings.html">Settings</a>
+      <a href="settings.html" class="active">Settings</a>
       <a href="#" id="logout-btn">Logout</a>
     </nav>
   </aside>
   <main class="main-content">
-    <h1>My Groups</h1>
+    <h1>Settings</h1>
     <div class="card">
-      <h3>Create New Group</h3>
+      <h3>Update Profile</h3>
       <div class="form-group">
-        <input type="text" id="group-name" placeholder="Group Name">
+        <label>Full Name</label>
+        <input type="text" id="fullname">
       </div>
       <div class="form-group">
-        <input type="text" id="group-desc" placeholder="Description (optional)">
+        <label>Phone Number</label>
+        <div class="phone-input">
+          <span class="prefix">+254</span>
+          <input type="tel" id="phone" data-phone>
+        </div>
       </div>
-      <button id="create-btn" class="btn-primary">Create Group</button>
+      <button id="update-profile" class="btn-primary">Update</button>
     </div>
     <div class="card mt-20">
-      <h3>Join Existing Group</h3>
+      <h3>Change Password</h3>
       <div class="form-group">
-        <input type="number" id="join-group-id" placeholder="Group ID">
+        <label>Current Password</label>
+        <input type="password" id="current-password">
       </div>
-      <button id="join-btn" class="btn-primary">Join</button>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="new-password">
+      </div>
+      <button id="change-password" class="btn-primary">Change Password</button>
     </div>
-    <div id="groups-list" class="mt-20"></div>
   </main>
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
-  <script src="js/pages/groups.js"></script>
+  <script src="js/pages/settings.js"></script>
 </body>
 </html>
