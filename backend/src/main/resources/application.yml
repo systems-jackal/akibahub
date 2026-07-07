@@ -1,5 +1,8 @@
 server:
   port: 8080
+  error:
+    include-stacktrace: never
+    include-exception: false
 
 spring:
   datasource:
@@ -11,6 +14,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
@@ -21,8 +25,8 @@ jwt:
 
 rate-limit:
   auth:
-    capacity: 10          # max burst
-    refill-period-seconds: 60   # period in seconds
+    capacity: 10
+    refill-period-seconds: 60
 
 springdoc:
   api-docs:
