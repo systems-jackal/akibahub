@@ -6,8 +6,8 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #FDFBF7;
-  color: #1E293B;
+  background: #F2EDE1;
+  color: #093B33;
   display: flex;
   min-height: 100vh;
 }
@@ -15,8 +15,8 @@ body {
 /* ---------- Sidebar ---------- */
 .sidebar {
   width: 240px;
-  background: #5B0E14;
-  color: #F1E194;
+  background: #0A5E4E;
+  color: #D8C08A;
   display: flex;
   flex-direction: column;
   padding: 20px 0;
@@ -30,12 +30,12 @@ body {
   font-size: 24px;
   font-weight: 700;
   padding: 0 20px 30px;
-  color: #F1E194;
+  color: #D8C08A;
 }
 .sidebar nav a {
   display: block;
   padding: 12px 20px;
-  color: #F1E194;
+  color: #D8C08A;
   text-decoration: none;
   font-weight: 500;
   transition: background 0.2s;
@@ -43,11 +43,11 @@ body {
 }
 .sidebar nav a:hover,
 .sidebar nav a.active {
-  background: rgba(255,255,255,0.1);
-  border-left-color: #F1E194;
+  background: rgba(216, 192, 138, 0.15);
+  border-left-color: #D8C08A;
 }
 
-/* ---------- Main content (for authenticated pages) ---------- */
+/* ---------- Main content ---------- */
 .main-content {
   margin-left: 240px;
   flex: 1;
@@ -59,17 +59,17 @@ body {
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(7, 27, 30, 0.06);
   margin-bottom: 20px;
 }
 .card h2, .card h3 {
-  color: #5B0E14;
+  color: #0A5E4E;
   margin-bottom: 15px;
 }
 
 /* ---------- Buttons ---------- */
 .btn-primary {
-  background: #5B0E14;
+  background: #0A5E4E;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -82,15 +82,15 @@ body {
   text-align: center;
 }
 .btn-primary:hover {
-  background: #450a10;
+  background: #093B33;
 }
 .btn-primary.full-width {
   width: 100%;
   margin-top: 15px;
 }
 .btn-secondary {
-  background: #F1E194;
-  color: #5B0E14;
+  background: #D8C08A;
+  color: #0A5E4E;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
@@ -100,12 +100,12 @@ body {
   display: inline-block;
 }
 .btn-secondary:hover {
-  background: #e6d679;
+  background: #c9af70;
 }
 .btn-outline {
   background: transparent;
-  color: #5B0E14;
-  border: 2px solid #5B0E14;
+  color: #0A5E4E;
+  border: 2px solid #0A5E4E;
   padding: 10px 18px;
   border-radius: 8px;
   cursor: pointer;
@@ -123,7 +123,7 @@ body {
   display: block;
   margin-bottom: 6px;
   font-weight: 600;
-  color: #5B0E14;
+  color: #0A5E4E;
 }
 .form-group input,
 .form-group select {
@@ -135,7 +135,7 @@ body {
 }
 .form-group input:focus {
   outline: none;
-  border-color: #5B0E14;
+  border-color: #0A5E4E;
 }
 
 /* Phone input with prefix */
@@ -173,7 +173,7 @@ body {
   border: none;
   cursor: pointer;
   font-size: 18px;
-  color: #5B0E14;
+  color: #0A5E4E;
 }
 
 /* ---------- Utility ---------- */
@@ -194,15 +194,15 @@ body {
   border-radius: 12px;
   padding: 24px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(7, 27, 30, 0.06);
 }
 .stat-card .number {
   font-size: 28px;
   font-weight: 700;
-  color: #5B0E14;
+  color: #0A5E4E;
 }
 .stat-card .label {
-  color: #64748B;
+  color: #103F46;
   margin-top: 8px;
   font-size: 14px;
 }
@@ -219,7 +219,7 @@ th, td {
   border-bottom: 1px solid #E2E8F0;
 }
 th {
-  color: #5B0E14;
+  color: #0A5E4E;
   font-weight: 600;
 }
 
@@ -228,22 +228,22 @@ th {
   background: white;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(7, 27, 30, 0.06);
   margin-bottom: 16px;
 }
 .group-card h4, .proposal-card h4 {
-  color: #5B0E14;
+  color: #0A5E4E;
   margin-bottom: 8px;
 }
 
-/* ---------- Welcome page (standalone) ---------- */
+/* ---------- Welcome page ---------- */
 .welcome-container {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #5B0E14 0%, #8B1A2B 100%);
+  background: linear-gradient(135deg, #0A5E4E 0%, #093B33 100%);
   color: white;
   text-align: center;
 }
@@ -254,7 +254,7 @@ th {
 .welcome-card h1 {
   font-size: 36px;
   margin-bottom: 10px;
-  color: #F1E194;
+  color: #D8C08A;
 }
 .welcome-card p {
   margin-bottom: 30px;
@@ -264,20 +264,20 @@ th {
   margin: 0 10px;
 }
 
-/* ---------- Auth pages (login/register) ---------- */
+/* ---------- Auth pages ---------- */
 .auth-container {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   width: 100%;
-  background: #FDFBF7;
+  background: #F2EDE1;
 }
 .auth-card {
   background: white;
   padding: 32px;
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+  box-shadow: 0 20px 40px rgba(7, 27, 30, 0.08);
   width: 100%;
   max-width: 420px;
 }
@@ -286,17 +286,16 @@ th {
   margin-bottom: 24px;
   font-size: 26px;
   font-weight: 700;
-  color: #5B0E14;
+  color: #0A5E4E;
 }
 .auth-card h2 {
   margin-bottom: 24px;
-  color: #5B0E14;
+  color: #0A5E4E;
   text-align: center;
 }
 
-/* ---------- Links inside auth card ---------- */
 .auth-card a {
-  color: #5B0E14;
+  color: #0A5E4E;
   font-weight: 600;
   text-decoration: none;
 }
@@ -304,11 +303,26 @@ th {
   text-decoration: underline;
 }
 
-/* ---------- Message area ---------- */
 #auth-message {
   font-size: 14px;
   min-height: 20px;
   margin-top: 12px;
+}
+
+/* Solo saver prompt */
+#solo-saver-prompt {
+  text-align: center;
+  padding: 30px;
+}
+#solo-saver-prompt h3 {
+  color: #0A5E4E;
+  margin-bottom: 10px;
+}
+#solo-saver-prompt .welcome-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* ---------- Responsive ---------- */
@@ -333,6 +347,6 @@ th {
     border-bottom: 2px solid transparent;
   }
   .sidebar nav a.active {
-    border-bottom-color: #F1E194;
+    border-bottom-color: #D8C08A;
   }
 }

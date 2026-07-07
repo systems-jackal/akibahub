@@ -3,40 +3,78 @@ requireAuth();
 async function loadDashboard() {
   try {
     const data = await fetchDashboard();
-    const stats = document.getElementById('stats-container');
-    stats.innerHTML = `
-      <div class="stat-card">
-        <div class="number">KES ${formatCurrency(data.personalBalance)}</div>
-        <div class="label">Personal Balance</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">KES ${formatCurrency(data.groupBalance)}</div>
-        <div class="label">Group Savings</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">${data.activeGroups}</div>
-        <div class="label">Active Groups</div>
-      </div>
-      <div class="stat-card">
-        <div class="number">${data.pendingVotes}</div>
-        <div class="label">Pending Votes</div>
-      </div>
-    `;
-    // Load recent proposals
-    const proposals = await fetchMyProposals();
-    const list = document.getElementById('recent-proposals');
-    if (proposals && proposals.length > 0) {
-      list.innerHTML = proposals.slice(0, 5).map(p => `
-        <div class="proposal-card">
-          <strong>${p.title}</strong> – ${p.status} – Amount: KES ${formatCurrency(p.amount)}
-        </div>
-      `).join('');
+    document.getElementById('personal-balance').textContent = formatCurrency(data.personalBalance);
+
+    const groups = await fetchMyGroups();
+
+    if (groups.length === 0) {
+      // Solo saver – hide group sections, show prompt
+      document.getElementById('groups-section').classList.add('hidden');
+      document.getElementById('solo-saver-prompt').classList.remove('hidden');
     } else {
-      list.innerHTML = '<p>No proposals yet.</p>';
+      // Group saver – show group sections, hide solo prompt
+      document.getElementById('groups-section').classList.remove('hidden');
+      document.getElementById('solo-saver-prompt').classList.add('hidden');
+
+      // Groups summary
+      const summary = document.getElementById('groups-summary');
+      summary.innerHTML = `
+        <p>You are in <strong>${groups.length}</strong> group(s) with a total balance of <strong>KES ${formatCurrency(data.groupBalance)}</strong>.</p>
+        <ul>
+          ${groups.map(g => `<li><a href="group.html?id=${g.id}">${g.name}</a></li>`).join('')}
+        </ul>
+      `;
+
+      // Recent proposals
+      const proposals = await fetchMyProposals();
+      const list = document.getElementById('recent-proposals');
+      if (proposals && proposals.length > 0) {
+        list.innerHTML = proposals.slice(0, 5).map(p => `
+          <div class="proposal-card">
+            <strong>${p.title}</strong> – ${p.status} – KES ${formatCurrency(p.amount)}
+          </div>
+        `).join('');
+      } else {
+        list.innerHTML = '<p>No proposals yet.</p>';
+      }
     }
   } catch (err) {
     showAlert(err.message, 'error');
   }
 }
+
+// Quick actions
+document.getElementById('quick-deposit').addEventListener('click', async () => {
+  const amount = prompt('Enter amount to deposit:');
+  if (amount) {
+    try {
+      await deposit(parseFloat(amount));
+      showAlert('Deposit successful');
+      loadDashboard();
+    } catch (e) { showAlert(e.message, 'error'); }
+  }
+});
+
+document.getElementById('quick-withdraw').addEventListener('click', async () => {
+  const amount = prompt('Enter amount to withdraw:');
+  if (amount) {
+    try {
+      await withdraw(parseFloat(amount));
+      showAlert('Withdrawal successful');
+      loadDashboard();
+    } catch (e) { showAlert(e.message, 'error'); }
+  }
+});
+
+document.getElementById('quick-join-group').addEventListener('click', async () => {
+  const code = prompt('Enter the Group ID or invite code:');
+  if (code) {
+    try {
+      await joinGroup(code.trim());
+      showAlert('Joined group successfully!');
+      loadDashboard();
+    } catch (e) { showAlert(e.message, 'error'); }
+  }
+});
 
 loadDashboard();

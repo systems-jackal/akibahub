@@ -23,12 +23,45 @@
 
   <main class="main-content">
     <h1>Dashboard</h1>
-    <div class="dashboard-grid" id="stats-container">
-      <!-- Filled by JS -->
+
+    <!-- Personal Savings (always visible) -->
+    <div class="card personal-savings">
+      <h3>Personal Savings</h3>
+      <div class="stat-card">
+        <div class="number" id="personal-balance">0.00</div>
+        <div class="label">KES</div>
+      </div>
+      <div class="quick-actions mt-20">
+        <button id="quick-deposit" class="btn-primary">Deposit</button>
+        <button id="quick-withdraw" class="btn-primary">Withdraw</button>
+        <a href="wallet.html" class="btn-outline">View Wallet</a>
+      </div>
     </div>
-    <div class="card mt-20">
-      <h3>Recent Proposals</h3>
-      <div id="recent-proposals"></div>
+
+    <!-- Group Savings Section (hidden until user joins a group) -->
+    <div id="groups-section" class="hidden">
+      <div class="card mt-20">
+        <h3>Savings Groups</h3>
+        <div id="groups-summary"></div>
+        <div class="quick-actions mt-20">
+          <a href="groups.html" class="btn-primary">Manage Groups</a>
+        </div>
+      </div>
+
+      <div class="card mt-20">
+        <h3>Recent Proposals</h3>
+        <div id="recent-proposals"></div>
+      </div>
+    </div>
+
+    <!-- Solo Saver Prompt (visible when no groups) -->
+    <div id="solo-saver-prompt" class="card mt-20">
+      <h3>You're saving solo! 💪</h3>
+      <p>Want to save together with friends or classmates?</p>
+      <div class="welcome-actions mt-20">
+        <a href="groups.html" class="btn-primary">Create a Savings Group</a>
+        <button id="quick-join-group" class="btn-secondary">Join a Group</button>
+      </div>
     </div>
   </main>
 
