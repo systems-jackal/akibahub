@@ -32,7 +32,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .csrf(csrf -> csrf.disable())
         .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/auth/**", "/health").permitAll()
             .anyRequest().authenticated()
         )
         // Order matters: add JwtFilter first, then RateLimitFilter before the same target.
