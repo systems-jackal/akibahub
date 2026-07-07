@@ -18,6 +18,11 @@ async function fetchGroups() {
   return await res.json();
 }
 
+async function fetchMyGroups() {
+  const res = await fetch('/api/groups/my', { headers: authHeaders() });
+  return await res.json();
+}
+
 async function fetchGroup(groupId) {
   const res = await fetch(`/api/groups/${groupId}`, { headers: authHeaders() });
   if (!res.ok) throw new Error('Group not found');

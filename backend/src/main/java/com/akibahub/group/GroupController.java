@@ -32,9 +32,14 @@ public class GroupController {
         return ResponseEntity.ok(Map.of("message", "Joined group"));
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<List<Group>> getMyGroups(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(groupService.getMyGroups(user));
+    }
+
     @GetMapping("/{groupId}")
     public ResponseEntity<Group> getGroup(@PathVariable Long groupId) {
-    return ResponseEntity.ok(groupService.getGroup(groupId));
+        return ResponseEntity.ok(groupService.getGroup(groupId));
     }
 
     @GetMapping

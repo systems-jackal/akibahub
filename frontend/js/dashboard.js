@@ -59,10 +59,10 @@ async function renderDashboard() {
     </div>
   `).join('');
 
-  const groups = await fetchGroups();
+  const groups = await fetchMyGroups();
   const groupsDiv = document.getElementById('groups-list');
   if (groups.length === 0) {
-    groupsDiv.innerHTML = '<p>No groups yet.</p>';
+    groupsDiv.innerHTML = '<p>No groups yet. Create or join one!</p>';
   } else {
     groupsDiv.innerHTML = groups.map(g => `
       <div class="group-item">
@@ -72,11 +72,10 @@ async function renderDashboard() {
     `).join('');
   }
 
-  // Show proposals from all groups? Not ideal. We'll just leave the proposals section for manual trigger via the group page.
   document.getElementById('proposals-list').innerHTML = '<p>Visit a group to see proposals.</p>';
 }
 
-// Contribute helper (called from inline onclick, still need to define globally)
+// Contribute helper
 window.contributeToGroup = async function(groupId) {
   const amount = prompt('Amount to contribute:');
   if (amount) {

@@ -27,8 +27,12 @@ public class GroupService {
     }
 
     public Group getGroup(Long groupId) {
-    return groupRepo.findById(groupId)
-            .orElseThrow(() -> new RuntimeException("Group not found"));
+        return groupRepo.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+    }
+
+    public List<Group> getMyGroups(User user) {
+        return groupRepo.findByMemberUserId(user.getId());
     }
 
     @Transactional
@@ -51,5 +55,6 @@ public class GroupService {
     }
 
     public List<Group> getAllGroups() { return groupRepo.findAll(); }
+
     public List<GroupMember> getGroupMembers(Long groupId) { return memberRepo.findByGroupId(groupId); }
 }
