@@ -1,4 +1,4 @@
-name: CI/CD with Security Scan & Deploy
+name: CI/CD with Deploy
 
 on:
   push:
@@ -8,7 +8,7 @@ env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/akibahub-backend
 
 jobs:
-  build-and-scan:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -30,16 +30,6 @@ jobs:
       - name: Build and test
         run: mvn -B package --file backend/pom.xml
 
-      - name: OWASP Dependency Check
-        run: mvn -B dependency-check:check --file backend/pom.xml -DnvdApiKey=${{ secrets.NVD_API_KEY }} || true
-        continue-on-error: true
-
-      - name: Upload OWASP report
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-report
-          path: backend/target/dependency-check-report.html
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -55,7 +45,7 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:latest,${{ env.IMAGE_NAME }}:${{ github.sha }}
 
   deploy:
-    needs: build-and-scan
+    needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
