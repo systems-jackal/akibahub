@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Akiba Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="logo">🏦 Akiba Hub</div>
+      <h2>Create Account</h2>
+      <form id="register-form">
+        <div class="form-group">
+          <label for="fullname">Full Name</label>
+          <input type="text" id="fullname" placeholder="Jane Doe" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="text" id="phone" placeholder="+254712345678" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required>
+        </div>
+        <button type="submit" class="primary-btn full-width">Register</button>
+      </form>
+      <p id="auth-message" class="message"></p>
+      <p class="switch-page">Already have an account? <a href="login.html">Login</a></p>
+      <a href="index.html" class="text-btn">← Back to Home</a>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const phone = document.getElementById('phone').value;
+      const password = document.getElementById('password').value;
+      const fullname = document.getElementById('fullname').value;
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone, password, fullName: fullname })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('akiba_token', data.token);
+        window.location.href = 'dashboard.html';
+      } else {
+        document.getElementById('auth-message').textContent = data.error || 'Registration failed';
+        document.getElementById('auth-message').style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>

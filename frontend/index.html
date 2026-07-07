@@ -3,92 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Akiba Hub</title>
+  <title>Akiba Hub - Secure Community Savings</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="container">
-    <div id="auth-section">
-      <h1>Akiba Hub</h1>
-      <div class="tabs">
-        <button id="login-tab" class="tab active">Login</button>
-        <button id="register-tab" class="tab">Register</button>
-      </div>
-
-      <form id="auth-form">
-        <div id="phone-group" class="form-group">
-          <label for="phone">Phone Number</label>
-          <input type="text" id="phone" placeholder="+254712345678" required>
-        </div>
-
-        <div id="password-group" class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" required>
-        </div>
-
-        <div id="fullname-group" class="form-group hidden">
-          <label for="fullname">Full Name</label>
-          <input type="text" id="fullname" placeholder="Jane Doe">
-        </div>
-
-        <button type="submit" id="auth-button">Login</button>
-      </form>
-      <p id="auth-message" class="message"></p>
-    </div>
-
-    <div id="dashboard" class="hidden">
-      <header>
-        <h2>Welcome, <span id="user-name"></span></h2>
-        <button id="logout-btn">Logout</button>
-      </header>
-
-      <div class="wallet-section">
-        <h3>Wallets</h3>
-        <div id="wallets"></div>
-      </div>
-
-      <div class="actions">
-        <h3>Quick Actions</h3>
-        <button id="deposit-btn">Deposit to Personal</button>
-        <div id="deposit-form" class="hidden">
-          <input type="number" id="deposit-amount" placeholder="Amount" step="0.0001">
-          <button id="do-deposit">Deposit</button>
-        </div>
-
-        <button id="create-group-btn">Create Group</button>
-        <div id="create-group-form" class="hidden">
-          <input type="text" id="group-name" placeholder="Group Name">
-          <input type="text" id="group-desc" placeholder="Description (optional)">
-          <button id="do-create-group">Create</button>
-        </div>
-
-        <div id="join-group-form">
-          <h4>Join Group</h4>
-          <input type="number" id="join-group-id" placeholder="Group ID">
-          <button id="do-join-group">Join</button>
-        </div>
-      </div>
-
-      <div class="groups-section">
-        <h3>Your Groups</h3>
-        <div id="groups-list"></div>
-      </div>
-
-      <div class="proposals-section">
-        <h3>Group Proposals</h3>
-        <div id="proposals-list"></div>
-        <div id="create-proposal-form" class="hidden">
-          <h4>New Proposal</h4>
-          <input type="number" id="proposal-group-id" placeholder="Group ID">
-          <input type="text" id="proposal-title" placeholder="Title">
-          <input type="text" id="proposal-desc" placeholder="Description (optional)">
-          <input type="number" id="proposal-amount" placeholder="Amount" step="0.0001">
-          <button id="do-create-proposal">Create Proposal</button>
-        </div>
+  <div class="welcome-container">
+    <div class="welcome-card">
+      <div class="logo">🏦 Akiba Hub</div>
+      <h1>Grow Together, Save Together</h1>
+      <p class="tagline">Secure community savings, democratic governance, and transparent finances for your chama.</p>
+      <div class="welcome-actions">
+        <a href="login.html" class="primary-btn">Login</a>
+        <a href="register.html" class="secondary-btn">Register</a>
       </div>
     </div>
   </div>
-
-  <script src="js/app.js"></script>
 </body>
 </html>
