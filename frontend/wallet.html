@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Wallet - Akiba Hub</title>
+  <title>My Wallet – Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -22,9 +22,13 @@
   <main class="main-content">
     <h1>My Wallet</h1>
     <div class="card">
-      <h3>Personal Balance: <span id="balance">0.00</span> KES</h3>
+      <h3>Personal Balance</h3>
+      <div class="stat-card">
+        <div class="number" id="balance">0.00</div>
+        <div class="label">KES</div>
+      </div>
       <div class="mt-20">
-        <input type="number" id="amount" placeholder="Amount" step="0.01" class="form-group" style="width:200px;display:inline-block;margin-right:10px;">
+        <input type="number" id="amount" placeholder="Amount (KES)" step="0.01" class="form-group" style="width:200px;display:inline-block;margin-right:10px;">
         <button id="deposit-btn" class="btn-primary">Deposit</button>
         <button id="withdraw-btn" class="btn-primary">Withdraw</button>
       </div>

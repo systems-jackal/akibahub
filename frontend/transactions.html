@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transactions - Akiba Hub</title>
+  <title>Transactions – Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -22,12 +22,13 @@
   <main class="main-content">
     <h1>Transaction History</h1>
     <div class="card">
+      <h3>Filters</h3>
       <div class="form-group" style="display:flex; gap:10px; flex-wrap:wrap;">
         <input type="text" id="filter-type" placeholder="Type (DEPOSIT/WITHDRAWAL)" style="flex:1;">
         <input type="number" id="filter-group" placeholder="Group ID" style="flex:1;">
         <input type="date" id="filter-start" style="flex:1;">
         <input type="date" id="filter-end" style="flex:1;">
-        <button id="apply-filter" class="btn-primary" style="flex:0 0 auto;">Filter</button>
+        <button id="apply-filter" class="btn-primary" style="flex:0 0 auto;">Apply Filters</button>
       </div>
     </div>
     <div id="transactions-table" class="mt-20"></div>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Group - Akiba Hub</title>
+  <title>Group Details – Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -21,15 +21,29 @@
   </aside>
   <main class="main-content">
     <h1 id="group-name"></h1>
-    <p id="group-desc"></p>
+    <p id="group-desc" class="text-muted"></p>
+
     <div class="card">
-      <h3>Group Wallet: <span id="group-balance">0.00</span> KES</h3>
+      <h3>Group Wallet</h3>
+      <p class="stat-number">KES <span id="group-balance">0.00</span></p>
       <button id="contribute-btn" class="btn-primary">Contribute</button>
     </div>
+
+    <!-- Invite Section (visible only to group creator) -->
+    <div id="invite-section" class="card mt-20 hidden">
+      <h3>Invite Members</h3>
+      <p>Share this link to allow others to join your group:</p>
+      <div class="invite-link-box" style="display:flex; gap:10px; align-items:center;">
+        <input type="text" id="invite-link-output" readonly style="flex:1;">
+        <button id="copy-invite" class="btn-primary small">Copy Link</button>
+      </div>
+    </div>
+
     <div class="card mt-20">
       <h3>Members</h3>
       <div id="members-list"></div>
     </div>
+
     <div class="card mt-20">
       <h3>Proposals</h3>
       <div id="proposals-list"></div>

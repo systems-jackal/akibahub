@@ -5,7 +5,7 @@ async function loadTransactions(type, groupId, start, end) {
     const txns = await fetchTransactions(type || null, groupId || null, start || null, end || null);
     const div = document.getElementById('transactions-table');
     if (txns.length === 0) {
-      div.innerHTML = '<p>No transactions match the criteria.</p>';
+      div.innerHTML = '<p>No transactions match your criteria.</p>';
       return;
     }
     div.innerHTML = `
@@ -17,7 +17,7 @@ async function loadTransactions(type, groupId, start, end) {
               <td>${formatDate(t.timestamp)}</td>
               <td>${t.type}</td>
               <td>KES ${formatCurrency(t.amount)}</td>
-              <td>${t.reference || ''}</td>
+              <td>${t.reference || '—'}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -36,5 +36,5 @@ document.getElementById('apply-filter').addEventListener('click', () => {
   loadTransactions(type, groupId, start, end);
 });
 
-// Initial load with no filters
+// Initial load without filters
 loadTransactions();
