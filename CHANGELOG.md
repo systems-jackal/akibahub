@@ -28,3 +28,7 @@
 
 ### Added
 - Rate limiting on `/api/auth/**` endpoints (bucket4j) to prevent brute‑force attacks
+
+### Security
+- Disabled stack traces and exception details in API error responses
+- Disabled `spring.jpa.open-in-view` to prevent potential data leaks
