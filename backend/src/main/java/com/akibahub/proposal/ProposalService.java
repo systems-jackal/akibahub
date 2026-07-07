@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
+import java.util.stream.Collectors;
 
 @Service
 public class ProposalService {
@@ -97,5 +98,13 @@ public class ProposalService {
 
     public List<Proposal> getProposalsForGroup(Long groupId) {
         return proposalRepo.findByGroupId(groupId);
+    }
+
+    // New method – get proposals for all groups the user belongs to
+    public List<Proposal> getProposalsForUserGroups(User user) {
+        List<Long> groupIds = memberRepo.findByUserId(user.getId())
+                .stream().map(m -> m.getGroup().getId()).collect(Collectors.toList());
+        if (groupIds.isEmpty()) return List.of();
+        return proposalRepo.findByGroupIdIn(groupIds);
     }
 }

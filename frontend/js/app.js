@@ -90,3 +90,9 @@ async function voteOnProposal(proposalId) {
     body: JSON.stringify({ vote: 'YES' })
   });
 }
+
+async function fetchMyProposals() {
+  const res = await fetch('/api/proposals/my', { headers: authHeaders() });
+  if (!res.ok) return [];
+  return await res.json();
+}

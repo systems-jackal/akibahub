@@ -45,4 +45,9 @@ public class ProposalController {
     public ResponseEntity<List<Proposal>> getProposals(@PathVariable Long groupId) {
         return ResponseEntity.ok(proposalService.getProposalsForGroup(groupId));
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<Proposal>> getMyProposals(@AuthenticationPrincipal User user) {
+    return ResponseEntity.ok(proposalService.getProposalsForUserGroups(user));
+    }
 }

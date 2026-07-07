@@ -100,8 +100,26 @@ async function renderDashboard() {
     `).join('');
   }
 
-  document.getElementById('proposals-list').innerHTML = '<p>Visit a group to see proposals.</p>';
+  // Fetch and display proposals
+  const proposals = await fetchMyProposals();
+  const proposalsDiv = document.getElementById('proposals-list');
+  if (proposals.length === 0) {
+    proposalsDiv.innerHTML = '<p>No proposals yet.</p>';
+  } else {
+    proposalsDiv.innerHTML = proposals.map(p => `
+      <div class="proposal-item">
+        <strong>${p.title}</strong> – Group: ${p.group?.name || 'Group ' + p.group?.id} – Amount: ${p.amount}, Status: ${p.status}
+        ${p.status === 'OPEN' ? `<button class="btn-primary small" onclick="vote(${p.id})">Vote YES</button>` : ''}
+      </div>
+    `).join('');
+  }
 }
+
+// Global vote function for inline onclick
+window.vote = async function(proposalId) {
+  await voteOnProposal(proposalId);
+  renderDashboard();
+};
 
 // Contribute helper
 window.contributeToGroup = async function(groupId) {

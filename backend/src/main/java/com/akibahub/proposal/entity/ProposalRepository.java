@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface ProposalRepository extends JpaRepository<Proposal, Long> {
     List<Proposal> findByGroupId(Long groupId);
+    List<Proposal> findByGroupIdIn(List<Long> groupIds);
 }
