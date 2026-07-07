@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login – Akiba Hub</title>
+  <title>Login - Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -13,20 +13,25 @@
       <h2>Login</h2>
       <form id="login-form">
         <div class="form-group">
-          <label for="phone">Phone Number</label>
-          <input type="text" id="phone" placeholder="+254712345678" required>
+          <label for="login">Phone Number or ID Number</label>
+          <input type="text" id="login" placeholder="+254 712 345 678 or 12345678" required>
         </div>
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" required>
+          <div class="password-wrapper">
+            <input type="password" id="password" required>
+            <button type="button" class="toggle-password">👁️</button>
+          </div>
         </div>
         <button type="submit" class="btn-primary full-width">Login</button>
       </form>
-      <p id="auth-message" class="message"></p>
-      <p class="switch-page">Don't have an account? <a href="register.html">Register</a></p>
-      <a href="index.html" class="text-link">← Back to Home</a>
+      <p id="auth-message" class="mt-20"></p>
+      <p class="mt-20">Don't have an account? <a href="register.html">Register</a></p>
+      <a href="index.html" class="btn-outline mt-20">← Back to Home</a>
     </div>
   </div>
-  <script src="js/login.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/pages/login.js"></script>
 </body>
 </html>

@@ -1,20 +1,24 @@
 document.getElementById('login-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const phone = document.getElementById('phone').value;
+  const login = document.getElementById('login').value;
   const password = document.getElementById('password').value;
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phoneNumber: phone, password })
-  });
-  const data = await res.json();
-  if (res.ok) {
-    localStorage.setItem('akiba_token', data.token);
-    localStorage.setItem('akiba_phone', data.phoneNumber);
-    window.location.href = 'dashboard.html';
-  } else {
-    const msg = document.getElementById('auth-message');
-    msg.textContent = data.error || 'Login failed';
-    msg.style.color = 'red';
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login, password })
+    });
+    const json = await res.json();
+    if (json.success) {
+      localStorage.setItem('akiba_token', json.data.token);
+      localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
+      window.location.href = 'dashboard.html';
+    } else {
+      document.getElementById('auth-message').textContent = json.message || 'Login failed';
+      document.getElementById('auth-message').style.color = 'red';
+    }
+  } catch (err) {
+    document.getElementById('auth-message').textContent = 'Network error';
+    document.getElementById('auth-message').style.color = 'red';
   }
 });

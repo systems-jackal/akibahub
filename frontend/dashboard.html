@@ -3,73 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard – Akiba Hub</title>
+  <title>Dashboard - Akiba Hub</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="dashboard-container">
-    <header class="dashboard-header">
-      <div class="logo">🏦 Akiba Hub</div>
-      <nav>
-        <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="#" id="logout-btn">Logout</a>
-      </nav>
-    </header>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">🏦 Akiba Hub</div>
+    <nav>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="wallet.html">My Wallet</a>
+      <a href="groups.html">Groups</a>
+      <a href="proposals.html">Proposals</a>
+      <a href="transactions.html">Transactions</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logout-btn">Logout</a>
+    </nav>
+  </aside>
 
-    <div class="dashboard-grid">
-      <!-- Wallets Card -->
-      <div class="card">
-        <h3>Your Wallets</h3>
-        <div id="wallets"></div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="card">
-        <h3>Quick Actions</h3>
-        <button id="deposit-btn" class="btn-primary">Deposit to Personal</button>
-        <div id="deposit-form" class="hidden inline-form">
-          <input type="number" id="deposit-amount" placeholder="Amount" step="0.0001">
-          <button id="do-deposit" class="btn-primary small">Deposit</button>
-        </div>
-
-        <button id="create-group-btn" class="btn-primary">Create Group</button>
-        <div id="create-group-form" class="hidden inline-form">
-          <input type="text" id="group-name" placeholder="Group Name">
-          <input type="text" id="group-desc" placeholder="Description (optional)">
-          <button id="do-create-group" class="btn-primary small">Create</button>
-        </div>
-
-        <h4>Join Group</h4>
-        <div class="inline-form">
-          <input type="number" id="join-group-id" placeholder="Group ID">
-          <button id="do-join-group" class="btn-primary small">Join</button>
-        </div>
-      </div>
-
-      <!-- Groups List -->
-      <div class="card">
-        <h3>Your Groups</h3>
-        <div id="groups-list"></div>
-      </div>
-
-      <!-- Proposals -->
-      <div class="card">
-        <h3>Recent Proposals</h3>
-        <div id="proposals-list"></div>
-        <button id="create-proposal-btn" class="btn-primary">New Proposal</button>
-        <div id="create-proposal-form" class="hidden inline-form">
-          <p id="proposal-message" style="margin-top:10px;"></p>
-          <input type="number" id="proposal-group-id" placeholder="Group ID">
-          <input type="text" id="proposal-title" placeholder="Title">
-          <input type="text" id="proposal-desc" placeholder="Description (optional)">
-          <input type="number" id="proposal-amount" placeholder="Amount" step="0.0001">
-          <button id="do-create-proposal" class="btn-primary small">Create</button>
-        </div>
-      </div>
+  <main class="main-content">
+    <h1>Dashboard</h1>
+    <div class="dashboard-grid" id="stats-container">
+      <!-- Filled by JS -->
     </div>
-  </div>
+    <div class="card mt-20">
+      <h3>Recent Proposals</h3>
+      <div id="recent-proposals"></div>
+    </div>
+  </main>
 
-  <script src="js/app.js"></script>
-  <script src="js/dashboard.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pages/dashboard.js"></script>
 </body>
 </html>
