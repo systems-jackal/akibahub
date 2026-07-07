@@ -47,14 +47,16 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
+   
+   @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("*"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(List.of("https://akiba.unitybridge.dev"));
+    config.setAllowCredentials(true);
+    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+}
 }
