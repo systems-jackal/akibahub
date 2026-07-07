@@ -19,29 +19,32 @@
       <a href="#" id="logout-btn">Logout</a>
     </nav>
   </aside>
-  <main class="main-content">
-    <h1 id="group-name"></h1>
-    <p id="group-desc" class="text-muted"></p>
 
-    <div class="card">
+  <main class="main-content">
+    <h1 id="group-name">Loading Group...</h1>
+    <p id="group-desc" class="text-muted"></p>
+    
+    <div id="group-rules-box" class="card hidden">
+      <h3>Group Rules</h3>
+      <p id="group-rules-text"></p>
+    </div>
+
+    <div class="card mt-20">
       <h3>Group Wallet</h3>
       <p class="stat-number">KES <span id="group-balance">0.00</span></p>
       <button id="contribute-btn" class="btn-primary">Contribute</button>
     </div>
 
-    <!-- Invite Section (visible only to group creator) -->
     <div id="invite-section" class="card mt-20 hidden">
       <h3>Invite Members</h3>
-      <p>Share this link to allow others to join your group:</p>
-      <div class="invite-link-box" style="display:flex; gap:10px; align-items:center;">
-        <input type="text" id="invite-link-output" readonly style="flex:1;">
-        <button id="copy-invite" class="btn-primary small">Copy Link</button>
-      </div>
+      <p>Invite Code: <strong id="invite-code-display"></strong></p>
+      <button id="copy-invite" class="btn-primary small">Copy Code</button>
     </div>
 
     <div class="card mt-20">
-      <h3>Members</h3>
-      <div id="members-list"></div>
+      <h3>Members (<span id="member-count">0</span>)</h3>
+      <button id="toggle-members" class="btn-outline">View Members</button>
+      <div id="members-list" class="hidden mt-10"></div>
     </div>
 
     <div class="card mt-20">
@@ -50,6 +53,7 @@
       <button id="new-proposal-btn" class="btn-primary mt-20">New Proposal</button>
     </div>
   </main>
+
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>

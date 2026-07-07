@@ -23,15 +23,24 @@ public class GroupController {
     @PostMapping
     public ResponseEntity<ApiResponse<Group>> createGroup(@RequestBody Map<String, String> body,
                                                           @AuthenticationPrincipal User user) {
-        Group group = groupService.createGroup(body.get("name"), body.get("description"), user);
+        Group group = groupService.createGroup(
+                body.get("name"),
+                body.get("description"),
+                body.get("rules"),
+                user
+        );
         return ResponseEntity.ok(ApiResponse.<Group>builder()
                 .success(true).message("Group created").data(group).build());
     }
 
-    @PostMapping("/{groupId}/join")
-    public ResponseEntity<ApiResponse<String>> joinGroup(@PathVariable Long groupId,
+    @PostMapping("/join")
+    public ResponseEntity<ApiResponse<String>> joinGroup(@RequestBody Map<String, String> body,
                                                          @AuthenticationPrincipal User user) {
-        groupService.joinGroup(groupId, user);
+        String code = body.get("code");
+        if (code == null || code.isBlank()) {
+            throw new RuntimeException("Invite code required");
+        }
+        groupService.joinGroup(code.trim(), user);
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .success(true).message("Joined group").build());
     }
@@ -54,7 +63,13 @@ public class GroupController {
     public ResponseEntity<ApiResponse<Group>> updateGroup(@PathVariable Long groupId,
                                                           @RequestBody Map<String, String> body,
                                                           @AuthenticationPrincipal User user) {
-        Group updated = groupService.updateGroup(groupId, body.get("name"), body.get("description"), user);
+        Group updated = groupService.updateGroup(
+                groupId, 
+                body.get("name"), 
+                body.get("description"), 
+                body.get("rules"), 
+                user
+        );
         return ResponseEntity.ok(ApiResponse.<Group>builder()
                 .success(true).message("Group updated").data(updated).build());
     }

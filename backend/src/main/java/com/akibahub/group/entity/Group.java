@@ -18,6 +18,12 @@ public class Group {
 
     private String description;
 
+    @Column(length = 500)
+    private String rules;                    // group rules / terms
+
+    @Column(unique = true, length = 6)
+    private String inviteCode;              // 6‑char alphanumeric
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
@@ -26,5 +32,8 @@ public class Group {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist protected void onCreate() { createdAt = LocalDateTime.now(); }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

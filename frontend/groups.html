@@ -19,27 +19,40 @@
       <a href="#" id="logout-btn">Logout</a>
     </nav>
   </aside>
+  
   <main class="main-content">
     <h1>My Groups</h1>
+    
     <div class="card">
       <h3>Create New Group</h3>
       <div class="form-group">
-        <input type="text" id="group-name" placeholder="Group Name">
+        <input type="text" id="group-name" placeholder="Group Name" required>
       </div>
       <div class="form-group">
         <input type="text" id="group-desc" placeholder="Description (optional)">
       </div>
+      <div class="form-group">
+        <textarea id="group-rules" placeholder="Group Rules (e.g., monthly contribution KES 500, voting rules)" rows="3"></textarea>
+      </div>
       <button id="create-btn" class="btn-primary">Create Group</button>
+      
+      <div id="invite-code-area" class="hidden mt-20">
+        <p><strong>Invite Code:</strong> <span id="generated-code" class="invite-code"></span></p>
+        <button id="copy-code" class="btn-primary small">Copy Code</button>
+      </div>
     </div>
+    
     <div class="card mt-20">
       <h3>Join Existing Group</h3>
       <div class="form-group">
-        <input type="number" id="join-group-id" placeholder="Group ID">
+        <input type="text" id="join-invite-code" placeholder="Enter 6-Character Invite Code" maxlength="6">
       </div>
-      <button id="join-btn" class="btn-primary">Join</button>
+      <button id="join-btn" class="btn-primary">Join Group</button>
     </div>
+    
     <div id="groups-list" class="mt-20"></div>
   </main>
+
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
