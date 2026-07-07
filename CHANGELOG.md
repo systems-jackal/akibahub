@@ -25,3 +25,6 @@
 ## [Unreleased]
 ### Changed
 - Backend container now runs as non‑root user `akibahub` (security hardening)
+
+### Added
+- Rate limiting on `/api/auth/**` endpoints (bucket4j) to prevent brute‑force attacks
