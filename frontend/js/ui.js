@@ -79,3 +79,51 @@ document.addEventListener('DOMContentLoaded', () => {
   initPhoneInputs();
   loadSidebar();
 });
+
+// ===================== MOBILE SIDEBAR TOGGLE =====================
+(function() {
+  // Only run on authenticated pages that have a sidebar
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  // Create hamburger button (visible only on phones ≤768px via CSS)
+  const hamburger = document.createElement('button');
+  hamburger.className = 'hamburger';
+  hamburger.innerHTML = '&#9776;'; // ☰
+  hamburger.setAttribute('aria-label', 'Toggle menu');
+  document.body.appendChild(hamburger);
+
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'sidebar-overlay';
+  document.body.appendChild(overlay);
+
+  // Open/close functions
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    hamburger.innerHTML = '&#10005;'; // ✕
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    hamburger.innerHTML = '&#9776;'; // ☰
+  }
+
+  hamburger.addEventListener('click', function() {
+    if (sidebar.classList.contains('open')) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  overlay.addEventListener('click', closeSidebar);
+
+  // Close sidebar when any nav link is clicked
+  sidebar.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', function() {
+      closeSidebar();
+    });
+  });
+})();

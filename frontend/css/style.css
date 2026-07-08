@@ -844,3 +844,157 @@ tbody tr:hover { background: #F8F7F2; }
     .auth-card { padding: 30px; }
     .logo-container, .footer-logo-container { flex-direction: column; gap: 4px; }
 }
+
+/* ========== MOBILE RESPONSIVENESS ========== */
+
+/* Hamburger toggle button (hidden on desktop) */
+.hamburger {
+    display: none;
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 1000;
+    background: #0A5E4E;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+
+@media (max-width: 768px) {
+    /* Show hamburger */
+    .hamburger {
+        display: block;
+    }
+
+    /* Sidebar – hidden off‑screen by default */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -280px;            /* slide‑out drawer */
+        width: 260px;
+        height: 100vh;
+        transition: left 0.3s ease;
+        z-index: 999;
+        padding-top: 80px;
+    }
+
+    /* When open, slide in */
+    .sidebar.open {
+        left: 0;
+    }
+
+    /* Overlay behind sidebar */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 998;
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* Push main content to full width */
+    .main-content {
+        margin-left: 0 !important;
+        padding: 80px 20px 20px;  /* leave room for top hamburger */
+    }
+
+    /* Landing page hero */
+    .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 120px 5% 60px;
+    }
+    .hero h1 { font-size: 40px; }
+    .hero-buttons { justify-content: center; }
+
+    /* Grids – single column */
+    .dashboard-grid,
+    .feature-grid,
+    .steps-grid,
+    .why-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    /* Tables – horizontal scroll on small screens */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* Cards – less padding */
+    .card, .stat-card, .feature-card, .step, .hero-card {
+        padding: 20px;
+    }
+
+    /* Navbar (landing) */
+    .navbar {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+        gap: 10px;
+    }
+    .navbar nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    /* Footer */
+    .footer-links {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Auth cards */
+    .auth-card {
+        margin: 0 15px;
+        padding: 25px;
+    }
+
+    /* Buttons – full width on mobile */
+    .btn-primary,
+    .btn-secondary {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Solo saver prompt */
+    #solo-saver-prompt .welcome-actions {
+        flex-direction: column;
+    }
+
+    /* Phone input */
+    .phone-input {
+        flex-direction: column;
+    }
+    .phone-input .prefix {
+        border-radius: 10px 10px 0 0;
+        border-right: 1px solid #ddd;
+        border-bottom: none;
+    }
+    .phone-input input {
+        border-radius: 0 0 10px 10px;
+    }
+}
+
+/* Extra small screens (phones ≤ 400px) */
+@media (max-width: 400px) {
+    .hero h1 { font-size: 32px; }
+    .hero p { font-size: 16px; }
+    section h2 { font-size: 28px; }
+    .stat h2 { font-size: 36px; }
+}
