@@ -48,8 +48,9 @@ public class ProposalController {
 
     // Proposals for a specific group
     @GetMapping("/groups/{groupId}/proposals")
-    public ResponseEntity<ApiResponse<List<Proposal>>> getProposals(@PathVariable Long groupId) {
-        List<Proposal> proposals = proposalService.getProposalsForGroup(groupId);
+    public ResponseEntity<ApiResponse<List<Proposal>>> getProposals(@PathVariable Long groupId,
+                                                                     @AuthenticationPrincipal User user) {
+        List<Proposal> proposals = proposalService.getProposalsForGroup(groupId, user);
         return ResponseEntity.ok(ApiResponse.<List<Proposal>>builder()
                 .success(true).data(proposals).build());
     }
@@ -64,8 +65,9 @@ public class ProposalController {
 
     // Get single proposal detail
     @GetMapping("/proposals/{proposalId}")
-    public ResponseEntity<ApiResponse<Proposal>> getProposal(@PathVariable Long proposalId) {
-        Proposal proposal = proposalService.getProposal(proposalId);
+    public ResponseEntity<ApiResponse<Proposal>> getProposal(@PathVariable Long proposalId,
+                                                              @AuthenticationPrincipal User user) {
+        Proposal proposal = proposalService.getProposal(proposalId, user);
         return ResponseEntity.ok(ApiResponse.<Proposal>builder()
                 .success(true).data(proposal).build());
     }

@@ -2,6 +2,10 @@ package com.akibahub.wallet;
 
 import com.akibahub.audit.AuditLogService;
 import com.akibahub.group.entity.GroupMemberRepository;
+import com.akibahub.shared.AmountValidator;
+import com.akibahub.shared.exception.BadRequestException;
+import com.akibahub.shared.exception.ForbiddenException;
+import com.akibahub.shared.exception.NotFoundException;
 import com.akibahub.user.entity.User;
 import com.akibahub.wallet.entity.*;
 import org.springframework.stereotype.Service;
@@ -34,8 +38,9 @@ public class WalletService {
 
     @Transactional
     public Wallet depositToPersonal(User user, BigDecimal amount) {
+        AmountValidator.requirePositive(amount);
         Wallet wallet = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
-                .orElseThrow(() -> new RuntimeException("Personal wallet not found"));
+                .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
         wallet.setBalance(wallet.getBalance().add(amount));
         walletRepo.save(wallet);
         transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
@@ -46,9 +51,10 @@ public class WalletService {
 
     @Transactional
     public Wallet withdrawFromPersonal(User user, BigDecimal amount) {
+        AmountValidator.requirePositive(amount);
         Wallet wallet = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
-                .orElseThrow(() -> new RuntimeException("Personal wallet not found"));
-        if (wallet.getBalance().compareTo(amount) < 0) throw new RuntimeException("Insufficient balance");
+                .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
+        if (wallet.getBalance().compareTo(amount) < 0) throw new BadRequestException("Insufficient balance");
         wallet.setBalance(wallet.getBalance().subtract(amount));
         walletRepo.save(wallet);
         transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.WITHDRAWAL)
@@ -59,12 +65,14 @@ public class WalletService {
 
     @Transactional
     public void contributeToGroup(User user, Long groupId, BigDecimal amount) {
+        AmountValidator.requirePositive(amount);
         memberRepo.findByGroupIdAndUserId(groupId, user.getId())
-                .orElseThrow(() -> new RuntimeException("Not a member"));
-        Wallet personal = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL).orElseThrow();
-        if (personal.getBalance().compareTo(amount) < 0) throw new RuntimeException("Insufficient balance");
+                .orElseThrow(() -> new ForbiddenException("Not a member"));
+        Wallet personal = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
+                .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
+        if (personal.getBalance().compareTo(amount) < 0) throw new BadRequestException("Insufficient balance");
         Wallet groupWallet = walletRepo.findByGroupIdAndType(groupId, Wallet.WalletType.GROUP)
-                .orElseThrow(() -> new RuntimeException("Group wallet not found"));
+                .orElseThrow(() -> new NotFoundException("Group wallet not found"));
 
         personal.setBalance(personal.getBalance().subtract(amount));
         walletRepo.save(personal);

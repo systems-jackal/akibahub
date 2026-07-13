@@ -21,7 +21,7 @@ async function loadDashboard() {
       summary.innerHTML = `
         <p>You are in <strong>${groups.length}</strong> group(s) with a total balance of <strong>KES ${formatCurrency(data.groupBalance)}</strong>.</p>
         <ul>
-          ${groups.map(g => `<li><a href="group.html?id=${g.id}">${g.name}</a></li>`).join('')}
+          ${groups.map(g => `<li><a href="group.html?id=${g.id}">${escapeHtml(g.name)}</a></li>`).join('')}
         </ul>
       `;
 
@@ -31,7 +31,7 @@ async function loadDashboard() {
       if (proposals && proposals.length > 0) {
         list.innerHTML = proposals.slice(0, 5).map(p => `
           <div class="proposal-card">
-            <strong>${p.title}</strong> – ${p.status} – KES ${formatCurrency(p.amount)}
+            <strong>${escapeHtml(p.title)}</strong> – ${escapeHtml(p.status)} – KES ${formatCurrency(p.amount)}
           </div>
         `).join('');
       } else {

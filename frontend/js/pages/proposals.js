@@ -9,9 +9,9 @@ async function loadProposals() {
     } else {
       container.innerHTML = proposals.map(p => `
         <div class="proposal-card">
-          <strong>${p.title}</strong>
-          <p>Amount: KES ${formatCurrency(p.amount)} &nbsp;|&nbsp; Status: <span class="status-${p.status.toLowerCase()}">${p.status}</span></p>
-          <p>Group: ${p.group?.name || 'Unknown Group'} (ID: ${p.group?.id || 'N/A'})</p>
+          <strong>${escapeHtml(p.title)}</strong>
+          <p>Amount: KES ${formatCurrency(p.amount)} &nbsp;|&nbsp; Status: <span class="status-${p.status.toLowerCase()}">${escapeHtml(p.status)}</span></p>
+          <p>Group: ${escapeHtml(p.group?.name || 'Unknown Group')} (ID: ${p.group?.id || 'N/A'})</p>
           ${p.status === 'OPEN' ? `<button class="btn-primary small" onclick="vote('${p.id}')">Vote YES</button>` : ''}
         </div>
       `).join('');

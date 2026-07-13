@@ -17,7 +17,7 @@ async function loadTransactions(type, groupId, start, end) {
               <td>${formatDate(t.timestamp)}</td>
               <td>${t.type}</td>
               <td>KES ${formatCurrency(t.amount)}</td>
-              <td>${t.reference || '—'}</td>
+              <td>${escapeHtml(t.reference) || '—'}</td>
             </tr>
           `).join('')}
         </tbody>

@@ -85,15 +85,5 @@ document.getElementById('join-btn').addEventListener('click', async () => {
   }
 });
 
-// Helper utility to sanitize output and avoid XSS injections
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-}
-
 // Initial execution
 loadGroups();

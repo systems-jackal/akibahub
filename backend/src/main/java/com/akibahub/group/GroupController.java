@@ -53,8 +53,9 @@ public class GroupController {
     }
 
     @GetMapping("/{groupId}")
-    public ResponseEntity<ApiResponse<Group>> getGroup(@PathVariable Long groupId) {
-        Group group = groupService.getGroup(groupId);
+    public ResponseEntity<ApiResponse<Group>> getGroup(@PathVariable Long groupId,
+                                                        @AuthenticationPrincipal User user) {
+        Group group = groupService.getGroup(groupId, user);
         return ResponseEntity.ok(ApiResponse.<Group>builder()
                 .success(true).data(group).build());
     }
@@ -99,8 +100,9 @@ public class GroupController {
     }
 
     @GetMapping("/{groupId}/members")
-    public ResponseEntity<ApiResponse<List<GroupMember>>> getMembers(@PathVariable Long groupId) {
-        List<GroupMember> members = groupService.getGroupMembers(groupId);
+    public ResponseEntity<ApiResponse<List<GroupMember>>> getMembers(@PathVariable Long groupId,
+                                                                      @AuthenticationPrincipal User user) {
+        List<GroupMember> members = groupService.getGroupMembers(groupId, user);
         return ResponseEntity.ok(ApiResponse.<List<GroupMember>>builder()
                 .success(true).data(members).build());
     }

@@ -6,19 +6,29 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimitConfig rateLimitConfig;
+    private final Set<String> trustedProxies;
 
-    public RateLimitFilter(RateLimitConfig rateLimitConfig) {
+    public RateLimitFilter(RateLimitConfig rateLimitConfig,
+                            @Value("${security.trusted-proxies:127.0.0.1,::1}") String trustedProxiesCsv) {
         this.rateLimitConfig = rateLimitConfig;
+        this.trustedProxies = Arrays.stream(trustedProxiesCsv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -47,10 +57,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String getClientIP(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader != null) {
-            return xfHeader.split(",")[0].trim();
+        String directPeer = request.getRemoteAddr();
+
+        // Only honor X-Forwarded-For if this request's direct TCP connection
+        // came from a reverse proxy we control. Otherwise the header is
+        // attacker-controlled input - anyone can set
+        // "X-Forwarded-For: <anything>" on a request they send directly
+        // to us, which previously handed them a brand new rate-limit
+        // bucket on every request, defeating the limiter entirely.
+        if (trustedProxies.contains(directPeer)) {
+            String xfHeader = request.getHeader("X-Forwarded-For");
+            if (xfHeader != null && !xfHeader.isBlank()) {
+                return xfHeader.split(",")[0].trim();
+            }
         }
-        return request.getRemoteAddr();
+        return directPeer;
     }
 }
