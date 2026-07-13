@@ -1,55 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Groups - Akiba Hub</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Groups – Akiba Hub</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">🏦 Akiba Hub</div>
+  <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">🏦 Akiba<span>Hub</span></div>
     <nav>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="wallet.html">My Wallet</a>
-      <a href="groups.html" class="active">Groups</a>
-      <a href="proposals.html">Proposals</a>
-      <a href="transactions.html">Transactions</a>
-      <a href="settings.html">Settings</a>
-      <a href="#" id="logout-btn">Logout</a>
+      <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+      <a href="wallet.html"><span class="icon">👛</span>My Wallet</a>
+      <a href="groups.html" class="active"><span class="icon">👥</span>Groups</a>
+      <a href="proposals.html"><span class="icon">📋</span>Proposals</a>
+      <a href="transactions.html"><span class="icon">📈</span>Transactions</a>
+      <a href="settings.html"><span class="icon">⚙️</span>Settings</a>
+      <a href="#" id="logout-btn"><span class="icon">🚪</span>Logout</a>
     </nav>
   </aside>
-  
+
   <main class="main-content">
     <h1>My Groups</h1>
-    
+
     <div class="card">
-      <h3>Create New Group</h3>
+      <h3>✨ Create New Group</h3>
       <div class="form-group">
-        <input type="text" id="group-name" placeholder="Group Name" required>
+        <label for="group-name">Group Name</label>
+        <div class="input-wrapper">
+          <div class="glow-ring"></div>
+          <input type="text" id="group-name" placeholder="e.g. Campus Chama" />
+        </div>
       </div>
       <div class="form-group">
-        <input type="text" id="group-desc" placeholder="Description (optional)">
+        <label for="group-desc">Description (optional)</label>
+        <div class="input-wrapper">
+          <div class="glow-ring"></div>
+          <input type="text" id="group-desc" placeholder="What's this group about?" />
+        </div>
       </div>
       <div class="form-group">
-        <textarea id="group-rules" placeholder="Group Rules (e.g., monthly contribution KES 500, voting rules)" rows="3"></textarea>
+        <label for="group-rules">Group Rules</label>
+        <div class="input-wrapper">
+          <div class="glow-ring"></div>
+          <textarea id="group-rules" placeholder="e.g. Monthly contribution KES 500, voting rules…" rows="3"></textarea>
+        </div>
       </div>
-      <button id="create-btn" class="btn-primary">Create Group</button>
-      
+      <button id="create-btn" class="btn-primary"><span class="wrap">🚀 Create Group</span></button>
+
       <div id="invite-code-area" class="hidden mt-20">
         <p><strong>Invite Code:</strong> <span id="generated-code" class="invite-code"></span></p>
-        <button id="copy-code" class="btn-primary small">Copy Code</button>
+        <button id="copy-code" class="btn-primary btn-sm"><span class="wrap">📋 Copy Code</span></button>
       </div>
     </div>
-    
+
     <div class="card mt-20">
-      <h3>Join Existing Group</h3>
+      <h3>🔑 Join Existing Group</h3>
       <div class="form-group">
-        <input type="text" id="join-invite-code" placeholder="Enter 6-Character Invite Code" maxlength="6">
+        <label for="join-invite-code">Enter 6‑Character Invite Code</label>
+        <div class="input-wrapper">
+          <div class="glow-ring"></div>
+          <input type="text" id="join-invite-code" placeholder="e.g. A1B2C3" maxlength="6" />
+        </div>
       </div>
-      <button id="join-btn" class="btn-primary">Join Group</button>
+      <button id="join-btn" class="btn-primary"><span class="wrap">➕ Join Group</span></button>
     </div>
-    
+
     <div id="groups-list" class="mt-20"></div>
   </main>
 
@@ -57,5 +76,15 @@
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/groups.js"></script>
+  <script>
+    document.getElementById('hamburger-btn')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('active');
+    });
+    document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.remove('open');
+      this.classList.remove('active');
+    });
+  </script>
 </body>
 </html>

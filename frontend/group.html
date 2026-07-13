@@ -1,56 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Group Details – Akiba Hub</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">🏦 Akiba Hub</div>
+  <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">🏦 Akiba<span>Hub</span></div>
     <nav>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="wallet.html">My Wallet</a>
-      <a href="groups.html">Groups</a>
-      <a href="proposals.html">Proposals</a>
-      <a href="transactions.html">Transactions</a>
-      <a href="settings.html">Settings</a>
-      <a href="#" id="logout-btn">Logout</a>
+      <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+      <a href="wallet.html"><span class="icon">👛</span>My Wallet</a>
+      <a href="groups.html"><span class="icon">👥</span>Groups</a>
+      <a href="proposals.html"><span class="icon">📋</span>Proposals</a>
+      <a href="transactions.html"><span class="icon">📈</span>Transactions</a>
+      <a href="settings.html"><span class="icon">⚙️</span>Settings</a>
+      <a href="#" id="logout-btn"><span class="icon">🚪</span>Logout</a>
     </nav>
   </aside>
 
   <main class="main-content">
-    <h1 id="group-name">Loading Group...</h1>
+    <h1 id="group-name">Loading Group…</h1>
     <p id="group-desc" class="text-muted"></p>
-    
+
     <div id="group-rules-box" class="card hidden">
-      <h3>Group Rules</h3>
+      <h3>📜 Group Rules</h3>
       <p id="group-rules-text"></p>
     </div>
 
     <div class="card mt-20">
-      <h3>Group Wallet</h3>
+      <h3>💰 Group Wallet</h3>
       <p class="stat-number">KES <span id="group-balance">0.00</span></p>
-      <button id="contribute-btn" class="btn-primary">Contribute</button>
+      <button id="contribute-btn" class="btn-primary mt-10"><span class="wrap">➕ Contribute</span></button>
     </div>
 
     <div id="invite-section" class="card mt-20 hidden">
-      <h3>Invite Members</h3>
+      <h3>🔗 Invite Members</h3>
       <p>Invite Code: <strong id="invite-code-display"></strong></p>
-      <button id="copy-invite" class="btn-primary small">Copy Code</button>
+      <button id="copy-invite" class="btn-primary btn-sm"><span class="wrap">📋 Copy Code</span></button>
     </div>
 
     <div class="card mt-20">
-      <h3>Members (<span id="member-count">0</span>)</h3>
-      <button id="toggle-members" class="btn-outline">View Members</button>
+      <h3>👤 Members (<span id="member-count">0</span>)</h3>
+      <button id="toggle-members" class="btn-secondary btn-sm">View Members</button>
       <div id="members-list" class="hidden mt-10"></div>
     </div>
 
     <div class="card mt-20">
-      <h3>Proposals</h3>
+      <h3>📋 Proposals</h3>
       <div id="proposals-list"></div>
-      <button id="new-proposal-btn" class="btn-primary mt-20">New Proposal</button>
+      <button id="new-proposal-btn" class="btn-primary mt-20"><span class="wrap">➕ New Proposal</span></button>
     </div>
   </main>
 
@@ -58,5 +61,15 @@
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/group.js"></script>
+  <script>
+    document.getElementById('hamburger-btn')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('active');
+    });
+    document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.remove('open');
+      this.classList.remove('active');
+    });
+  </script>
 </body>
 </html>

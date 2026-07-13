@@ -1,65 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Akiba Hub</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Akiba Hub</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <!-- Hamburger (mobile) -->
+  <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
   <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="logo">🏦 Akiba Hub</div>
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">🏦 Akiba<span>Hub</span></div>
     <nav>
-      <a href="dashboard.html" class="active">Dashboard</a>
-      <a href="wallet.html">My Wallet</a>
-      <a href="groups.html">Groups</a>
-      <a href="proposals.html">Proposals</a>
-      <a href="transactions.html">Transactions</a>
-      <a href="settings.html">Settings</a>
-      <a href="#" id="logout-btn">Logout</a>
+      <a href="dashboard.html" class="active"><span class="icon">📊</span>Dashboard</a>
+      <a href="wallet.html"><span class="icon">👛</span>My Wallet</a>
+      <a href="groups.html"><span class="icon">👥</span>Groups</a>
+      <a href="proposals.html"><span class="icon">📋</span>Proposals</a>
+      <a href="transactions.html"><span class="icon">📈</span>Transactions</a>
+      <a href="settings.html"><span class="icon">⚙️</span>Settings</a>
+      <a href="#" id="logout-btn"><span class="icon">🚪</span>Logout</a>
     </nav>
   </aside>
 
+  <!-- Main Content -->
   <main class="main-content">
     <h1>Dashboard</h1>
 
-    <!-- Personal Savings (always visible) -->
+    <!-- Personal Savings -->
     <div class="card personal-savings">
-      <h3>Personal Savings</h3>
+      <h3>💳 Personal Savings</h3>
       <div class="stat-card">
         <div class="number" id="personal-balance">0.00</div>
         <div class="label">KES</div>
       </div>
-      <div class="quick-actions mt-20">
-        <button id="quick-deposit" class="btn-primary">Deposit</button>
-        <button id="quick-withdraw" class="btn-primary">Withdraw</button>
-        <a href="wallet.html" class="btn-outline">View Wallet</a>
+      <div class="quick-actions">
+        <button id="quick-deposit" class="btn-primary"><span class="wrap">➕ Deposit</span></button>
+        <button id="quick-withdraw" class="btn-primary"><span class="wrap">➖ Withdraw</span></button>
+        <a href="wallet.html" class="btn-outline">View Wallet →</a>
       </div>
     </div>
 
     <!-- Group Savings Section (hidden until user joins a group) -->
     <div id="groups-section" class="hidden">
       <div class="card mt-20">
-        <h3>Savings Groups</h3>
+        <h3>👥 Savings Groups</h3>
         <div id="groups-summary"></div>
-        <div class="quick-actions mt-20">
-          <a href="groups.html" class="btn-primary">Manage Groups</a>
+        <div class="mt-20">
+          <a href="groups.html" class="btn-primary"><span class="wrap">Manage Groups</span></a>
         </div>
       </div>
 
       <div class="card mt-20">
-        <h3>Recent Proposals</h3>
+        <h3>📋 Recent Proposals</h3>
         <div id="recent-proposals"></div>
       </div>
     </div>
 
-    <!-- Solo Saver Prompt (visible when no groups) -->
+    <!-- Solo Saver Prompt -->
     <div id="solo-saver-prompt" class="card mt-20">
-      <h3>You're saving solo! 💪</h3>
-      <p>Want to save together with friends</p>
-      <div class="welcome-actions mt-20">
-        <a href="groups.html" class="btn-primary">Create a Savings Group</a>
+      <h3>💪 You're saving solo!</h3>
+      <p>Want to save together with friends? Create or join a group now.</p>
+      <div class="welcome-actions">
+        <a href="groups.html" class="btn-primary"><span class="wrap">Create a Savings Group</span></a>
         <button id="quick-join-group" class="btn-secondary">Join a Group</button>
       </div>
     </div>
@@ -69,5 +74,16 @@
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/dashboard.js"></script>
+  <script>
+    // Mobile sidebar toggle
+    document.getElementById('hamburger-btn')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('active');
+    });
+    document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.remove('open');
+      this.classList.remove('active');
+    });
+  </script>
 </body>
 </html>

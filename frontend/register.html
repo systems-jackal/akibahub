@@ -1,48 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register - Akiba Hub</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register – Akiba Hub</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div class="auth-container">
     <div class="auth-card">
       <div class="logo">🏦 Akiba Hub</div>
       <h2>Create Account</h2>
+
       <form id="register-form">
         <div class="form-group">
           <label for="fullname">Full Name</label>
-          <input type="text" id="fullname" required>
+          <div class="input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="text" id="fullname" required />
+          </div>
         </div>
+
         <div class="form-group">
           <label for="idnumber">ID Number</label>
-          <input type="text" id="idnumber" placeholder="8 digits" pattern="\d{8}" required>
+          <div class="input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="text" id="idnumber" placeholder="8 digits" pattern="\d{8}" required />
+          </div>
         </div>
+
         <div class="form-group">
           <label for="phone">Phone Number</label>
           <div class="phone-input">
             <span class="prefix">+254</span>
-            <input type="tel" id="phone" data-phone required>
+            <div class="input-wrapper" style="flex:1;">
+              <div class="glow-ring"></div>
+              <input type="tel" id="phone" data-phone required />
+            </div>
           </div>
         </div>
+
         <div class="form-group">
           <label for="password">Password</label>
-          <div class="password-wrapper">
-            <input type="password" id="password" required minlength="6">
+          <div class="password-wrapper input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="password" id="password" required minlength="6" />
             <button type="button" class="toggle-password">👁️</button>
           </div>
         </div>
-        <button type="submit" class="btn-primary full-width">Register</button>
+
+        <button type="submit" class="btn-primary full-width"><span class="wrap">🚀 Register</span></button>
       </form>
-      <p id="auth-message" class="mt-20"></p>
-      <p class="mt-20">Already have an account? <a href="login.html">Login</a></p>
-      <a href="index.html" class="btn-outline mt-20">← Back to Home</a>
+
+      <p id="auth-message"></p>
+      <p>Already have an account? <a href="login.html">Login</a></p>
+      <a href="index.html" class="btn-secondary full-width mt-20">← Back to Home</a>
     </div>
   </div>
+
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/pages/register.js"></script>
+  <script>
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const input = this.closest('.password-wrapper').querySelector('input');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        this.textContent = input.type === 'password' ? '👁️' : '🙈';
+      });
+    });
+  </script>
 </body>
 </html>

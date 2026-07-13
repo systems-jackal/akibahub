@@ -1,57 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Settings – Akiba Hub</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">🏦 Akiba Hub</div>
+  <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">🏦 Akiba<span>Hub</span></div>
     <nav>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="wallet.html">My Wallet</a>
-      <a href="groups.html">Groups</a>
-      <a href="proposals.html">Proposals</a>
-      <a href="transactions.html">Transactions</a>
-      <a href="settings.html" class="active">Settings</a>
-      <a href="#" id="logout-btn">Logout</a>
+      <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+      <a href="wallet.html"><span class="icon">👛</span>My Wallet</a>
+      <a href="groups.html"><span class="icon">👥</span>Groups</a>
+      <a href="proposals.html"><span class="icon">📋</span>Proposals</a>
+      <a href="transactions.html"><span class="icon">📈</span>Transactions</a>
+      <a href="settings.html" class="active"><span class="icon">⚙️</span>Settings</a>
+      <a href="#" id="logout-btn"><span class="icon">🚪</span>Logout</a>
     </nav>
   </aside>
+
   <main class="main-content">
-    <h1>Settings</h1>
+    <h1>⚙️ Settings</h1>
+
     <div class="card">
-      <h3>Update Profile</h3>
+      <h3>👤 Update Profile</h3>
       <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="fullname">
-      </div>
-      <div class="form-group">
-        <label>Phone Number</label>
-        <div class="phone-input">
-          <span class="prefix">+254</span>
-          <input type="tel" id="phone" data-phone>
+        <label for="fullname">Full Name</label>
+        <div class="input-wrapper">
+          <div class="glow-ring"></div>
+          <input type="text" id="fullname" />
         </div>
       </div>
-      <button id="update-profile" class="btn-primary">Update Profile</button>
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <div class="phone-input">
+          <span class="prefix">+254</span>
+          <div class="input-wrapper" style="flex:1;">
+            <div class="glow-ring"></div>
+            <input type="tel" id="phone" data-phone />
+          </div>
+        </div>
+      </div>
+      <button id="update-profile" class="btn-primary"><span class="wrap">💾 Update Profile</span></button>
     </div>
+
     <div class="card mt-20">
-      <h3>Change Password</h3>
+      <h3>🔑 Change Password</h3>
       <div class="form-group">
-        <label>Current Password</label>
-        <input type="password" id="current-password">
+        <label for="current-password">Current Password</label>
+        <div class="password-wrapper input-wrapper">
+          <div class="glow-ring"></div>
+          <input type="password" id="current-password" />
+          <button type="button" class="toggle-password">👁️</button>
+        </div>
       </div>
       <div class="form-group">
-        <label>New Password</label>
-        <input type="password" id="new-password">
+        <label for="new-password">New Password</label>
+        <div class="password-wrapper input-wrapper">
+          <div class="glow-ring"></div>
+          <input type="password" id="new-password" />
+          <button type="button" class="toggle-password">👁️</button>
+        </div>
       </div>
-      <button id="change-password" class="btn-primary">Change Password</button>
+      <button id="change-password" class="btn-primary"><span class="wrap">🔄 Change Password</span></button>
     </div>
   </main>
+
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/settings.js"></script>
+  <script>
+    document.getElementById('hamburger-btn')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('active');
+    });
+    document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.remove('open');
+      this.classList.remove('active');
+    });
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const input = this.closest('.password-wrapper').querySelector('input');
+        input.type = input.type === 'password' ? 'text' : 'password';
+        this.textContent = input.type === 'password' ? '👁️' : '🙈';
+      });
+    });
+  </script>
 </body>
 </html>

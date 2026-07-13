@@ -1,41 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Transactions – Akiba Hub</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">🏦 Akiba Hub</div>
+  <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">🏦 Akiba<span>Hub</span></div>
     <nav>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="wallet.html">My Wallet</a>
-      <a href="groups.html">Groups</a>
-      <a href="proposals.html">Proposals</a>
-      <a href="transactions.html" class="active">Transactions</a>
-      <a href="settings.html">Settings</a>
-      <a href="#" id="logout-btn">Logout</a>
+      <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+      <a href="wallet.html"><span class="icon">👛</span>My Wallet</a>
+      <a href="groups.html"><span class="icon">👥</span>Groups</a>
+      <a href="proposals.html"><span class="icon">📋</span>Proposals</a>
+      <a href="transactions.html" class="active"><span class="icon">📈</span>Transactions</a>
+      <a href="settings.html"><span class="icon">⚙️</span>Settings</a>
+      <a href="#" id="logout-btn"><span class="icon">🚪</span>Logout</a>
     </nav>
   </aside>
+
   <main class="main-content">
-    <h1>Transaction History</h1>
+    <h1>📈 Transaction History</h1>
+
     <div class="card">
-      <h3>Filters</h3>
-      <div class="form-group" style="display:flex; gap:10px; flex-wrap:wrap;">
-        <input type="text" id="filter-type" placeholder="Type (DEPOSIT/WITHDRAWAL)" style="flex:1;">
-        <input type="number" id="filter-group" placeholder="Group ID" style="flex:1;">
-        <input type="date" id="filter-start" style="flex:1;">
-        <input type="date" id="filter-end" style="flex:1;">
-        <button id="apply-filter" class="btn-primary" style="flex:0 0 auto;">Apply Filters</button>
+      <h3>🔎 Filters</h3>
+      <div class="flex gap-10" style="flex-wrap: wrap;">
+        <div class="input-wrapper" style="flex:1; min-width:140px;">
+          <div class="glow-ring"></div>
+          <input type="text" id="filter-type" placeholder="Type (DEPOSIT/WITHDRAWAL)" />
+        </div>
+        <div class="input-wrapper" style="flex:1; min-width:140px;">
+          <div class="glow-ring"></div>
+          <input type="number" id="filter-group" placeholder="Group ID" />
+        </div>
+        <div class="input-wrapper" style="flex:1; min-width:140px;">
+          <div class="glow-ring"></div>
+          <input type="date" id="filter-start" />
+        </div>
+        <div class="input-wrapper" style="flex:1; min-width:140px;">
+          <div class="glow-ring"></div>
+          <input type="date" id="filter-end" />
+        </div>
+        <button id="apply-filter" class="btn-primary" style="flex:0 0 auto;"><span class="wrap">Apply Filters</span></button>
       </div>
     </div>
+
     <div id="transactions-table" class="mt-20"></div>
   </main>
+
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/transactions.js"></script>
+  <script>
+    document.getElementById('hamburger-btn')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('active');
+    });
+    document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
+      document.getElementById('sidebar').classList.remove('open');
+      this.classList.remove('active');
+    });
+  </script>
 </body>
 </html>
