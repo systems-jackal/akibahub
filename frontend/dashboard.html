@@ -7,11 +7,9 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <!-- Hamburger (mobile) -->
   <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="logo">🏦 Akiba<span>Hub</span></div>
     <nav>
@@ -25,11 +23,9 @@
     </nav>
   </aside>
 
-  <!-- Main Content -->
   <main class="main-content">
     <h1>Dashboard</h1>
 
-    <!-- Personal Savings -->
     <div class="card personal-savings">
       <h3>💳 Personal Savings</h3>
       <div class="stat-card">
@@ -43,7 +39,6 @@
       </div>
     </div>
 
-    <!-- Group Savings Section (hidden until user joins a group) -->
     <div id="groups-section" class="hidden">
       <div class="card mt-20">
         <h3>👥 Savings Groups</h3>
@@ -52,14 +47,12 @@
           <a href="groups.html" class="btn-primary"><span class="wrap">Manage Groups</span></a>
         </div>
       </div>
-
       <div class="card mt-20">
         <h3>📋 Recent Proposals</h3>
         <div id="recent-proposals"></div>
       </div>
     </div>
 
-    <!-- Solo Saver Prompt -->
     <div id="solo-saver-prompt" class="card mt-20">
       <h3>💪 You're saving solo!</h3>
       <p>Want to save together with friends? Create or join a group now.</p>
@@ -75,7 +68,6 @@
   <script src="js/utils.js"></script>
   <script src="js/pages/dashboard.js"></script>
   <script>
-    // Mobile sidebar toggle
     document.getElementById('hamburger-btn')?.addEventListener('click', function() {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebar-overlay').classList.toggle('active');

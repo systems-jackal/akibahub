@@ -13,7 +13,6 @@
       <h2>Welcome Back</h2>
 
       <form id="login-form">
-        <!-- Phone login (default) -->
         <div id="phone-login-group" class="form-group">
           <label for="phone-login">Phone Number</label>
           <div class="phone-input">
@@ -25,7 +24,6 @@
           </div>
         </div>
 
-        <!-- ID login (hidden) -->
         <div id="id-login-group" class="form-group hidden">
           <label for="id-login">ID Number</label>
           <div class="input-wrapper">
@@ -61,7 +59,6 @@
   <script src="js/utils.js"></script>
   <script src="js/pages/login.js"></script>
   <script>
-    // Toggle password visibility
     document.querySelectorAll('.toggle-password').forEach(btn => {
       btn.addEventListener('click', function() {
         const input = this.closest('.password-wrapper').querySelector('input');
