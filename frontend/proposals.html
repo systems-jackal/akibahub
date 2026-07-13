@@ -7,9 +7,6 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
   <aside class="sidebar" id="sidebar">
     <div class="logo">🏦 Akiba<span>Hub</span></div>
     <nav>
@@ -32,15 +29,5 @@
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/proposals.js"></script>
-  <script>
-    document.getElementById('hamburger-btn')?.addEventListener('click', function() {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('sidebar-overlay').classList.toggle('active');
-    });
-    document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
-      document.getElementById('sidebar').classList.remove('open');
-      this.classList.remove('active');
-    });
-  </script>
 </body>
 </html>
