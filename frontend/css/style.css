@@ -506,6 +506,56 @@ p { color: var(--text-secondary); }
   min-height: 100vh;
 }
 
+/* ========== 10b. TABLET / SMALL-LAPTOP (769px–1024px) ==========
+   Previously nothing existed in this range at all: the sidebar stayed a
+   fixed 260px and .main-content kept its 260px margin unconditionally,
+   right up until the mobile breakpoint at 768px flipped it to a fully
+   hidden off-canvas drawer. A 900px-wide window - a small laptop, an
+   iPad in landscape, a foldable - got squeezed into a ~640px content
+   area with zero adjustment.
+
+   Rather than reusing the mobile hamburger/off-canvas pattern here (that
+   pattern fits a phone, where navigation is occasional and the sidebar
+   fully hiding is the right trade-off), this range gets a proper
+   collapsed "icon rail": the sidebar stays visible and one tap away
+   from navigation at all times - the more expected desktop-class
+   pattern - it just drops its text labels and shrinks to icon width so
+   the content area gets its space back. Labels reappear as native
+   tooltips via the title attribute already on each nav link. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 76px;
+  }
+
+  .sidebar .logo {
+    font-size: 22px;
+    padding: 0 8px;
+  }
+
+  /* Hide the "Hub" subtitle and every nav label - only icons remain,
+     centered, with the full label available as a native tooltip via
+     the title attribute already on each <a>. */
+  .sidebar .logo span,
+  .sidebar nav a .label {
+    display: none;
+  }
+
+  .sidebar nav a {
+    justify-content: center;
+    padding: 14px 0;
+    gap: 0;
+  }
+
+  .sidebar nav a .icon {
+    width: auto;
+  }
+
+  .main-content {
+    margin-left: 76px;
+    padding: 28px 24px 50px;
+  }
+}
+
 /* ========== 11. DASHBOARD ========== */
 
 /* Personal Savings – Premium Gradient Card */

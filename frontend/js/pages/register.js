@@ -12,7 +12,7 @@ document.getElementById('register-form').addEventListener('submit', async functi
     });
     const json = await res.json();
     if (json.success) {
-      localStorage.setItem('akiba_token', json.data.token);
+      setTokens(json.data.token, json.data.refreshToken);
       localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
       window.location.href = 'dashboard.html';
     } else {
