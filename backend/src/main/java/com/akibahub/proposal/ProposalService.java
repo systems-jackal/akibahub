@@ -2,6 +2,8 @@ package com.akibahub.proposal;
 
 import com.akibahub.audit.AuditLogService;
 import com.akibahub.group.entity.GroupMemberRepository;
+import com.akibahub.ledger.LedgerService;
+import com.akibahub.ledger.entity.Transfer;
 import com.akibahub.proposal.entity.*;
 import com.akibahub.shared.AmountValidator;
 import com.akibahub.shared.exception.BadRequestException;
@@ -26,16 +28,19 @@ public class ProposalService {
     private final WalletRepository walletRepo;
     private final TransactionRepository transactionRepo;
     private final AuditLogService auditLog;
+    private final LedgerService ledgerService;
 
     public ProposalService(ProposalRepository proposalRepo, VoteRepository voteRepo,
                            GroupMemberRepository memberRepo, WalletRepository walletRepo,
-                           TransactionRepository transactionRepo, AuditLogService auditLog) {
+                           TransactionRepository transactionRepo, AuditLogService auditLog,
+                           LedgerService ledgerService) {
         this.proposalRepo = proposalRepo;
         this.voteRepo = voteRepo;
         this.memberRepo = memberRepo;
         this.walletRepo = walletRepo;
         this.transactionRepo = transactionRepo;
         this.auditLog = auditLog;
+        this.ledgerService = ledgerService;
     }
 
     // ---------- existing methods ----------
@@ -111,6 +116,12 @@ public class ProposalService {
         transactionRepo.save(Transaction.builder().wallet(personal).amount(proposal.getAmount())
                 .type(Transaction.TransactionType.DEPOSIT)
                 .reference("Withdrawal from group " + proposal.getGroup().getId()).build());
+
+        // Both wallets exist inside Akiba Hub, so this is a genuine
+        // two-legged internal transfer, not the external-movement
+        // approximation used for personal deposit/withdraw.
+        ledgerService.recordInternalTransfer(Transfer.Type.PROPOSAL_PAYOUT, proposal.getCreatedBy(),
+                "Approved proposal: " + proposal.getTitle(), groupWallet, personal, proposal.getAmount());
     }
 
     public List<Proposal> getProposalsForGroup(Long groupId, User user) {

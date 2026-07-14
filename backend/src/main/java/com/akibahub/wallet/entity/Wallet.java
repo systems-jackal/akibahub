@@ -31,5 +31,18 @@ public class Wallet {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal balance = BigDecimal.ZERO;
 
+    // Optimistic locking. Without this, two concurrent requests against
+    // the same wallet (double-click deposit, or a contribution racing a
+    // proposal payout) can both read the same starting balance and one
+    // update silently overwrites the other - a lost-update race that's
+    // a real correctness bug for a financial ledger. With @Version,
+    // Hibernate includes "AND version = ?" on the UPDATE and throws
+    // OptimisticLockException if another transaction beat it to the
+    // save, instead of quietly losing money.
+    @Version
+    @Column(nullable = false)
+    @Builder.Default
+    private Long version = 0L;
+
     public enum WalletType { PERSONAL, GROUP }
 }

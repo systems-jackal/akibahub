@@ -2,6 +2,9 @@ package com.akibahub.wallet;
 
 import com.akibahub.audit.AuditLogService;
 import com.akibahub.group.entity.GroupMemberRepository;
+import com.akibahub.ledger.LedgerService;
+import com.akibahub.ledger.entity.LedgerEntry;
+import com.akibahub.ledger.entity.Transfer;
 import com.akibahub.shared.AmountValidator;
 import com.akibahub.shared.exception.BadRequestException;
 import com.akibahub.shared.exception.ForbiddenException;
@@ -21,13 +24,16 @@ public class WalletService {
     private final TransactionRepository transactionRepo;
     private final GroupMemberRepository memberRepo;
     private final AuditLogService auditLog;
+    private final LedgerService ledgerService;
 
     public WalletService(WalletRepository walletRepo, TransactionRepository transactionRepo,
-                         GroupMemberRepository memberRepo, AuditLogService auditLog) {
+                         GroupMemberRepository memberRepo, AuditLogService auditLog,
+                         LedgerService ledgerService) {
         this.walletRepo = walletRepo;
         this.transactionRepo = transactionRepo;
         this.memberRepo = memberRepo;
         this.auditLog = auditLog;
+        this.ledgerService = ledgerService;
     }
 
     public List<Wallet> getUserWallets(User user) {
@@ -45,6 +51,13 @@ public class WalletService {
         walletRepo.save(wallet);
         transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
                 .reference("Personal deposit").build());
+
+        // Ledger write happens after the balance is saved above, since
+        // LedgerService reads wallet.getBalance() as the post-transaction
+        // snapshot for this entry - see LedgerService's class comment.
+        ledgerService.recordExternalMovement(Transfer.Type.DEPOSIT, user, "Personal deposit",
+                wallet, LedgerEntry.Direction.CREDIT, amount);
+
         auditLog.logEvent("PERSONAL_DEPOSIT", Map.of("user", user.getPhoneNumber(), "amount", amount));
         return wallet;
     }
@@ -59,6 +72,10 @@ public class WalletService {
         walletRepo.save(wallet);
         transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.WITHDRAWAL)
                 .reference("Personal withdrawal").build());
+
+        ledgerService.recordExternalMovement(Transfer.Type.WITHDRAWAL, user, "Personal withdrawal",
+                wallet, LedgerEntry.Direction.DEBIT, amount);
+
         auditLog.logEvent("PERSONAL_WITHDRAWAL", Map.of("user", user.getPhoneNumber(), "amount", amount));
         return wallet;
     }
@@ -83,6 +100,12 @@ public class WalletService {
                 .reference("Contribution to group " + groupId).build());
         transactionRepo.save(Transaction.builder().wallet(groupWallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
                 .reference("Contribution from " + user.getPhoneNumber()).build());
+
+        // This one IS a genuine two-legged internal transfer - both
+        // wallets exist inside Akiba Hub, so this is real double-entry,
+        // not the single-leg approximation used for deposit/withdraw.
+        ledgerService.recordInternalTransfer(Transfer.Type.CONTRIBUTION, user,
+                "Contribution to group " + groupId, personal, groupWallet, amount);
 
         auditLog.logEvent("GROUP_CONTRIBUTION", Map.of("user", user.getPhoneNumber(), "amount", amount, "groupId", groupId));
     }

@@ -4,6 +4,7 @@ import com.akibahub.shared.dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -84,6 +85,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 ApiResponse.<Void>builder().success(false)
                         .message("This action conflicts with existing data. Reference: " + refId).build()
+        );
+    }
+
+    // Thrown when a wallet's @Version doesn't match at save time - i.e.
+    // another request modified the same wallet between this request's
+    // read and its write. The fix from the client's side is simply "try
+    // again"; the balance itself was never corrupted, which is the whole
+    // point of adding @Version in the first place.
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLock(OptimisticLockingFailureException ex) {
+        log.warn("Optimistic lock conflict: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiResponse.<Void>builder().success(false)
+                        .message("This wallet was updated by another request. Please try again.").build()
         );
     }
 

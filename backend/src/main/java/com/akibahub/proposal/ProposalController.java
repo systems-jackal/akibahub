@@ -1,9 +1,11 @@
 package com.akibahub.proposal;
 
+import com.akibahub.idempotency.IdempotencyService;
 import com.akibahub.proposal.entity.Proposal;
 import com.akibahub.proposal.entity.Vote;
 import com.akibahub.shared.dto.ApiResponse;
 import com.akibahub.user.entity.User;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -16,34 +18,48 @@ import java.util.Map;
 @RequestMapping("/api")
 public class ProposalController {
     private final ProposalService proposalService;
+    private final IdempotencyService idempotencyService;
 
-    public ProposalController(ProposalService proposalService) {
+    public ProposalController(ProposalService proposalService, IdempotencyService idempotencyService) {
         this.proposalService = proposalService;
+        this.idempotencyService = idempotencyService;
     }
 
     // Create proposal
     @PostMapping("/groups/{groupId}/proposals")
-    public ResponseEntity<ApiResponse<Proposal>> createProposal(@PathVariable Long groupId,
-                                                                @RequestBody Map<String, Object> body,
-                                                                @AuthenticationPrincipal User user) {
-        Proposal p = proposalService.createProposal(groupId,
-                (String) body.get("title"),
-                (String) body.get("description"),
-                new BigDecimal(body.get("amount").toString()),
-                user);
-        return ResponseEntity.ok(ApiResponse.<Proposal>builder()
-                .success(true).message("Proposal created").data(p).build());
+    public ResponseEntity<ApiResponse<Proposal>> createProposal(
+            @PathVariable Long groupId,
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal User user,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        return idempotencyService.execute(idempotencyKey, user, body,
+                new TypeReference<ApiResponse<Proposal>>() {},
+                () -> {
+                    Proposal p = proposalService.createProposal(groupId,
+                            (String) body.get("title"),
+                            (String) body.get("description"),
+                            new BigDecimal(body.get("amount").toString()),
+                            user);
+                    return ResponseEntity.ok(ApiResponse.<Proposal>builder()
+                            .success(true).message("Proposal created").data(p).build());
+                });
     }
 
     // Vote
     @PostMapping("/proposals/{proposalId}/vote")
-    public ResponseEntity<ApiResponse<String>> vote(@PathVariable Long proposalId,
-                                                    @RequestBody Map<String, String> body,
-                                                    @AuthenticationPrincipal User user) {
-        Vote.VoteValue value = Vote.VoteValue.valueOf(body.get("vote").toUpperCase());
-        proposalService.vote(proposalId, user, value);
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true).message("Vote recorded").build());
+    public ResponseEntity<ApiResponse<String>> vote(
+            @PathVariable Long proposalId,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal User user,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        return idempotencyService.execute(idempotencyKey, user, body,
+                new TypeReference<ApiResponse<String>>() {},
+                () -> {
+                    Vote.VoteValue value = Vote.VoteValue.valueOf(body.get("vote").toUpperCase());
+                    proposalService.vote(proposalId, user, value);
+                    return ResponseEntity.ok(ApiResponse.<String>builder()
+                            .success(true).message("Vote recorded").build());
+                });
     }
 
     // Proposals for a specific group
