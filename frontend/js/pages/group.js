@@ -32,22 +32,16 @@ async function loadGroup() {
       const inviteSection = document.getElementById('invite-section');
       inviteSection.classList.remove('hidden');
 
-      const inviteRes = await fetch(`/api/groups/${groupId}/invite`, {
-        method: 'POST',
-        headers: authHeaders()
-      });
-      const inviteData = await inviteRes.json();
-      if (inviteData.success) {
-        document.getElementById('invite-code-display').textContent = inviteData.data;
-        
-        // Single static attachment pattern to prevent duplication memory leaks
-        const copyBtn = document.getElementById('copy-invite');
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(inviteData.data)
-            .then(() => showAlert('Invite code copied.'))
-            .catch(() => showAlert('Failed to copy code.', 'error'));
-        };
-      }
+      const inviteCode = await fetchGroupInviteCode(groupId);
+      document.getElementById('invite-code-display').textContent = inviteCode;
+
+      // Single static attachment pattern to prevent duplication memory leaks
+      const copyBtn = document.getElementById('copy-invite');
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(inviteCode)
+          .then(() => showAlert('Invite code copied.'))
+          .catch(() => showAlert('Failed to copy code.', 'error'));
+      };
     }
 
     // Financial component evaluation
@@ -56,11 +50,8 @@ async function loadGroup() {
     document.getElementById('group-balance').textContent = formatCurrency(groupWallet?.balance || 0);
 
     // Metadata & member calculations
-    const statsRes = await fetch(`/api/groups/${groupId}/stats`, { headers: authHeaders() });
-    const statsData = await statsRes.json();
-    if (statsData.success) {
-      document.getElementById('member-count').textContent = statsData.data.members;
-    }
+    const stats = await fetchGroupStats(groupId);
+    document.getElementById('member-count').textContent = stats.members;
 
     // Dynamic proposal system tracking
     const proposals = await fetchProposalsForGroup(groupId);
@@ -72,16 +63,19 @@ async function loadGroup() {
         <div class="proposal-card">
           <strong>${escapeHtml(p.title)}</strong>
           <p>Amount: KES ${formatCurrency(p.amount)} &nbsp;|&nbsp; Status: <span class="badge">${escapeHtml(p.status)}</span></p>
-          ${p.status === 'OPEN' ? `<button class="btn-primary small" onclick="vote('${p.id}')">Vote YES</button>` : ''}
+          ${p.status === 'OPEN' ? `
+            <button class="btn-primary small" onclick="vote('${p.id}','YES')">Vote YES</button>
+            <button class="btn-secondary small" onclick="vote('${p.id}','NO')">Vote NO</button>
+          ` : ''}
         </div>
       `).join('');
     }
 
     // Expose voting functionality globally safely
-    window.vote = async (proposalId) => {
+    window.vote = async (proposalId, decision) => {
       try {
-        await voteOnProposal(proposalId, 'YES');
-        showAlert('Vote recorded.');
+        await voteOnProposal(proposalId, decision);
+        showAlert(`Your ${decision} vote has been recorded.`);
         loadGroup();
       } catch (e) { 
         showAlert(e.message, 'error'); 
@@ -107,10 +101,9 @@ function initStaticListeners() {
     
     if (list.classList.contains('hidden')) {
       try {
-        const membersRes = await fetch(`/api/groups/${groupId}/members`, { headers: authHeaders() });
-        const membersData = await membersRes.json();
-        if (membersData.success && membersData.data.length > 0) {
-          list.innerHTML = membersData.data.map(m => `
+        const members = await fetchGroupMembers(groupId);
+        if (members && members.length > 0) {
+          list.innerHTML = members.map(m => `
             <div class="member-item">
               👤 ${escapeHtml(m.user?.fullName || m.user?.phoneNumber || 'Unknown')}
             </div>

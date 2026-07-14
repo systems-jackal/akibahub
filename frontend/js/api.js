@@ -52,18 +52,34 @@ async function fetchGroup(groupId) {
   return apiFetch(`/api/groups/${groupId}`, { headers: authHeaders() });
 }
 
-async function createGroup(name, description) {
-  return apiFetch('/api/groups', {
+async function fetchGroupInviteCode(groupId) {
+  return apiFetch(`/api/groups/${groupId}/invite`, {
     method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify({ name, description })
+    headers: authHeaders()
   });
 }
 
-async function joinGroup(groupId) {
-  return apiFetch(`/api/groups/${groupId}/join`, {
+async function fetchGroupStats(groupId) {
+  return apiFetch(`/api/groups/${groupId}/stats`, { headers: authHeaders() });
+}
+
+async function fetchGroupMembers(groupId) {
+  return apiFetch(`/api/groups/${groupId}/members`, { headers: authHeaders() });
+}
+
+async function createGroup(name, description, rules) {
+  return apiFetch('/api/groups', {
     method: 'POST',
-    headers: authHeaders()
+    headers: authHeaders(),
+    body: JSON.stringify({ name, description, rules })
+  });
+}
+
+async function joinGroup(code) {
+  return apiFetch('/api/groups/join', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ code })
   });
 }
 

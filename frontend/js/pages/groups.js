@@ -29,14 +29,7 @@ document.getElementById('create-btn').addEventListener('click', async () => {
   if (!name) return showAlert('Group name is required.', 'error');
 
   try {
-    const res = await fetch('/api/groups', {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description: desc, rules })
-    });
-    
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    const group = await createGroup(name, desc, rules);
 
     showAlert('Group created successfully.');
 
@@ -46,7 +39,7 @@ document.getElementById('create-btn').addEventListener('click', async () => {
     document.getElementById('group-rules').value = '';
 
     // Unveil invite code mechanics
-    const inviteCode = data.data.inviteCode;
+    const inviteCode = group.inviteCode;
     document.getElementById('generated-code').textContent = inviteCode;
     document.getElementById('invite-code-area').classList.remove('hidden');
 
@@ -68,14 +61,7 @@ document.getElementById('join-btn').addEventListener('click', async () => {
   if (!code) return showAlert('Please enter an invite code.', 'error');
 
   try {
-    const res = await fetch('/api/groups/join', {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code })
-    });
-    
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
+    await joinGroup(code);
 
     showAlert('You have joined the group.');
     document.getElementById('join-invite-code').value = ''; // Reset field
