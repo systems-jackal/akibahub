@@ -33,8 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = extractToken(request);
         if (token != null && jwtUtil.validateToken(token)) {
-            String phone = jwtUtil.getPhoneNumberFromToken(token);
-            User user = userRepository.findByPhoneNumber(phone).orElse(null);
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         user, null, Collections.emptyList());

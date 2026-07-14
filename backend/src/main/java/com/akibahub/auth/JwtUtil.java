@@ -15,23 +15,30 @@ public class JwtUtil {
     private final long expiration;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
-                   @Value("${jwt.expiration}") long expiration) {
+                   @Value("${jwt.access-token-expiration-ms}") long expiration) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration;
     }
 
-    public String generateToken(String phoneNumber) {
+    // Subject is now the user's immutable numeric ID, NOT their phone
+    // number. Phone number can be changed via PUT /api/users/me, and a
+    // token whose identity claim can silently stop resolving (or worse,
+    // start resolving to a DIFFERENT user, if phone numbers are ever
+    // reused after an account is deleted) is a real bug, not just an
+    // inconvenience.
+    public String generateToken(Long userId) {
         return Jwts.builder()
-                .subject(phoneNumber)
+                .subject(String.valueOf(userId))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key)
                 .compact();
     }
 
-    public String getPhoneNumberFromToken(String token) {
-        return Jwts.parser().verifyWith(key).build()
+    public Long getUserIdFromToken(String token) {
+        String subject = Jwts.parser().verifyWith(key).build()
                 .parseSignedClaims(token).getPayload().getSubject();
+        return Long.parseLong(subject);
     }
 
     public boolean validateToken(String token) {

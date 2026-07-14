@@ -38,7 +38,13 @@ spring:
 
 jwt:
   secret: change-this-to-a-very-long-random-secret-key!!
-  expiration: 3600000
+  # Was a single 1-hour token with no way to revoke it early. Now that
+  # refresh tokens exist (see RefreshTokenService) to cover renewing the
+  # session, the access token itself can be short-lived - this limits how
+  # long a stolen access token remains useful, without making the user
+  # log in constantly.
+  access-token-expiration-ms: 900000       # 15 minutes
+  refresh-token-expiration-days: 30
 
 rate-limit:
   auth:
