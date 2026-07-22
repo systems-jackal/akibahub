@@ -49,15 +49,15 @@ document.getElementById('login-form').addEventListener('submit', async function(
     });
     const json = await res.json();
     if (json.success) {
-      localStorage.setItem('akiba_token', json.data.token);
+      setTokens(json.data.token, json.data.refreshToken);
       localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
       window.location.href = 'dashboard.html';
     } else {
       msgEl.textContent = json.message || 'Login failed';
-      msgEl.style.color = 'red';
+      msgEl.style.color = 'var(--red)';
     }
   } catch (err) {
     msgEl.textContent = 'Network error. Please try again.';
-    msgEl.style.color = 'red';
+    msgEl.style.color = 'var(--red)';
   }
 });

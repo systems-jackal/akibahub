@@ -59,16 +59,42 @@ async function loadGroup() {
     if (!proposals || proposals.length === 0) {
       proposalsList.innerHTML = '<p>No proposals yet.</p>';
     } else {
-      proposalsList.innerHTML = proposals.map(p => `
+      proposalsList.innerHTML = proposals.map(p => {
+        const isOpen = p.status === 'OPEN';
+        const isApproved = p.status === 'APPROVED';
+        const isRejected = p.status === 'REJECTED';
+        return `
         <div class="proposal-card">
-          <strong>${escapeHtml(p.title)}</strong>
-          <p>Amount: KES ${formatCurrency(p.amount)} &nbsp;|&nbsp; Status: <span class="badge">${escapeHtml(p.status)}</span></p>
-          ${p.status === 'OPEN' ? `
-            <button class="btn-primary small" onclick="vote('${p.id}','YES')">Vote YES</button>
-            <button class="btn-secondary small" onclick="vote('${p.id}','NO')">Vote NO</button>
+          <div class="dao-stepper">
+            <span class="step done">PROPOSE</span><span class="arrow">→</span>
+            <span class="step ${isOpen ? 'active' : 'done'}">VOTE</span><span class="arrow">→</span>
+            <span class="step ${isApproved ? 'done' : ''}">EXECUTE</span>
+          </div>
+          <div class="proposal-title">
+            ${escapeHtml(p.title)}
+            <span class="badge status-${p.status.toLowerCase()}">${escapeHtml(p.status)}</span>
+          </div>
+          <div class="proposal-meta">Amount: KES <span class="proposal-amount">${formatCurrency(p.amount)}</span></div>
+          ${isOpen ? `
+            <div class="dial-group" data-proposal-id="${p.id}">
+              <div class="dial-option dial-yes" onclick="vote('${p.id}','YES')">YES</div>
+              <div class="dial-option dial-no" onclick="vote('${p.id}','NO')">NO</div>
+            </div>
           ` : ''}
         </div>
-      `).join('');
+      `;
+      }).join('');
+    }
+
+    // Growth-over-time analytics, sourced directly from the ledger
+    const growthChartEl = document.getElementById('group-growth-chart');
+    if (growthChartEl) {
+      try {
+        const growth = await fetchGroupGrowth(groupId);
+        renderStepLineChart(growthChartEl, growth.map(g => ({ label: g.label, value: parseFloat(g.value) })));
+      } catch (e) {
+        growthChartEl.innerHTML = '<div class="chart-empty">ANALYTICS_UNAVAILABLE</div>';
+      }
     }
 
     // Expose voting functionality globally safely

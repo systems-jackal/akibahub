@@ -106,4 +106,12 @@ public class GroupController {
         return ResponseEntity.ok(ApiResponse.<List<GroupMember>>builder()
                 .success(true).data(members).build());
     }
+
+    @GetMapping("/{groupId}/analytics/growth")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getGroupGrowth(@PathVariable Long groupId,
+                                                                                  @AuthenticationPrincipal User user) {
+        List<Map<String, Object>> growth = groupService.getGroupGrowth(groupId, user);
+        return ResponseEntity.ok(ApiResponse.<List<Map<String, Object>>>builder()
+                .success(true).data(growth).build());
+    }
 }

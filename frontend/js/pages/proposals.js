@@ -34,54 +34,33 @@ async function loadProposals() {
             .map(
                 (p) => `
             <div class="proposal-card">
+                <div class="dao-stepper">
+                    <span class="step done">PROPOSE</span><span class="arrow">→</span>
+                    <span class="step ${p.status === 'OPEN' ? 'active' : 'done'}">VOTE</span><span class="arrow">→</span>
+                    <span class="step ${p.status === 'APPROVED' ? 'done' : ''}">EXECUTE</span>
+                </div>
 
-                <strong>${escapeHtml(p.title)}</strong>
+                <div class="proposal-title">
+                    ${escapeHtml(p.title)}
+                    <span class="badge status-${escapeHtml(p.status.toLowerCase())}">${escapeHtml(p.status)}</span>
+                </div>
 
-                <p>
-                    Amount:
-                    <strong>KES ${formatCurrency(p.amount)}</strong>
-                    &nbsp;|&nbsp;
-                    Status:
-                    <span class="status-${escapeHtml(
-                        p.status.toLowerCase()
-                    )}">
-                        ${escapeHtml(p.status)}
-                    </span>
-                </p>
-
-                <p>
-                    Group:
-                    ${escapeHtml(p.group?.name || "Unknown Group")}
-                    (ID:
-                    ${escapeHtml(String(p.group?.id || "N/A"))})
-                </p>
+                <div class="proposal-meta">
+                    Amount: KES <span class="proposal-amount">${formatCurrency(p.amount)}</span>
+                    &nbsp;·&nbsp;
+                    Group: ${escapeHtml(p.group?.name || "Unknown Group")}
+                </div>
 
                 ${
                     p.status === "OPEN"
                         ? `
-                    <div class="proposal-actions">
-
-                        <button
-                            class="btn-primary small"
-                            onclick="vote('${escapeHtml(
-                                String(p.id)
-                            )}','YES')">
-                            Vote YES
-                        </button>
-
-                        <button
-                            class="btn-secondary small"
-                            onclick="vote('${escapeHtml(
-                                String(p.id)
-                            )}','NO')">
-                            Vote NO
-                        </button>
-
+                    <div class="dial-group">
+                        <div class="dial-option dial-yes" onclick="vote('${escapeHtml(String(p.id))}','YES')">YES</div>
+                        <div class="dial-option dial-no" onclick="vote('${escapeHtml(String(p.id))}','NO')">NO</div>
                     </div>
                 `
                         : ""
                 }
-
             </div>
         `
             )

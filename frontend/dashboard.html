@@ -21,6 +21,15 @@
   </aside>
 
   <main class="main-content">
+    <div class="ledger-ticker">
+      <span><span class="dot"></span> LEDGER: SYNCED</span>
+      <span class="sep">·</span>
+      <span id="ticker-time">--:--:--</span>
+      <span class="sep">·</span>
+      <span>NET_POSITION: KES <span id="ticker-balance">0.00</span></span>
+      <span class="cursor-block"></span>
+    </div>
+
     <h1>Dashboard</h1>
 
     <div class="card personal-savings">
@@ -33,6 +42,13 @@
         <button id="quick-deposit" class="btn-primary"><span class="wrap">➕ Deposit</span></button>
         <button id="quick-withdraw" class="btn-primary"><span class="wrap">➖ Withdraw</span></button>
         <a href="wallet.html" class="btn-outline">View Wallet →</a>
+      </div>
+    </div>
+
+    <div class="card mt-20 analytics-panel">
+      <h3>📊 Asset Distribution</h3>
+      <div id="asset-distribution-chart" class="chart-container">
+        <div class="loader-inline"><span class="matrix-loader"><span></span><span></span><span></span><span></span><span></span></span> LOADING_ANALYTICS</div>
       </div>
     </div>
 

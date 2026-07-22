@@ -7,142 +7,86 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="navbar" style="position:fixed;top:0;left:0;width:100%;height:70px;display:flex;justify-content:space-between;align-items:center;padding:0 8%;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:999;border-bottom:1px solid rgba(255,255,255,0.04);">
-    <div class="logo-container" style="display:flex;align-items:center;gap:12px;">
-      <svg width="36" height="36" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="36" cy="36" r="33" fill="none" stroke="#FBBF24" stroke-width="2.5"/>
-        <circle cx="36" cy="36" r="26" fill="none" stroke="#FBBF24" stroke-width="1"/>
-        <text x="36" y="44" font-family="Georgia, serif" font-size="26" fill="#FBBF24" text-anchor="middle">A</text>
+  <header class="navbar">
+    <div class="logo-container">
+      <svg width="32" height="32" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="64" height="64" rx="10" fill="#0D0E12" stroke="#F7931A" stroke-width="2.5"/>
+        <text x="36" y="47" font-family="'Space Mono',monospace" font-weight="700" font-size="28" fill="#F7931A" text-anchor="middle">A</text>
       </svg>
-      <div style="font-family:'Georgia','Times New Roman',serif;font-size:28px;color:#FBBF24;letter-spacing:2px;">AKIBA <span style="font-family:'Inter',sans-serif;font-size:16px;color:#94A3B8;">Hub</span></div>
+      <span class="brand">AKIBA<span>HUB</span></span>
     </div>
-    <nav style="display:flex;align-items:center;gap:28px;">
-      <a href="#features" style="color:#94A3B8;transition:0.3s;font-size:0.9rem;">Features</a>
-      <a href="#how-it-works" style="color:#94A3B8;transition:0.3s;font-size:0.9rem;">How it Works</a>
-      <a href="#why-us" style="color:#94A3B8;transition:0.3s;font-size:0.9rem;">Why Akiba Hub?</a>
-      <a href="login.html" style="color:#94A3B8;transition:0.3s;font-size:0.9rem;padding:8px 16px;">Login</a>
-      <a href="register.html" style="background:linear-gradient(135deg,#FBBF24,#D97706);color:#0A0A0F;padding:10px 24px;border-radius:9999px;font-weight:600;font-size:0.9rem;transition:0.3s;">Get Started</a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it Works</a>
+      <a href="#why-us">Why Akiba Hub?</a>
+      <a href="login.html">Login</a>
+      <a href="register.html" class="btn-primary">Get Started</a>
     </nav>
   </header>
 
-  <section class="hero-container" style="padding-top:70px;">
-    <div class="hero-bg-plate">
-      <svg width="100%" height="100%" viewBox="0 0 1200 320" preserveAspectRatio="xMidYMid slice">
-        <rect width="1200" height="320" fill="transparent" />
-        <text x="600" y="160" font-family="Georgia, serif" font-size="76" fill="rgba(251,191,36,0.06)" text-anchor="middle" letter-spacing="6">AKIBA HUB</text>
-      </svg>
-    </div>
+  <section class="hero-container">
     <div class="hero">
       <div class="hero-text">
-        <div class="badge">✨ Built for Students • Communities • Investment Groups</div>
+        <div class="badge">● NETWORK STATUS: SYNCED — BUILT FOR CHAMAS & HARAMBEES</div>
         <h1>Save.<br />Support.<br /><span>Grow.</span></h1>
         <p>
-          Akiba Hub is your digital financial companion. Save individually,
-          build transparent savings groups, launch Harambee fundraisers,
-          and grow your wealth—all from one secure platform.
+          Akiba Hub is a transparent, ledger-backed savings platform. Save individually,
+          run democratic Chama governance, launch Harambee campaigns, and track every
+          shilling with the same rigor as a treasury.
         </p>
         <div class="hero-buttons">
-          <a href="register.html" class="btn-primary"><span class="wrap">✨ Create Free Account</span></a>
+          <a href="register.html" class="btn-primary">Create Free Account</a>
           <a href="login.html" class="btn-secondary">Login</a>
         </div>
       </div>
       <div class="hero-image">
-        <div class="hero-card">
-          <h3>💰 Total Savings</h3>
-          <h2>KES 128,500</h2>
-          <span style="color:var(--text-muted);">⬆ +18% this month</span>
+        <div class="hero-card card--accent-orange">
+          <h3>Total Savings</h3>
+          <h2>KES 128,500.00</h2>
+          <span class="text-muted">▲ +18.0% this month</span>
         </div>
         <div class="hero-card">
-          <h3>👥 My Groups</h3>
+          <h3>My Groups</h3>
           <ul>
             <li>✔ Software Developers Chama</li>
             <li>✔ Family Savings Circle</li>
             <li>✔ Vacation Fund</li>
           </ul>
         </div>
-        <div class="hero-card">
-          <h3>❤️ Campus Harambee</h3>
-          <p style="color:var(--text-secondary);">Medical Support</p>
-          <strong>KES 63,400 Raised</strong>
+        <div class="hero-card card--accent-green">
+          <h3>Campus Harambee — Medical Support</h3>
+          <strong>KES 63,400.00 Raised</strong>
         </div>
       </div>
     </div>
   </section>
 
   <section class="stats">
-    <div class="stat-item">
-      <h2>1000+</h2>
-      <p>Students Saving</p>
-    </div>
-    <div class="stat-item">
-      <h2>250+</h2>
-      <p>Active Savings Groups</p>
-    </div>
-    <div class="stat-item">
-      <h2>KES 5M+</h2>
-      <p>Community Savings</p>
-    </div>
-    <div class="stat-item">
-      <h2>24/7</h2>
-      <p>Secure Access</p>
-    </div>
+    <div class="stat-item"><h2>1000+</h2><p>Students Saving</p></div>
+    <div class="stat-item"><h2>250+</h2><p>Active Savings Groups</p></div>
+    <div class="stat-item"><h2>KES 5M+</h2><p>Community Savings</p></div>
+    <div class="stat-item"><h2>24/7</h2><p>Secure Access</p></div>
   </section>
 
   <section class="features" id="features">
     <h2>Everything You Need In One Platform</h2>
-    <p>More than just a savings app.</p>
+    <p>More than just a savings app — a full financial ledger for your community.</p>
     <div class="feature-grid">
-      <div class="feature-card">
-        <div class="icon">💰</div>
-        <h3>Personal Savings</h3>
-        <p>Create savings goals, monitor your balance, and develop healthy financial habits.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">👥</div>
-        <h3>Digital Chamas</h3>
-        <p>Join or create multiple savings groups, contribute securely and vote on financial decisions.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">❤️</div>
-        <h3>Campus Harambee</h3>
-        <p>Raise emergency funds for medical bills, school fees or community projects using secure invite links.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">📈</div>
-        <h3>Investments</h3>
-        <p>Grow your savings through trusted investment opportunities and future wealth-building tools.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">🗳️</div>
-        <h3>Democratic Voting</h3>
-        <p>Every withdrawal or investment decision is approved transparently by members.</p>
-      </div>
-      <div class="feature-card">
-        <div class="icon">🔒</div>
-        <h3>Secure Audit Trail</h3>
-        <p>Every contribution, vote and withdrawal is permanently recorded for transparency.</p>
-      </div>
+      <div class="feature-card"><div class="icon">💰</div><h3>Personal Savings</h3><p>Create savings goals, monitor your balance, and develop healthy financial habits.</p></div>
+      <div class="feature-card"><div class="icon">👥</div><h3>Digital Chamas</h3><p>Join or create multiple savings groups, contribute securely and vote on financial decisions.</p></div>
+      <div class="feature-card"><div class="icon">❤️</div><h3>Campus Harambee</h3><p>Raise emergency funds for medical bills, school fees or community projects using secure invite links.</p></div>
+      <div class="feature-card"><div class="icon">📈</div><h3>Live Analytics</h3><p>Track group growth, asset distribution, and contribution velocity in real time.</p></div>
+      <div class="feature-card"><div class="icon">🗳️</div><h3>DAO-Style Governance</h3><p>Every withdrawal is a proposal — members Propose, Vote, and Execute transparently.</p></div>
+      <div class="feature-card"><div class="icon">🔒</div><h3>Immutable Ledger</h3><p>Every contribution, vote and withdrawal is permanently recorded, entry by entry.</p></div>
     </div>
   </section>
 
   <section class="steps" id="how-it-works">
     <h2>How Akiba Hub Works</h2>
     <div class="steps-grid">
-      <div class="step">
-        <div class="number">1</div>
-        <h3>Create an Account</h3>
-        <p>Register in minutes and access your secure dashboard.</p>
-      </div>
-      <div class="step">
-        <div class="number">2</div>
-        <h3>Save or Join Groups</h3>
-        <p>Start saving individually or collaborate with trusted communities.</p>
-      </div>
-      <div class="step">
-        <div class="number">3</div>
-        <h3>Grow Together</h3>
-        <p>Vote, invest, support friends and build a stronger financial future.</p>
-      </div>
+      <div class="step"><div class="number">1</div><h3>Create an Account</h3><p>Register in minutes and access your secure dashboard.</p></div>
+      <div class="step"><div class="number">2</div><h3>Save or Join Groups</h3><p>Start saving individually or collaborate with trusted communities.</p></div>
+      <div class="step"><div class="number">3</div><h3>Grow Together</h3><p>Vote, invest, support friends and build a stronger financial future.</p></div>
     </div>
   </section>
 
@@ -150,10 +94,10 @@
     <h2>Why Choose Akiba Hub?</h2>
     <div class="why-grid">
       <div>✔ Built for students and communities</div>
-      <div>✔ Transparent savings management</div>
+      <div>✔ Transparent, ledger-backed savings</div>
       <div>✔ Digital Harambee campaigns</div>
       <div>✔ Multiple savings groups</div>
-      <div>✔ Secure financial records</div>
+      <div>✔ Immutable financial records</div>
       <div>✔ Future-ready investment tools</div>
     </div>
   </section>
@@ -161,12 +105,12 @@
   <section class="cta">
     <h2>Your Financial Journey Starts Today.</h2>
     <p>Join Akiba Hub and begin saving, supporting your community, and growing your future.</p>
-    <a href="register.html" class="btn-primary"><span class="wrap">🚀 Get Started Free</span></a>
+    <a href="register.html" class="btn-primary">Get Started Free</a>
   </section>
 
   <footer>
-    <div class="footer-logo">AKIBA <span>Hub</span></div>
-    <p style="color:var(--text-muted);">Save • Support • Grow</p>
+    <div class="footer-logo">AKIBA<span>HUB</span></div>
+    <p>Save • Support • Grow</p>
     <div class="footer-links">
       <a href="#">About</a>
       <a href="#">Privacy</a>

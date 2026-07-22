@@ -2,6 +2,8 @@ package com.akibahub.group;
 
 import com.akibahub.audit.AuditLogService;
 import com.akibahub.group.entity.*;
+import com.akibahub.ledger.entity.LedgerEntry;
+import com.akibahub.ledger.entity.LedgerEntryRepository;
 import com.akibahub.shared.exception.ConflictException;
 import com.akibahub.shared.exception.ForbiddenException;
 import com.akibahub.shared.exception.NotFoundException;
@@ -13,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,16 +25,19 @@ public class GroupService {
     private final GroupRepository groupRepo;
     private final GroupMemberRepository memberRepo;
     private final WalletRepository walletRepo;
+    private final LedgerEntryRepository ledgerEntryRepo;
     private final AuditLogService auditLog;
     
     private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     public GroupService(GroupRepository groupRepo, GroupMemberRepository memberRepo,
-                        WalletRepository walletRepo, AuditLogService auditLog) {
+                        WalletRepository walletRepo, LedgerEntryRepository ledgerEntryRepo,
+                        AuditLogService auditLog) {
         this.groupRepo = groupRepo;
         this.memberRepo = memberRepo;
         this.walletRepo = walletRepo;
+        this.ledgerEntryRepo = ledgerEntryRepo;
         this.auditLog = auditLog;
     }
 
@@ -161,6 +168,32 @@ public class GroupService {
     public List<GroupMember> getGroupMembers(Long groupId, User user) {
         requireMembership(groupId, user.getId());
         return memberRepo.findByGroupId(groupId);
+    }
+
+    /**
+     * Growth-over-time series for a group, derived directly from the
+     * ledger's point-in-time balance snapshots (LedgerEntry.balanceAfter)
+     * rather than recomputing anything - this is exactly the kind of
+     * query the double-entry ledger was introduced to make trivial. Each
+     * point is {label: formatted date/time, value: balance at that point}.
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getGroupGrowth(Long groupId, User user) {
+        requireMembership(groupId, user.getId());
+        Wallet groupWallet = walletRepo.findByGroupIdAndType(groupId, Wallet.WalletType.GROUP)
+                .orElseThrow(() -> new NotFoundException("Group wallet not found"));
+
+        List<LedgerEntry> entries = ledgerEntryRepo.findByWalletIdOrderByCreatedAtAsc(groupWallet.getId());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM");
+
+        List<Map<String, Object>> series = new ArrayList<>();
+        for (LedgerEntry entry : entries) {
+            series.add(Map.of(
+                    "label", entry.getCreatedAt().format(formatter),
+                    "value", entry.getBalanceAfter()
+            ));
+        }
+        return series;
     }
 
     // Shared by every group-scoped read that should only be visible to

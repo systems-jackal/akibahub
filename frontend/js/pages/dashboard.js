@@ -5,6 +5,17 @@ async function loadDashboard() {
     const data = await fetchDashboard();
     document.getElementById('personal-balance').textContent = formatCurrency(data.personalBalance);
 
+    const tickerBalance = document.getElementById('ticker-balance');
+    if (tickerBalance) {
+      const total = parseFloat(data.personalBalance) + parseFloat(data.groupBalance || 0);
+      tickerBalance.textContent = formatCurrency(total);
+    }
+
+    const chartEl = document.getElementById('asset-distribution-chart');
+    if (chartEl && data.assetDistribution) {
+      renderBlockBarChart(chartEl, data.assetDistribution.map(d => ({ label: d.label, value: parseFloat(d.value) })));
+    }
+
     const groups = await fetchMyGroups();
 
     if (groups.length === 0) {
@@ -31,7 +42,8 @@ async function loadDashboard() {
       if (proposals && proposals.length > 0) {
         list.innerHTML = proposals.slice(0, 5).map(p => `
           <div class="proposal-card">
-            <strong>${escapeHtml(p.title)}</strong> – ${escapeHtml(p.status)} – KES ${formatCurrency(p.amount)}
+            <div class="proposal-title">${escapeHtml(p.title)} <span class="badge status-${p.status.toLowerCase()}">${escapeHtml(p.status)}</span></div>
+            <div class="proposal-meta">KES <span class="proposal-amount">${formatCurrency(p.amount)}</span></div>
           </div>
         `).join('');
       } else {

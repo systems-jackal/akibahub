@@ -63,10 +63,22 @@ function requireAuth() {
 }
 
 // Logout
-function logout() {
-  localStorage.removeItem('akiba_token');
-  localStorage.removeItem('akiba_phone');
+async function logout() {
+  await apiLogout(); // revokes refresh tokens server-side, clears storage either way
   window.location.href = 'index.html';
+}
+
+// Ledger ticker live clock — purely cosmetic (the "SYNCED" status reflects
+// that the page loaded, not a live connection), updates once a second on
+// any page that has the ticker element.
+function initLedgerTicker() {
+  const timeEl = document.getElementById('ticker-time');
+  if (!timeEl) return;
+  function tick() {
+    timeEl.textContent = new Date().toLocaleTimeString('en-KE', { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
 }
 
 // Attach logout event to the sidebar logout button
@@ -78,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPasswordToggles();
   initPhoneInputs();
   loadSidebar();
+  initLedgerTicker();
 });
 
 // ===================== MOBILE SIDEBAR TOGGLE =====================

@@ -1,7 +1,25 @@
 const API_BASE = '';
 
+// ---------- token storage ----------
+// Centralized here so login.js, register.js, and the refresh flow below
+// all agree on the same storage keys.
 function getToken() {
   return localStorage.getItem('akiba_token');
+}
+
+function getRefreshToken() {
+  return localStorage.getItem('akiba_refresh_token');
+}
+
+function setTokens(accessToken, refreshToken) {
+  localStorage.setItem('akiba_token', accessToken);
+  if (refreshToken) localStorage.setItem('akiba_refresh_token', refreshToken);
+}
+
+function clearTokens() {
+  localStorage.removeItem('akiba_token');
+  localStorage.removeItem('akiba_refresh_token');
+  localStorage.removeItem('akiba_phone');
 }
 
 function authHeaders() {
@@ -9,14 +27,76 @@ function authHeaders() {
   return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
 
-// Generic API call that expects ApiResponse wrapper
+// ---------- silent token refresh ----------
+// Access tokens are short-lived (15 minutes - see backend
+// jwt.access-token-expiration-ms) on purpose. Without this, every user
+// gets bounced to the login page every 15 minutes. `refreshPromise`
+// de-dupes concurrent refresh attempts.
+let refreshPromise = null;
+
+async function refreshAccessToken() {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) throw new Error('No refresh token available');
+
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error('Session expired');
+
+    setTokens(json.data.token, json.data.refreshToken);
+    return json.data.token;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
+// Generic API call that expects ApiResponse wrapper. Transparently
+// retries once on a 401, after a silent token refresh.
 async function apiFetch(url, options = {}) {
-  const res = await fetch(url, options);
+  let res = await fetch(url, options);
+
+  if (res.status === 401 && getRefreshToken()) {
+    try {
+      const newToken = await refreshAccessToken();
+      const retryOptions = {
+        ...options,
+        headers: { ...(options.headers || {}), Authorization: `Bearer ${newToken}` }
+      };
+      res = await fetch(url, retryOptions);
+    } catch (e) {
+      clearTokens();
+      window.location.href = 'login.html';
+      throw new Error('Your session has expired. Please log in again.');
+    }
+  }
+
   const data = await res.json();
   if (!res.ok || data.success === false) {
     throw new Error(data.message || 'Request failed');
   }
   return data.data; // extract the payload
+}
+
+// Best-effort server-side logout (revokes refresh tokens). Local storage
+// is cleared regardless of whether this call succeeds.
+async function apiLogout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() });
+  } catch (e) {
+    // not fatal - clear locally either way
+  } finally {
+    clearTokens();
+  }
 }
 
 // Specific API functions
@@ -65,6 +145,10 @@ async function fetchGroupStats(groupId) {
 
 async function fetchGroupMembers(groupId) {
   return apiFetch(`/api/groups/${groupId}/members`, { headers: authHeaders() });
+}
+
+async function fetchGroupGrowth(groupId) {
+  return apiFetch(`/api/groups/${groupId}/analytics/growth`, { headers: authHeaders() });
 }
 
 async function createGroup(name, description, rules) {

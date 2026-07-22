@@ -17,10 +17,10 @@ document.getElementById('register-form').addEventListener('submit', async functi
       window.location.href = 'dashboard.html';
     } else {
       document.getElementById('auth-message').textContent = json.message || 'Registration failed';
-      document.getElementById('auth-message').style.color = 'red';
+      document.getElementById('auth-message').style.color = 'var(--red)';
     }
   } catch (err) {
     document.getElementById('auth-message').textContent = 'Network error';
-    document.getElementById('auth-message').style.color = 'red';
+    document.getElementById('auth-message').style.color = 'var(--red)';
   }
 });

@@ -21,6 +21,13 @@
   </aside>
 
   <main class="main-content">
+    <div class="ledger-ticker">
+      <span><span class="dot"></span> LEDGER: SYNCED</span>
+      <span class="sep">·</span>
+      <span id="ticker-time">--:--:--</span>
+      <span class="cursor-block"></span>
+    </div>
+
     <h1 id="group-name">Loading Group…</h1>
     <p id="group-desc" class="text-muted"></p>
 
@@ -29,10 +36,17 @@
       <p id="group-rules-text"></p>
     </div>
 
-    <div class="card mt-20">
+    <div class="card mt-20 card--accent-orange">
       <h3>💰 Group Wallet</h3>
       <p class="stat-number">KES <span id="group-balance">0.00</span></p>
-      <button id="contribute-btn" class="btn-primary mt-10"><span class="wrap">➕ Contribute</span></button>
+      <button id="contribute-btn" class="btn-primary mt-10">➕ Contribute</button>
+    </div>
+
+    <div class="card mt-20 analytics-panel">
+      <h3>📈 Growth Over Time</h3>
+      <div id="group-growth-chart" class="chart-container">
+        <div class="loader-inline"><span class="matrix-loader"><span></span><span></span><span></span><span></span><span></span></span> LOADING_LEDGER_HISTORY</div>
+      </div>
     </div>
 
     <div id="invite-section" class="card mt-20 hidden">

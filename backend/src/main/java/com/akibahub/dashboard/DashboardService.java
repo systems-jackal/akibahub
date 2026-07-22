@@ -24,14 +24,23 @@ public class DashboardService {
         BigDecimal personalBalance = walletRepo.findByUserIdAndType(user.getId(), com.akibahub.wallet.entity.Wallet.WalletType.PERSONAL)
                 .map(w -> w.getBalance()).orElse(BigDecimal.ZERO);
 
-        // Group balances sum
-        List<Long> groupIds = memberRepo.findByUserId(user.getId()).stream()
-                .map(m -> m.getGroup().getId()).toList();
+        var memberships = memberRepo.findByUserId(user.getId());
+        List<Long> groupIds = memberships.stream().map(m -> m.getGroup().getId()).toList();
+
+        // Asset distribution: one entry for personal savings, one per group
+        // the user belongs to. This backs the dashboard's "Asset
+        // Distribution" chart - previously the dashboard only exposed an
+        // aggregate groupBalance total, which can't be broken down into a
+        // per-group chart on the frontend without this.
+        List<Map<String, Object>> assetDistribution = new ArrayList<>();
+        assetDistribution.add(Map.of("label", "Personal", "value", personalBalance));
+
         BigDecimal groupBalance = BigDecimal.ZERO;
-        for (Long gid : groupIds) {
-            groupBalance = groupBalance.add(
-                    walletRepo.findByGroupIdAndType(gid, com.akibahub.wallet.entity.Wallet.WalletType.GROUP)
-                            .map(w -> w.getBalance()).orElse(BigDecimal.ZERO));
+        for (var m : memberships) {
+            BigDecimal bal = walletRepo.findByGroupIdAndType(m.getGroup().getId(), com.akibahub.wallet.entity.Wallet.WalletType.GROUP)
+                    .map(w -> w.getBalance()).orElse(BigDecimal.ZERO);
+            groupBalance = groupBalance.add(bal);
+            assetDistribution.add(Map.of("label", m.getGroup().getName(), "value", bal));
         }
 
         long activeGroups = groupIds.size();
@@ -52,6 +61,7 @@ public class DashboardService {
         dashboard.put("groupBalance", groupBalance);
         dashboard.put("activeGroups", activeGroups);
         dashboard.put("pendingVotes", pendingVotes);
+        dashboard.put("assetDistribution", assetDistribution);
         // recent transactions/proposals can be added later
         dashboard.put("recentTransactions", List.of());
         dashboard.put("recentProposals", List.of());
