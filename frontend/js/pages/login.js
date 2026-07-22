@@ -1,3 +1,17 @@
+// If we got here via an inactivity auto-logout, say so - a silent
+// redirect to the login page reads as broken/confusing; an explained one
+// reads as a deliberate security feature.
+(function showInactivityNotice() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('reason') === 'inactivity') {
+    const msgEl = document.getElementById('auth-message');
+    if (msgEl) {
+      msgEl.textContent = '⏱ You were logged out due to inactivity. Please log in again.';
+      msgEl.style.color = 'var(--orange)';
+    }
+  }
+})();
+
 // Toggle between phone and ID login
 document.getElementById('toggle-login-method').addEventListener('click', function(e) {
   e.preventDefault();

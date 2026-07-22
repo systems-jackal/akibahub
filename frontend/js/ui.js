@@ -59,13 +59,102 @@ function loadSidebar() {
 function requireAuth() {
   if (!getToken()) {
     window.location.href = 'login.html';
+    return;
   }
+  initInactivityTimer();
 }
 
 // Logout
-async function logout() {
+async function logout(redirectTo = 'index.html') {
   await apiLogout(); // revokes refresh tokens server-side, clears storage either way
-  window.location.href = 'index.html';
+  window.location.href = redirectTo;
+}
+
+// ---------- Auto-logout on inactivity ----------
+// Independent of token expiry - this is a client-enforced security
+// control on top of the server-side session (refresh tokens, short-lived
+// access tokens). Even if a device is left unlocked, an idle session
+// ends itself. Uses the real logout() above, so an inactivity timeout
+// actually revokes the refresh token server-side too, not just a
+// client-side redirect that leaves the session usable elsewhere.
+const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutes idle
+const INACTIVITY_WARNING_MS = 60 * 1000;    // warn 60s before logging out
+const ACTIVITY_THROTTLE_MS = 3000;          // don't reset the timer on every single mousemove event
+
+let inactivityTimerStarted = false;
+let inactivityTimeout = null;
+let warningTimeout = null;
+let countdownInterval = null;
+let warningEl = null;
+let lastActivityReset = 0;
+
+function initInactivityTimer() {
+  if (inactivityTimerStarted) return; // guard against double-init
+  inactivityTimerStarted = true;
+
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      const now = Date.now();
+      if (now - lastActivityReset > ACTIVITY_THROTTLE_MS) {
+        lastActivityReset = now;
+        resetInactivityTimer();
+      }
+    }, { passive: true });
+  });
+
+  resetInactivityTimer();
+}
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimeout);
+  clearTimeout(warningTimeout);
+  dismissInactivityWarning();
+
+  warningTimeout = setTimeout(showInactivityWarning, INACTIVITY_LIMIT_MS - INACTIVITY_WARNING_MS);
+  inactivityTimeout = setTimeout(() => {
+    dismissInactivityWarning();
+    // Full page navigation - this isn't just hiding the modal, the
+    // entire authenticated page is torn down and replaced by the login
+    // screen. Straight to login.html (not the marketing homepage) since
+    // this is a timeout, not someone choosing to leave the app - they
+    // should be able to log back in immediately with the fewest clicks.
+    logout('login.html?reason=inactivity');
+  }, INACTIVITY_LIMIT_MS);
+}
+
+function showInactivityWarning() {
+  if (warningEl) return;
+  let secondsLeft = Math.floor(INACTIVITY_WARNING_MS / 1000);
+
+  warningEl = document.createElement('div');
+  warningEl.className = 'inactivity-overlay';
+  warningEl.innerHTML = `
+    <div class="inactivity-modal">
+      <div class="matrix-loader"><span></span><span></span><span></span><span></span><span></span></div>
+      <h3>⚠ SESSION_TIMEOUT_WARNING</h3>
+      <p>You've been inactive. For your security, you'll be logged out in
+        <span id="inactivity-countdown">${secondsLeft}</span>s.</p>
+      <button class="btn-primary full-width" id="stay-logged-in-btn">Stay Logged In</button>
+    </div>
+  `;
+  document.body.appendChild(warningEl);
+
+  const countdownEl = document.getElementById('inactivity-countdown');
+  countdownInterval = setInterval(() => {
+    secondsLeft--;
+    if (countdownEl) countdownEl.textContent = secondsLeft;
+    if (secondsLeft <= 0) clearInterval(countdownInterval);
+  }, 1000);
+
+  document.getElementById('stay-logged-in-btn').addEventListener('click', resetInactivityTimer);
+}
+
+function dismissInactivityWarning() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  if (warningEl) {
+    warningEl.remove();
+    warningEl = null;
+  }
 }
 
 // Ledger ticker live clock — purely cosmetic (the "SYNCED" status reflects
