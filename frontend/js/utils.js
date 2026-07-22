@@ -41,31 +41,64 @@ function escapeHtml(str) {
 // library dropped onto a themed page.
 
 // Renders a labeled block-bar chart. `data` is [{ label, value }, ...].
+// The first entry is always treated as "Personal" (colored orange); every
+// entry after that is a group (colored green) - this is a deliberate,
+// meaningful color code (yours vs. shared), not decoration. Each bar gets
+// its actual KES value and share-of-total percentage printed above it,
+// there's a legend, and a running total underneath - a bar chart with no
+// numbers on it isn't actually informative, just decorative.
 function renderBlockBarChart(containerEl, data, options = {}) {
   if (!data || data.length === 0) {
     containerEl.innerHTML = '<div class="chart-empty">NO_DATA_YET</div>';
     return;
   }
-  const width = 480, height = 180, padding = 28;
+  const width = 480, height = 210, padding = 28;
   const barAreaWidth = width - padding * 2;
-  const barGap = 16;
-  const barWidth = Math.max(20, (barAreaWidth / data.length) - barGap);
+  const barGap = 18;
+  const barWidth = Math.max(24, (barAreaWidth / data.length) - barGap);
   const maxVal = Math.max(...data.map(d => d.value), 1);
+  const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
   const blockSize = 8, blockGap = 2;
+  const chartFloor = height - 46; // leaves room for axis label + legend below
 
   let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
   data.forEach((d, i) => {
+    const isPersonal = i === 0;
+    const colorClass = isPersonal ? 'chart-bar-personal' : 'chart-bar-group';
     const x = padding + i * (barWidth + barGap);
-    const barHeightPx = Math.max(4, (d.value / maxVal) * (height - 50));
+    const barHeightPx = Math.max(4, (d.value / maxVal) * (chartFloor - 60));
     const numBlocks = Math.max(1, Math.floor(barHeightPx / (blockSize + blockGap)));
+    const pct = Math.round((d.value / total) * 100);
+
     for (let b = 0; b < numBlocks; b++) {
-      const y = (height - 30) - (b + 1) * (blockSize + blockGap);
-      svg += `<rect class="chart-bar-block" x="${x}" y="${y}" width="${barWidth}" height="${blockSize}" />`;
+      const y = chartFloor - (b + 1) * (blockSize + blockGap);
+      // Staggered animation delay: blocks build up from the bottom,
+      // bars build up left-to-right - this is what makes it read as
+      // "alive" on load rather than just appearing fully formed.
+      const delay = (i * 0.08 + b * 0.015).toFixed(3);
+      svg += `<rect class="chart-bar-block ${colorClass}" x="${x}" y="${y}" width="${barWidth}" height="${blockSize}" style="animation-delay:${delay}s">`;
+      svg += `<title>${escapeHtml(d.label)}: KES ${formatCurrency(d.value)} (${pct}%)</title>`;
+      svg += `</rect>`;
     }
-    svg += `<text class="chart-axis-label" x="${x + barWidth / 2}" y="${height - 8}" text-anchor="middle">${escapeHtml(truncate(d.label, 10))}</text>`;
+
+    // Value + percentage directly above the bar - the actual point of
+    // a chart like this is answering "how much, and how much of the
+    // whole" at a glance, without hovering or guessing from bar height.
+    const topY = chartFloor - numBlocks * (blockSize + blockGap) - 8;
+    svg += `<text class="chart-value-label" x="${x + barWidth / 2}" y="${Math.max(12, topY)}" text-anchor="middle">KES ${formatCurrency(d.value)}</text>`;
+    svg += `<text class="chart-pct-label" x="${x + barWidth / 2}" y="${Math.max(24, topY + 12)}" text-anchor="middle">${pct}%</text>`;
+    svg += `<text class="chart-axis-label" x="${x + barWidth / 2}" y="${chartFloor + 16}" text-anchor="middle">${escapeHtml(truncate(d.label, 10))}</text>`;
   });
   svg += `</svg>`;
-  containerEl.innerHTML = svg;
+
+  const legend = `
+    <div class="chart-legend">
+      <span class="legend-item"><span class="legend-swatch legend-personal"></span>Personal</span>
+      <span class="legend-item"><span class="legend-swatch legend-group"></span>Group Savings</span>
+      <span class="legend-total">TOTAL: KES ${formatCurrency(total)}</span>
+    </div>`;
+
+  containerEl.innerHTML = svg + legend;
 }
 
 // Renders a stepped (blockchain-block-like) line chart for a time series.
