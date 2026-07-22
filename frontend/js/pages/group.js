@@ -62,7 +62,9 @@ async function loadGroup() {
       proposalsList.innerHTML = proposals.map(p => {
         const isOpen = p.status === 'OPEN';
         const isApproved = p.status === 'APPROVED';
-        const isRejected = p.status === 'REJECTED';
+        const total = p.totalMembers || 1;
+        const yesPct = Math.round((p.yesVotes / total) * 100);
+        const noPct = Math.round((p.noVotes / total) * 100);
         return `
         <div class="proposal-card">
           <div class="dao-stepper">
@@ -75,6 +77,17 @@ async function loadGroup() {
             <span class="badge status-${p.status.toLowerCase()}">${escapeHtml(p.status)}</span>
           </div>
           <div class="proposal-meta">Amount: KES <span class="proposal-amount">${formatCurrency(p.amount)}</span></div>
+          <div class="vote-tally">
+            <div class="vote-tally-bar">
+              <div class="yes-fill" style="width:${yesPct}%"></div>
+              <div class="no-fill" style="width:${noPct}%"></div>
+            </div>
+            <div class="vote-tally-labels">
+              <span>YES: ${p.yesVotes}</span>
+              <span>NO: ${p.noVotes}</span>
+              <span>${p.yesVotes + p.noVotes}/${total} voted</span>
+            </div>
+          </div>
           ${isOpen ? `
             <div class="dial-group" data-proposal-id="${p.id}">
               <div class="dial-option dial-yes" onclick="vote('${p.id}','YES')">YES</div>

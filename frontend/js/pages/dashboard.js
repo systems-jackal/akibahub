@@ -40,12 +40,24 @@ async function loadDashboard() {
       const proposals = await fetchMyProposals();
       const list = document.getElementById('recent-proposals');
       if (proposals && proposals.length > 0) {
-        list.innerHTML = proposals.slice(0, 5).map(p => `
+        list.innerHTML = proposals.slice(0, 5).map(p => {
+          const total = p.totalMembers || 1;
+          const yesPct = Math.round((p.yesVotes / total) * 100);
+          const noPct = Math.round((p.noVotes / total) * 100);
+          return `
           <div class="proposal-card">
             <div class="proposal-title">${escapeHtml(p.title)} <span class="badge status-${p.status.toLowerCase()}">${escapeHtml(p.status)}</span></div>
             <div class="proposal-meta">KES <span class="proposal-amount">${formatCurrency(p.amount)}</span></div>
+            <div class="vote-tally">
+              <div class="vote-tally-bar">
+                <div class="yes-fill" style="width:${yesPct}%"></div>
+                <div class="no-fill" style="width:${noPct}%"></div>
+              </div>
+              <div class="vote-tally-labels"><span>YES: ${p.yesVotes}</span><span>NO: ${p.noVotes}</span></div>
+            </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       } else {
         list.innerHTML = '<p>No proposals yet.</p>';
       }

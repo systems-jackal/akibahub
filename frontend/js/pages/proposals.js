@@ -32,7 +32,11 @@ async function loadProposals() {
 
         container.innerHTML = proposals
             .map(
-                (p) => `
+                (p) => {
+                    const total = p.totalMembers || 1;
+                    const yesPct = Math.round((p.yesVotes / total) * 100);
+                    const noPct = Math.round((p.noVotes / total) * 100);
+                    return `
             <div class="proposal-card">
                 <div class="dao-stepper">
                     <span class="step done">PROPOSE</span><span class="arrow">→</span>
@@ -51,6 +55,18 @@ async function loadProposals() {
                     Group: ${escapeHtml(p.group?.name || "Unknown Group")}
                 </div>
 
+                <div class="vote-tally">
+                    <div class="vote-tally-bar">
+                        <div class="yes-fill" style="width:${yesPct}%"></div>
+                        <div class="no-fill" style="width:${noPct}%"></div>
+                    </div>
+                    <div class="vote-tally-labels">
+                        <span>YES: ${p.yesVotes}</span>
+                        <span>NO: ${p.noVotes}</span>
+                        <span>${p.yesVotes + p.noVotes}/${total} voted</span>
+                    </div>
+                </div>
+
                 ${
                     p.status === "OPEN"
                         ? `
@@ -62,7 +78,8 @@ async function loadProposals() {
                         : ""
                 }
             </div>
-        `
+        `;
+                }
             )
             .join("");
 

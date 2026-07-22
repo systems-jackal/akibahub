@@ -4,6 +4,7 @@ import com.akibahub.audit.AuditLogService;
 import com.akibahub.group.entity.GroupMemberRepository;
 import com.akibahub.ledger.LedgerService;
 import com.akibahub.ledger.entity.Transfer;
+import com.akibahub.proposal.dto.ProposalResponse;
 import com.akibahub.proposal.entity.*;
 import com.akibahub.shared.AmountValidator;
 import com.akibahub.shared.exception.BadRequestException;
@@ -46,7 +47,7 @@ public class ProposalService {
     // ---------- existing methods ----------
 
     @Transactional
-    public Proposal createProposal(Long groupId, String title, String description,
+    public ProposalResponse createProposal(Long groupId, String title, String description,
                                    BigDecimal amount, User creator) {
         AmountValidator.requirePositive(amount);
         var membership = memberRepo.findByGroupIdAndUserId(groupId, creator.getId())
@@ -56,7 +57,7 @@ public class ProposalService {
                 .status(Proposal.ProposalStatus.OPEN).build();
         proposal = proposalRepo.save(proposal);
         auditLog.logEvent("PROPOSAL_CREATED", proposal);
-        return proposal;
+        return toResponse(proposal);
     }
 
     @Transactional
@@ -124,31 +125,34 @@ public class ProposalService {
                 "Approved proposal: " + proposal.getTitle(), groupWallet, personal, proposal.getAmount());
     }
 
-    public List<Proposal> getProposalsForGroup(Long groupId, User user) {
+    @Transactional(readOnly = true)
+    public List<ProposalResponse> getProposalsForGroup(Long groupId, User user) {
         memberRepo.findByGroupIdAndUserId(groupId, user.getId())
                 .orElseThrow(() -> new ForbiddenException("Not a member of this group"));
-        return proposalRepo.findByGroupId(groupId);
+        return proposalRepo.findByGroupId(groupId).stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    public List<Proposal> getProposalsForUserGroups(User user) {
+    @Transactional(readOnly = true)
+    public List<ProposalResponse> getProposalsForUserGroups(User user) {
         List<Long> groupIds = memberRepo.findByUserId(user.getId())
                 .stream().map(m -> m.getGroup().getId()).collect(Collectors.toList());
         if (groupIds.isEmpty()) return List.of();
-        return proposalRepo.findByGroupIdIn(groupIds);
+        return proposalRepo.findByGroupIdIn(groupIds).stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     // ---------- new methods ----------
 
-    public Proposal getProposal(Long proposalId, User user) {
+    @Transactional(readOnly = true)
+    public ProposalResponse getProposal(Long proposalId, User user) {
         Proposal proposal = proposalRepo.findById(proposalId)
                 .orElseThrow(() -> new NotFoundException("Proposal not found"));
         memberRepo.findByGroupIdAndUserId(proposal.getGroup().getId(), user.getId())
                 .orElseThrow(() -> new ForbiddenException("Not a member of this group"));
-        return proposal;
+        return toResponse(proposal);
     }
 
     @Transactional
-    public Proposal updateProposal(Long proposalId, Map<String, Object> body, User user) {
+    public ProposalResponse updateProposal(Long proposalId, Map<String, Object> body, User user) {
         Proposal proposal = proposalRepo.findById(proposalId)
                 .orElseThrow(() -> new NotFoundException("Proposal not found"));
         if (!proposal.getCreatedBy().getId().equals(user.getId()))
@@ -164,7 +168,30 @@ public class ProposalService {
             proposal.setAmount(newAmount);
         }
 
-        return proposalRepo.save(proposal);
+        return toResponse(proposalRepo.save(proposal));
+    }
+
+    /**
+     * Builds the flattened API response for a proposal, including live
+     * vote tallies. Must run inside an active transaction (readOnly or
+     * not) since it touches proposal.getGroup(), a lazy association.
+     */
+    private ProposalResponse toResponse(Proposal proposal) {
+        long totalMembers = memberRepo.countByGroupId(proposal.getGroup().getId());
+        long yesVotes = voteRepo.countByProposalIdAndVote(proposal.getId(), Vote.VoteValue.YES);
+        long noVotes = voteRepo.countByProposalIdAndVote(proposal.getId(), Vote.VoteValue.NO);
+        return new ProposalResponse(
+                proposal.getId(),
+                proposal.getTitle(),
+                proposal.getDescription(),
+                proposal.getAmount(),
+                proposal.getStatus(),
+                proposal.getCreatedAt(),
+                new ProposalResponse.GroupSummary(proposal.getGroup().getId(), proposal.getGroup().getName()),
+                yesVotes,
+                noVotes,
+                totalMembers
+        );
     }
 
     @Transactional

@@ -1,7 +1,7 @@
 package com.akibahub.proposal;
 
 import com.akibahub.idempotency.IdempotencyService;
-import com.akibahub.proposal.entity.Proposal;
+import com.akibahub.proposal.dto.ProposalResponse;
 import com.akibahub.proposal.entity.Vote;
 import com.akibahub.shared.dto.ApiResponse;
 import com.akibahub.user.entity.User;
@@ -27,20 +27,20 @@ public class ProposalController {
 
     // Create proposal
     @PostMapping("/groups/{groupId}/proposals")
-    public ResponseEntity<ApiResponse<Proposal>> createProposal(
+    public ResponseEntity<ApiResponse<ProposalResponse>> createProposal(
             @PathVariable Long groupId,
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal User user,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         return idempotencyService.execute(idempotencyKey, user, body,
-                new TypeReference<ApiResponse<Proposal>>() {},
+                new TypeReference<ApiResponse<ProposalResponse>>() {},
                 () -> {
-                    Proposal p = proposalService.createProposal(groupId,
+                    ProposalResponse p = proposalService.createProposal(groupId,
                             (String) body.get("title"),
                             (String) body.get("description"),
                             new BigDecimal(body.get("amount").toString()),
                             user);
-                    return ResponseEntity.ok(ApiResponse.<Proposal>builder()
+                    return ResponseEntity.ok(ApiResponse.<ProposalResponse>builder()
                             .success(true).message("Proposal created").data(p).build());
                 });
     }
@@ -64,37 +64,37 @@ public class ProposalController {
 
     // Proposals for a specific group
     @GetMapping("/groups/{groupId}/proposals")
-    public ResponseEntity<ApiResponse<List<Proposal>>> getProposals(@PathVariable Long groupId,
+    public ResponseEntity<ApiResponse<List<ProposalResponse>>> getProposals(@PathVariable Long groupId,
                                                                      @AuthenticationPrincipal User user) {
-        List<Proposal> proposals = proposalService.getProposalsForGroup(groupId, user);
-        return ResponseEntity.ok(ApiResponse.<List<Proposal>>builder()
+        List<ProposalResponse> proposals = proposalService.getProposalsForGroup(groupId, user);
+        return ResponseEntity.ok(ApiResponse.<List<ProposalResponse>>builder()
                 .success(true).data(proposals).build());
     }
 
     // Proposals for all groups the user belongs to
     @GetMapping("/proposals/my")
-    public ResponseEntity<ApiResponse<List<Proposal>>> getMyProposals(@AuthenticationPrincipal User user) {
-        List<Proposal> proposals = proposalService.getProposalsForUserGroups(user);
-        return ResponseEntity.ok(ApiResponse.<List<Proposal>>builder()
+    public ResponseEntity<ApiResponse<List<ProposalResponse>>> getMyProposals(@AuthenticationPrincipal User user) {
+        List<ProposalResponse> proposals = proposalService.getProposalsForUserGroups(user);
+        return ResponseEntity.ok(ApiResponse.<List<ProposalResponse>>builder()
                 .success(true).data(proposals).build());
     }
 
     // Get single proposal detail
     @GetMapping("/proposals/{proposalId}")
-    public ResponseEntity<ApiResponse<Proposal>> getProposal(@PathVariable Long proposalId,
+    public ResponseEntity<ApiResponse<ProposalResponse>> getProposal(@PathVariable Long proposalId,
                                                               @AuthenticationPrincipal User user) {
-        Proposal proposal = proposalService.getProposal(proposalId, user);
-        return ResponseEntity.ok(ApiResponse.<Proposal>builder()
+        ProposalResponse proposal = proposalService.getProposal(proposalId, user);
+        return ResponseEntity.ok(ApiResponse.<ProposalResponse>builder()
                 .success(true).data(proposal).build());
     }
 
     // Update proposal
     @PutMapping("/proposals/{proposalId}")
-    public ResponseEntity<ApiResponse<Proposal>> updateProposal(@PathVariable Long proposalId,
+    public ResponseEntity<ApiResponse<ProposalResponse>> updateProposal(@PathVariable Long proposalId,
                                                                 @RequestBody Map<String, Object> body,
                                                                 @AuthenticationPrincipal User user) {
-        Proposal updated = proposalService.updateProposal(proposalId, body, user);
-        return ResponseEntity.ok(ApiResponse.<Proposal>builder()
+        ProposalResponse updated = proposalService.updateProposal(proposalId, body, user);
+        return ResponseEntity.ok(ApiResponse.<ProposalResponse>builder()
                 .success(true).message("Proposal updated").data(updated).build());
     }
 
