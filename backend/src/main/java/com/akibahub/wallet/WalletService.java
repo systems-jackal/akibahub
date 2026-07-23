@@ -95,7 +95,10 @@ public class WalletService {
                 .orElseThrow(() -> new ForbiddenException("Not a member"));
         Wallet personal = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
                 .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
-        if (personal.getBalance().compareTo(amount) < 0) throw new BadRequestException("Insufficient balance");
+        if (personal.getBalance().compareTo(amount) < 0) {
+            throw new BadRequestException(
+                    "Insufficient personal balance. Deposit to your wallet first, then contribute.");
+        }
         Wallet groupWallet = walletRepo.findByGroupIdAndType(groupId, Wallet.WalletType.GROUP)
                 .orElseThrow(() -> new NotFoundException("Group wallet not found"));
 

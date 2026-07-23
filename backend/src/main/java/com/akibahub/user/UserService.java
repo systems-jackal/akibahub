@@ -2,6 +2,7 @@ package com.akibahub.user;
 
 import com.akibahub.auth.RefreshTokenService;
 import com.akibahub.shared.exception.BadRequestException;
+import com.akibahub.shared.exception.ConflictException;
 import com.akibahub.user.entity.User;
 import com.akibahub.user.entity.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,8 +26,28 @@ public class UserService {
 
     @Transactional
     public User updateProfile(User user, Map<String, String> body) {
-        if (body.containsKey("fullName")) user.setFullName(body.get("fullName"));
-        if (body.containsKey("phoneNumber")) user.setPhoneNumber(body.get("phoneNumber"));
+        if (body.containsKey("fullName")) {
+            String fullName = body.get("fullName") == null ? "" : body.get("fullName").trim();
+            if (fullName.isBlank()) {
+                throw new BadRequestException("Full name is required");
+            }
+            if (fullName.length() > 100) {
+                throw new BadRequestException("Full name must be 100 characters or fewer");
+            }
+            user.setFullName(fullName);
+        }
+
+        if (body.containsKey("phoneNumber")) {
+            String phone = normalizeKenyanPhone(body.get("phoneNumber"));
+            if (phone == null) {
+                throw new BadRequestException("Phone must be a valid Kenyan number (+254XXXXXXXXX)");
+            }
+            if (!phone.equals(user.getPhoneNumber()) && userRepo.existsByPhoneNumber(phone)) {
+                throw new ConflictException("Phone number already registered");
+            }
+            user.setPhoneNumber(phone);
+        }
+
         return userRepo.save(user);
     }
 
@@ -55,5 +76,17 @@ public class UserService {
         // a stolen token) can mint a new access token afterward without
         // knowing the NEW password.
         refreshTokenService.revokeAllForUser(user.getId());
+    }
+
+    private static String normalizeKenyanPhone(String raw) {
+        String digits = raw == null ? "" : raw.replaceAll("\\D", "");
+        if (digits.startsWith("254")) {
+            digits = digits.substring(3);
+        }
+        digits = digits.replaceFirst("^0+", "");
+        if (digits.length() != 9) {
+            return null;
+        }
+        return "+254" + digits;
     }
 }

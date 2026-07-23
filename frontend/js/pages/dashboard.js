@@ -44,10 +44,14 @@ async function loadDashboard() {
           const total = p.totalMembers || 1;
           const yesPct = Math.round((p.yesVotes / total) * 100);
           const noPct = Math.round((p.noVotes / total) * 100);
+          const groupId = p.group?.id;
           return `
           <div class="proposal-card">
             <div class="proposal-title">${escapeHtml(p.title)} <span class="badge status-${p.status.toLowerCase()}">${escapeHtml(p.status)}</span></div>
-            <div class="proposal-meta">KES <span class="proposal-amount">${formatCurrency(p.amount)}</span></div>
+            <div class="proposal-meta">
+              KES <span class="proposal-amount">${formatCurrency(p.amount)}</span>
+              ${groupId ? ` · <a href="group.html?id=${groupId}">${escapeHtml(p.group?.name || 'Group')}</a>` : ''}
+            </div>
             <div class="vote-tally">
               <div class="vote-tally-bar">
                 <div class="yes-fill" style="width:${yesPct}%"></div>
@@ -93,13 +97,14 @@ document.getElementById('quick-withdraw').addEventListener('click', async () => 
 });
 
 document.getElementById('quick-join-group').addEventListener('click', async () => {
-  const code = prompt('Enter the Group ID or invite code:');
-  if (code) {
-    try {
-      await joinGroup(code.trim());
-      showAlert('Joined group successfully!');
-      loadDashboard();
-    } catch (e) { showAlert(e.message, 'error'); }
+  const code = prompt('Enter the 6-character invite code:');
+  if (!code) return;
+  try {
+    const group = await joinGroup(code.trim());
+    showAlert(`Joined ${group.name}!`);
+    window.location.href = `group.html?id=${group.id}`;
+  } catch (e) {
+    showAlert(e.message, 'error');
   }
 });
 

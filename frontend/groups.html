@@ -22,6 +22,7 @@
 
   <main class="main-content">
     <h1>My Groups</h1>
+    <p class="text-muted">Create a chama, share the invite code, then contribute and vote together.</p>
 
     <div class="card">
       <h3>✨ Create New Group</h3>
@@ -29,28 +30,32 @@
         <label for="group-name">Group Name</label>
         <div class="input-wrapper">
           <div class="glow-ring"></div>
-          <input type="text" id="group-name" placeholder="e.g. Campus Chama" />
+          <input type="text" id="group-name" placeholder="e.g. Campus Chama" maxlength="100" />
         </div>
       </div>
       <div class="form-group">
         <label for="group-desc">Description (optional)</label>
         <div class="input-wrapper">
           <div class="glow-ring"></div>
-          <input type="text" id="group-desc" placeholder="What's this group about?" />
+          <input type="text" id="group-desc" placeholder="What's this group about?" maxlength="255" />
         </div>
       </div>
       <div class="form-group">
-        <label for="group-rules">Group Rules</label>
+        <label for="group-rules">Group Rules (optional)</label>
         <div class="input-wrapper">
           <div class="glow-ring"></div>
-          <textarea id="group-rules" placeholder="e.g. Monthly contribution KES 500, voting rules…" rows="3"></textarea>
+          <textarea id="group-rules" placeholder="e.g. Monthly contribution KES 500, majority vote to withdraw…" rows="3"></textarea>
         </div>
       </div>
-      <button id="create-btn" class="btn-primary"><span class="wrap">🚀 Create Group</span></button>
+      <button id="create-btn" class="btn-primary" type="button"><span class="wrap">🚀 Create Group</span></button>
 
       <div id="invite-code-area" class="hidden mt-20">
         <p><strong>Invite Code:</strong> <span id="generated-code" class="invite-code"></span></p>
-        <button id="copy-code" class="btn-primary btn-sm"><span class="wrap">📋 Copy Code</span></button>
+        <p class="text-muted small">Share this code with members so they can join.</p>
+        <div class="btn-row">
+          <button id="copy-code" class="btn-primary btn-sm" type="button"><span class="wrap">📋 Copy Code</span></button>
+          <a id="open-created-group" class="btn-secondary btn-sm" href="#">Open Group →</a>
+        </div>
       </div>
     </div>
 
@@ -60,13 +65,14 @@
         <label for="join-invite-code">Enter 6‑Character Invite Code</label>
         <div class="input-wrapper">
           <div class="glow-ring"></div>
-          <input type="text" id="join-invite-code" placeholder="e.g. A1B2C3" maxlength="6" />
+          <input type="text" id="join-invite-code" placeholder="e.g. A1B2C3" maxlength="6" autocomplete="off" spellcheck="false" />
         </div>
       </div>
-      <button id="join-btn" class="btn-primary"><span class="wrap">➕ Join Group</span></button>
+      <button id="join-btn" class="btn-primary" type="button"><span class="wrap">➕ Join Group</span></button>
     </div>
 
-    <div id="groups-list" class="mt-20"></div>
+    <h2 class="mt-20">Your Groups</h2>
+    <div id="groups-list" class="mt-10"></div>
   </main>
 
   <script src="js/api.js"></script>

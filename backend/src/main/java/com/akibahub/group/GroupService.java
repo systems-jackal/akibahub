@@ -7,6 +7,7 @@ import com.akibahub.group.entity.*;
 import com.akibahub.ledger.entity.LedgerEntry;
 import com.akibahub.ledger.entity.LedgerEntryRepository;
 import com.akibahub.proposal.entity.ProposalRepository;
+import com.akibahub.shared.exception.BadRequestException;
 import com.akibahub.shared.exception.ConflictException;
 import com.akibahub.shared.exception.ForbiddenException;
 import com.akibahub.shared.exception.NotFoundException;
@@ -67,11 +68,19 @@ public class GroupService {
 
     @Transactional
     public GroupResponse createGroup(String name, String description, String rules, User creator) {
+        if (name == null || name.isBlank()) {
+            throw new BadRequestException("Group name is required");
+        }
+        String trimmedName = name.trim();
+        if (trimmedName.length() > 100) {
+            throw new BadRequestException("Group name must be 100 characters or fewer");
+        }
+
         String code = generateUniqueCode();
         Group group = Group.builder()
-                .name(name)
-                .description(description)
-                .rules(rules)
+                .name(trimmedName)
+                .description(description == null ? null : description.trim())
+                .rules(rules == null ? null : rules.trim())
                 .inviteCode(code)
                 .createdBy(creator)
                 .build();
@@ -89,17 +98,22 @@ public class GroupService {
     }
 
     @Transactional
-    public void joinGroup(String inviteCode, User user) {
+    public GroupResponse joinGroup(String inviteCode, User user) {
         String normalized = inviteCode == null ? "" : inviteCode.trim();
+        if (normalized.isBlank()) {
+            throw new BadRequestException("Invite code required");
+        }
+
         Group group = groupRepo.findByInviteCodeIgnoreCase(normalized)
                 .orElseThrow(() -> new NotFoundException("Invalid invite code"));
 
         if (memberRepo.findByGroupIdAndUserId(group.getId(), user.getId()).isPresent()) {
-            throw new ConflictException("Already a member");
+            throw new ConflictException("You are already a member of this group");
         }
 
         memberRepo.save(GroupMember.builder().group(group).user(user).build());
         auditLog.logEvent("MEMBER_JOINED", Map.of("groupId", group.getId(), "user", user.getPhoneNumber()));
+        return GroupResponse.from(group);
     }
 
     @Transactional
@@ -221,10 +235,16 @@ public class GroupService {
     }
 
     private String generateUniqueCode() {
-        StringBuilder sb = new StringBuilder(6);
-        for (int i = 0; i < 6; i++) {
-            sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+        for (int attempt = 0; attempt < 20; attempt++) {
+            StringBuilder sb = new StringBuilder(6);
+            for (int i = 0; i < 6; i++) {
+                sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+            }
+            String code = sb.toString();
+            if (groupRepo.findByInviteCodeIgnoreCase(code).isEmpty()) {
+                return code;
+            }
         }
-        return sb.toString();
+        throw new ConflictException("Could not generate a unique invite code. Please try again.");
     }
 }

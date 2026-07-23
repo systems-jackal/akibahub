@@ -47,6 +47,9 @@ public class ProposalService {
     @Transactional
     public ProposalResponse createProposal(Long groupId, String title, String description,
                                    BigDecimal amount, User creator) {
+        if (title == null || title.isBlank()) {
+            throw new BadRequestException("Proposal title is required");
+        }
         AmountValidator.requirePositive(amount);
         var membership = memberRepo.findByGroupIdAndUserId(groupId, creator.getId())
                 .orElseThrow(() -> new ForbiddenException("Not a group member"));
@@ -54,11 +57,11 @@ public class ProposalService {
         Wallet groupWallet = walletRepo.findByGroupIdAndType(groupId, Wallet.WalletType.GROUP)
                 .orElseThrow(() -> new NotFoundException("Group wallet not found"));
         if (groupWallet.getBalance().compareTo(amount) < 0) {
-            throw new BadRequestException("Proposal amount exceeds group balance");
+            throw new BadRequestException("Proposal amount exceeds group balance. Contribute more first.");
         }
 
-        Proposal proposal = Proposal.builder().group(membership.getGroup()).title(title)
-                .description(description).amount(amount).createdBy(creator)
+        Proposal proposal = Proposal.builder().group(membership.getGroup()).title(title.trim())
+                .description(description == null ? null : description.trim()).amount(amount).createdBy(creator)
                 .status(Proposal.ProposalStatus.OPEN).build();
         proposal = proposalRepo.save(proposal);
         auditLog.logEvent("PROPOSAL_CREATED", Map.of(

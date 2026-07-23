@@ -202,6 +202,13 @@ async function joinGroup(code) {
   });
 }
 
+async function deleteGroup(groupId) {
+  return apiFetch(`/api/groups/${groupId}`, {
+    method: 'DELETE',
+    headers: authHeaders()
+  });
+}
+
 async function contributeToGroup(groupId, amount) {
   return apiFetch(`/api/wallets/groups/${groupId}/contribute`, {
     method: 'POST',

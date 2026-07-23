@@ -34,8 +34,14 @@ public class User {
     }
 
     public UserDto toDto() {
-        return new UserDto(id, fullName, phoneNumber, idNumber);
+        return new UserDto(id, fullName, phoneNumber, idNumber, createdAt);
     }
 
-    public record UserDto(Long id, String fullName, String phoneNumber, String idNumber) {}
+    public record UserDto(
+            Long id,
+            String fullName,
+            String phoneNumber,
+            String idNumber,
+            LocalDateTime createdAt
+    ) {}
 }

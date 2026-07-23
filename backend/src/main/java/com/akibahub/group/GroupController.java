@@ -35,15 +35,15 @@ public class GroupController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<ApiResponse<String>> joinGroup(@RequestBody Map<String, String> body,
+    public ResponseEntity<ApiResponse<GroupResponse>> joinGroup(@RequestBody Map<String, String> body,
                                                          @AuthenticationPrincipal User user) {
         String code = body.get("code");
         if (code == null || code.isBlank()) {
             throw new BadRequestException("Invite code required");
         }
-        groupService.joinGroup(code.trim(), user);
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true).message("Joined group").build());
+        GroupResponse group = groupService.joinGroup(code.trim(), user);
+        return ResponseEntity.ok(ApiResponse.<GroupResponse>builder()
+                .success(true).message("Joined group").data(group).build());
     }
 
     @GetMapping("/my")

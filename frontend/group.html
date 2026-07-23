@@ -28,6 +28,7 @@
       <span class="cursor-block"></span>
     </div>
 
+    <p class="text-muted"><a href="groups.html">← All groups</a></p>
     <h1 id="group-name">Loading Group…</h1>
     <p id="group-desc" class="text-muted"></p>
 
@@ -39,7 +40,30 @@
     <div class="card mt-20 card--accent-orange">
       <h3>💰 Group Wallet</h3>
       <p class="stat-number">KES <span id="group-balance">0.00</span></p>
-      <button id="contribute-btn" class="btn-primary mt-10">➕ Contribute</button>
+      <p class="text-muted small">Your personal balance: KES <span id="personal-balance">0.00</span>
+        · <a href="wallet.html">Deposit first</a> if you need funds to contribute.</p>
+
+      <div class="form-group mt-10">
+        <label for="contribute-amount">Contribute to group (KES)</label>
+        <div class="input-wrapper">
+          <div class="glow-ring"></div>
+          <input type="number" id="contribute-amount" min="1" step="0.01" placeholder="e.g. 500" />
+        </div>
+      </div>
+      <button id="contribute-btn" class="btn-primary" type="button">➕ Contribute</button>
+    </div>
+
+    <div id="invite-section" class="card mt-20">
+      <h3>🔗 Invite Members</h3>
+      <p>Share this code so others can join from <strong>Groups → Join</strong>.</p>
+      <p>Invite Code: <strong id="invite-code-display">—</strong></p>
+      <button id="copy-invite" class="btn-primary btn-sm" type="button"><span class="wrap">📋 Copy Code</span></button>
+    </div>
+
+    <div class="card mt-20">
+      <h3>👤 Members (<span id="member-count">0</span>)</h3>
+      <button id="toggle-members" class="btn-secondary btn-sm" type="button">View Members</button>
+      <div id="members-list" class="hidden mt-10"></div>
     </div>
 
     <div class="card mt-20 analytics-panel">
@@ -49,22 +73,42 @@
       </div>
     </div>
 
-    <div id="invite-section" class="card mt-20 hidden">
-      <h3>🔗 Invite Members</h3>
-      <p>Invite Code: <strong id="invite-code-display"></strong></p>
-      <button id="copy-invite" class="btn-primary btn-sm"><span class="wrap">📋 Copy Code</span></button>
-    </div>
-
-    <div class="card mt-20">
-      <h3>👤 Members (<span id="member-count">0</span>)</h3>
-      <button id="toggle-members" class="btn-secondary btn-sm">View Members</button>
-      <div id="members-list" class="hidden mt-10"></div>
-    </div>
-
     <div class="card mt-20">
       <h3>📋 Proposals</h3>
+      <p class="text-muted small">Withdrawals from the group wallet need a majority YES vote from members.</p>
       <div id="proposals-list"></div>
-      <button id="new-proposal-btn" class="btn-primary mt-20"><span class="wrap">➕ New Proposal</span></button>
+
+      <div class="mt-20">
+        <h4>New withdrawal proposal</h4>
+        <div class="form-group">
+          <label for="proposal-title">Title</label>
+          <div class="input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="text" id="proposal-title" placeholder="e.g. Emergency medical support" maxlength="120" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="proposal-desc">Description (optional)</label>
+          <div class="input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="text" id="proposal-desc" placeholder="Why is this needed?" maxlength="255" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="proposal-amount">Amount (KES)</label>
+          <div class="input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="number" id="proposal-amount" min="1" step="0.01" placeholder="Must be ≤ group balance" />
+          </div>
+        </div>
+        <button id="new-proposal-btn" class="btn-primary" type="button"><span class="wrap">➕ Create Proposal</span></button>
+      </div>
+    </div>
+
+    <div id="owner-actions" class="card mt-20 hidden">
+      <h3>Owner actions</h3>
+      <p class="text-muted small">Only the group creator can delete. The group wallet must be empty and there must be no proposals or history.</p>
+      <button id="delete-group-btn" class="btn-secondary" type="button">Delete group</button>
     </div>
   </main>
 
