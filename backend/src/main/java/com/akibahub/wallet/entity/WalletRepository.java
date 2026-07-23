@@ -2,6 +2,8 @@ package com.akibahub.wallet.entity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,4 +12,7 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     Optional<Wallet> findByGroupIdAndType(Long groupId, Wallet.WalletType type);
     @Query("SELECT w FROM Wallet w WHERE w.user.id = :userId OR w.group.id IN :groupIds")
     List<Wallet> findByUserIdOrGroupIdIn(Long userId, List<Long> groupIds);
+
+    @Query("SELECT COALESCE(SUM(w.balance), 0) FROM Wallet w WHERE w.type = :type")
+    BigDecimal sumBalanceByType(Wallet.WalletType type);
 }
