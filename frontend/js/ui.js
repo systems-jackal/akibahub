@@ -25,7 +25,12 @@ function initPhoneInputs() {
     const hasVisualPrefix = input.closest('.phone-input')?.querySelector('.prefix');
     if (hasVisualPrefix) {
       input.addEventListener('input', function() {
-        const digits = input.value.replace(/\D/g, '').replace(/^254/, '').slice(0, 9);
+        // Strip country code / leading 0 so "0712…" and "254712…" both
+        // become the 9-digit national number the +254 prefix already implies.
+        const digits = input.value.replace(/\D/g, '')
+          .replace(/^254/, '')
+          .replace(/^0+/, '')
+          .slice(0, 9);
         let formatted = '';
         if (digits.length > 0) formatted = digits.substring(0, 3);
         if (digits.length > 3) formatted += ' ' + digits.substring(3, 6);
@@ -86,10 +91,18 @@ function requireAuth() {
   initInactivityTimer();
 }
 
-// Logout
+// Logout. Do not bind this directly as an event listener — browsers pass
+// the click Event as the first argument, which used to become
+// location.href = "[object MouseEvent]" and nginx returned 404.
 async function logout(redirectTo = 'index.html') {
+  const target = (typeof redirectTo === 'string' && redirectTo) ? redirectTo : 'index.html';
   await apiLogout(); // revokes refresh tokens server-side, clears storage either way
-  window.location.href = redirectTo;
+  window.location.href = target;
+}
+
+function handleLogoutClick(e) {
+  e.preventDefault();
+  logout('index.html');
 }
 
 // ---------- Auto-logout on inactivity ----------
@@ -196,7 +209,7 @@ function initLedgerTicker() {
 document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', logout);
+    logoutBtn.addEventListener('click', handleLogoutClick);
   }
   initPasswordToggles();
   initPhoneInputs();

@@ -3,15 +3,12 @@ document.getElementById('register-form').addEventListener('submit', async functi
   const msgEl = document.getElementById('auth-message');
   const fullname = document.getElementById('fullname').value.trim();
   const idnumber = document.getElementById('idnumber').value.trim();
-  const phoneRaw = document.getElementById('phone').value.replace(/\s/g, '');
-  const phone = phoneRaw.startsWith('+254')
-    ? phoneRaw
-    : '+254' + phoneRaw.replace(/^0+/, '').replace(/^\+254/, '');
+  const phone = normalizeKenyanPhone(document.getElementById('phone').value);
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirm-password').value;
 
-  if (!/^\+254\d{9}$/.test(phone)) {
-    msgEl.textContent = 'Enter a valid phone number (9 digits).';
+  if (!phone) {
+    msgEl.textContent = 'Enter a valid phone number (9 digits after +254).';
     msgEl.style.color = 'var(--red)';
     return;
   }

@@ -198,7 +198,7 @@ async function joinGroup(code) {
   return apiFetch('/api/groups/join', {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ code })
+    body: JSON.stringify({ code: String(code || '').trim() })
   });
 }
 

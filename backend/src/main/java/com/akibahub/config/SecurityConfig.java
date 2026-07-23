@@ -42,7 +42,6 @@ public class SecurityConfig {
                         "/api/auth/register",
                         "/api/auth/login",
                         "/api/auth/refresh",
-                        "/api/auth/forgot-password",
                         "/health"
                 ).permitAll()
                 .anyRequest().authenticated()

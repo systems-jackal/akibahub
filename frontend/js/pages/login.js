@@ -12,48 +12,74 @@
   }
 })();
 
-// Toggle between phone and ID login
-document.getElementById('toggle-login-method').addEventListener('click', function(e) {
-  e.preventDefault();
+function isPhoneLoginMode() {
+  const phoneGroup = document.getElementById('phone-login-group');
+  return phoneGroup && !phoneGroup.classList.contains('hidden');
+}
+
+function setLoginMode(usePhone) {
   const phoneGroup = document.getElementById('phone-login-group');
   const idGroup = document.getElementById('id-login-group');
+  const phoneInput = document.getElementById('phone-login');
+  const idInput = document.getElementById('id-login');
   const toggleLink = document.getElementById('toggle-login-method');
 
-  if (phoneGroup.classList.contains('hidden')) {
-    // Switch to phone
+  if (usePhone) {
     phoneGroup.classList.remove('hidden');
     idGroup.classList.add('hidden');
+    phoneInput.required = true;
+    phoneInput.disabled = false;
+    idInput.required = false;
+    idInput.disabled = true;
     toggleLink.textContent = 'Login with ID Number instead';
   } else {
-    // Switch to ID
     phoneGroup.classList.add('hidden');
     idGroup.classList.remove('hidden');
+    phoneInput.required = false;
+    phoneInput.disabled = true;
+    idInput.required = true;
+    idInput.disabled = false;
     toggleLink.textContent = 'Login with Phone Number instead';
   }
-  // Clear any previous error
   document.getElementById('auth-message').textContent = '';
+}
+
+document.getElementById('toggle-login-method').addEventListener('click', function(e) {
+  e.preventDefault();
+  setLoginMode(!isPhoneLoginMode());
 });
 
-// Form submission
+// Default: phone login (disable the hidden ID field so autofill can't steal focus)
+setLoginMode(true);
+
 document.getElementById('login-form').addEventListener('submit', async function(e) {
   e.preventDefault();
 
+  const msgEl = document.getElementById('auth-message');
   let login;
-  const phoneGroup = document.getElementById('phone-login-group');
-  if (!phoneGroup.classList.contains('hidden')) {
-    // Phone mode: remove spaces and ensure it starts with +254
-    let phone = document.getElementById('phone-login').value.replace(/\s/g, '');
-    if (!phone.startsWith('+254')) {
-      phone = '+254' + phone.replace(/^0+/, ''); // remove leading zeros if any
+
+  if (isPhoneLoginMode()) {
+    login = normalizeKenyanPhone(document.getElementById('phone-login').value);
+    if (!login) {
+      msgEl.textContent = 'Enter a valid phone number (9 digits after +254).';
+      msgEl.style.color = 'var(--red)';
+      return;
     }
-    login = phone;
   } else {
-    // ID mode
     login = document.getElementById('id-login').value.trim();
+    if (!/^\d{8}$/.test(login)) {
+      msgEl.textContent = 'ID number must be exactly 8 digits.';
+      msgEl.style.color = 'var(--red)';
+      return;
+    }
   }
 
   const password = document.getElementById('password').value;
-  const msgEl = document.getElementById('auth-message');
+  if (!password) {
+    msgEl.textContent = 'Password is required.';
+    msgEl.style.color = 'var(--red)';
+    return;
+  }
 
   try {
     const res = await fetch('/api/auth/login', {

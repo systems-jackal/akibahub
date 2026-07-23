@@ -16,11 +16,9 @@ async function loadProfile() {
 
 document.getElementById('update-profile').addEventListener('click', async () => {
   const fullName = document.getElementById('fullname').value.trim();
-  let phone = document.getElementById('phone').value.replace(/\s/g, '');
-  if (phone && !phone.startsWith('+254')) {
-    phone = '+254' + phone.replace(/^0+/, '');
-  }
-  if (phone && !/^\+254\d{9}$/.test(phone)) {
+  const phoneRaw = document.getElementById('phone').value.trim();
+  const phone = phoneRaw ? normalizeKenyanPhone(phoneRaw) : '';
+  if (phoneRaw && !phone) {
     return showAlert('Enter a valid Kenyan phone number (9 digits after +254).', 'error');
   }
   try {

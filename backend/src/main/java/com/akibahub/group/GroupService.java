@@ -34,7 +34,7 @@ public class GroupService {
     private final TransactionRepository transactionRepo;
     private final AuditLogService auditLog;
 
-    private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O/1/I
     private static final SecureRandom RANDOM = new SecureRandom();
 
     public GroupService(GroupRepository groupRepo, GroupMemberRepository memberRepo,
@@ -90,7 +90,8 @@ public class GroupService {
 
     @Transactional
     public void joinGroup(String inviteCode, User user) {
-        Group group = groupRepo.findByInviteCode(inviteCode)
+        String normalized = inviteCode == null ? "" : inviteCode.trim();
+        Group group = groupRepo.findByInviteCodeIgnoreCase(normalized)
                 .orElseThrow(() -> new NotFoundException("Invalid invite code"));
 
         if (memberRepo.findByGroupIdAndUserId(group.getId(), user.getId()).isPresent()) {

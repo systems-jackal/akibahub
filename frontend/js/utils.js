@@ -1,3 +1,16 @@
+/**
+ * Normalize Kenyan phone input to E.164 (+254XXXXXXXXX).
+ * Accepts: 0712…, 712…, 254712…, +254712…, with or without spaces.
+ * Returns null if the national number is not exactly 9 digits.
+ */
+function normalizeKenyanPhone(raw) {
+  let digits = String(raw || '').replace(/\D/g, '');
+  if (digits.startsWith('254')) digits = digits.slice(3);
+  digits = digits.replace(/^0+/, '');
+  if (digits.length !== 9) return null;
+  return '+254' + digits;
+}
+
 // Format currency
 function formatCurrency(amount) {
   return parseFloat(amount).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

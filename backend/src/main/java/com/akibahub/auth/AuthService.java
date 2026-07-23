@@ -2,7 +2,6 @@ package com.akibahub.auth;
 
 import com.akibahub.audit.AuditLogService;
 import com.akibahub.auth.dto.AuthResponse;
-import com.akibahub.auth.dto.ForgotPasswordRequest;
 import com.akibahub.auth.dto.LoginRequest;
 import com.akibahub.auth.dto.RegisterRequest;
 import com.akibahub.shared.exception.BadRequestException;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Service
 public class AuthService {
@@ -69,41 +67,25 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        // try phone first, then ID
-        User user = userRepo.findByPhoneNumber(request.getLogin())
-                .orElseGet(() -> userRepo.findByIdNumber(request.getLogin())
-                        .orElseThrow(() -> new BadRequestException("Invalid credentials")));
+        String login = request.getLogin() == null ? "" : request.getLogin().trim();
+        // Phone numbers are stored as +254XXXXXXXXX; accept common typed forms.
+        if (looksLikePhone(login)) {
+            String normalized = normalizeKenyanPhone(login);
+            if (normalized != null) {
+                login = normalized;
+            }
+        }
+
+        final String identifier = login;
+        User user = userRepo.findByPhoneNumber(identifier)
+                .or(() -> userRepo.findByIdNumber(identifier))
+                .orElseThrow(() -> new BadRequestException("Invalid credentials"));
 
         if (!encoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new BadRequestException("Invalid credentials");
         }
         auditLog.logEvent("USER_LOGGED_IN", user.toDto());
         return issueAuthResponse(user);
-    }
-
-    /**
-     * Resets a password when the caller proves they know both unique
-     * identifiers collected at registration (phone + national ID).
-     * Both must match the same account — a generic error is returned
-     * otherwise so callers cannot probe which field was wrong.
-     * All refresh tokens are revoked so any stolen sessions die with
-     * the old password.
-     */
-    @Transactional
-    public void resetPassword(ForgotPasswordRequest request) {
-        User user = userRepo.findByPhoneNumber(request.getPhoneNumber())
-                .filter(u -> u.getIdNumber().equals(request.getIdNumber()))
-                .orElseThrow(() -> new BadRequestException(
-                        "Phone number and ID number do not match any account"));
-
-        if (encoder.matches(request.getNewPassword(), user.getPasswordHash())) {
-            throw new BadRequestException("New password must be different from your current password");
-        }
-
-        user.setPasswordHash(encoder.encode(request.getNewPassword()));
-        userRepo.save(user);
-        refreshTokenService.revokeAllForUser(user.getId());
-        auditLog.logEvent("PASSWORD_RESET", Map.of("userId", user.getId()));
     }
 
     /**
@@ -149,5 +131,23 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .user(user.toDto())
                 .build();
+    }
+
+    private static boolean looksLikePhone(String login) {
+        String digits = login.replaceAll("\\D", "");
+        return login.startsWith("+") || digits.startsWith("254") || digits.startsWith("0") || digits.length() == 9;
+    }
+
+    /** Same rules as the frontend: produce +254 + 9 national digits, or null. */
+    private static String normalizeKenyanPhone(String raw) {
+        String digits = raw == null ? "" : raw.replaceAll("\\D", "");
+        if (digits.startsWith("254")) {
+            digits = digits.substring(3);
+        }
+        digits = digits.replaceFirst("^0+", "");
+        if (digits.length() != 9) {
+            return null;
+        }
+        return "+254" + digits;
     }
 }

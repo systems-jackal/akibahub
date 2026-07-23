@@ -1,7 +1,6 @@
 package com.akibahub.auth;
 
 import com.akibahub.auth.dto.AuthResponse;
-import com.akibahub.auth.dto.ForgotPasswordRequest;
 import com.akibahub.auth.dto.LoginRequest;
 import com.akibahub.auth.dto.RegisterRequest;
 import com.akibahub.shared.dto.ApiResponse;
@@ -36,19 +35,6 @@ public class AuthController {
                 .success(true).message("Login successful").data(res).build());
     }
 
-    /**
-     * Public password reset. Rate-limited with the rest of /api/auth/**.
-     * Requires phone + national ID (both unique at registration).
-     */
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.resetPassword(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .success(true)
-                .message("Password updated. You can log in with your new password.")
-                .build());
-    }
-
     // Public on purpose: by the time a client needs to refresh, its
     // access token may well have already expired, so this can't require
     // the normal Bearer-token auth. The refresh token itself, validated
@@ -64,7 +50,9 @@ public class AuthController {
     // an authenticated user asking to revoke their own sessions.
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal User user) {
-        authService.logout(user);
+        if (user != null) {
+            authService.logout(user);
+        }
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true).message("Logged out").build());
     }
