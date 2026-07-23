@@ -53,21 +53,34 @@ public class WalletService {
         return wallets.stream().map(WalletResponse::from).toList();
     }
 
+    /**
+     * Credits a personal wallet after a verified payment event (demo complete
+     * or future PayHero IPN). Callers must not invent credits from the client.
+     */
     @Transactional
-    public WalletResponse depositToPersonal(User user, BigDecimal amount) {
+    public WalletResponse creditPersonalDeposit(User user, BigDecimal amount, String reference) {
         AmountValidator.requirePositive(amount);
         Wallet wallet = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
                 .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
         wallet.setBalance(wallet.getBalance().add(amount));
         walletRepo.save(wallet);
-        transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
-                .reference("Personal deposit").build());
 
-        ledgerService.recordExternalMovement(Transfer.Type.DEPOSIT, user, "Personal deposit",
+        String ref = (reference == null || reference.isBlank()) ? "Personal deposit" : reference;
+        transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
+                .reference(ref).build());
+
+        ledgerService.recordExternalMovement(Transfer.Type.DEPOSIT, user, ref,
                 wallet, LedgerEntry.Direction.CREDIT, amount);
 
-        auditLog.logEvent("PERSONAL_DEPOSIT", Map.of("user", user.getPhoneNumber(), "amount", amount));
+        auditLog.logEvent("PERSONAL_DEPOSIT", Map.of("user", user.getPhoneNumber(), "amount", amount, "reference", ref));
         return WalletResponse.from(wallet);
+    }
+
+    /** @deprecated Instant credit removed — use PaymentService.initiateDeposit. */
+    @Transactional
+    public WalletResponse depositToPersonal(User user, BigDecimal amount) {
+        throw new BadRequestException(
+                "Direct deposit credit is disabled. Initiate STK deposit and complete via verified payment event.");
     }
 
     @Transactional

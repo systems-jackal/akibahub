@@ -144,11 +144,34 @@ async function fetchMyWallets() {
   return apiFetch('/api/wallets/me', { headers: authHeaders() });
 }
 
-async function deposit(amount) {
+/** Initiate STK-style deposit — returns PENDING { reference, status, expiresAt }; does not credit. */
+async function initiateDeposit(amount, phone) {
+  const body = { amount };
+  if (phone) body.phone = phone;
   return apiFetch('/api/wallets/me/personal/deposit', {
     method: 'POST',
     headers: authHeaders({ 'Idempotency-Key': newIdempotencyKey() }),
-    body: JSON.stringify({ amount })
+    body: JSON.stringify(body)
+  });
+}
+
+/** @deprecated Prefer initiateDeposit — kept for older call sites. */
+async function deposit(amount, phone) {
+  return initiateDeposit(amount, phone);
+}
+
+async function fetchPaymentStatus(reference) {
+  return apiFetch(`/api/payments/status/${encodeURIComponent(reference)}`, {
+    headers: authHeaders()
+  });
+}
+
+/** Demo-only: simulates successful IPN and credits once. */
+async function completeDemoPayment(reference) {
+  return apiFetch('/api/payments/demo/complete', {
+    method: 'POST',
+    headers: authHeaders({ 'Idempotency-Key': newIdempotencyKey() }),
+    body: JSON.stringify({ reference })
   });
 }
 

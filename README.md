@@ -11,7 +11,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Containerized-A67C3D?style=for-the-badge&logo=docker&logoColor=F7E7CE)
 ![Nginx](https://img.shields.io/badge/Nginx-Reverse_Proxy-C9A15A?style=for-the-badge&logo=nginx&logoColor=F7E7CE)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI/CD-8A6D46?style=for-the-badge&logo=githubactions&logoColor=F7E7CE)
-![M-Pesa](https://img.shields.io/badge/M--Pesa-Daraja_API-B8860B?style=for-the-badge&logoColor=F7E7CE)
+![M-Pesa](https://img.shields.io/badge/M--Pesa-PayHero_STK-B8860B?style=for-the-badge&logoColor=F7E7CE)
 
 <img src="./assets/divider.svg" width="70%" alt="" />
 
@@ -84,12 +84,12 @@ The platform is currently implemented as a **Spring Boot monolithic application*
 <td width="50%" valign="top">
 
 ### 💳 Mobile Payments
-Integrated with the **Safaricom Daraja API**
-- M‑Pesa STK Push
-- Callback handling
-- Automatic wallet updates
-- Transaction reconciliation
-- Sandbox & production support
+PayHero-oriented **M‑Pesa STK** flow (demo mode by default)
+- STK-style initiate → PENDING
+- Labeled phone PIN simulator for demos
+- Verify-then-credit (demo complete / future IPN)
+- Status polling + callback contract
+- Sandbox-ready env vars for live PayHero
 
 </td>
 <td width="50%" valign="top">
@@ -116,12 +116,14 @@ Integrated with the **Safaricom Daraja API**
 
 | | |
 |---|---|
-| 🔑 | JWT Authentication |
+| 🔑 | JWT + revocable refresh tokens |
 | 🔒 | BCrypt password hashing |
-| 🚦 | Rate limiting |
-| 🛂 | Role-based authorization |
-| 📜 | Immutable audit logging |
-| 🧱 | Secure, isolated API endpoints |
+| 🚦 | Trusted-proxy-aware rate limiting |
+| 🛂 | Membership checks on group-scoped data |
+| 📜 | Append-only ledger + audit logging |
+| 🧱 | Fail-closed secrets · Idempotency-Key on money ops |
+
+See [SECURITY.md](SECURITY.md) and [docs/security/SECURITY_POLICY.md](docs/security/SECURITY_POLICY.md).
 
 <div align="center"><img src="./assets/divider.svg" width="70%" alt="" /></div>
 
@@ -137,7 +139,7 @@ Integrated with the **Safaricom Daraja API**
 | **Security** | Spring Security + JWT |
 | **Database** | MariaDB 10.11 |
 | **ORM** | Spring Data JPA / Hibernate |
-| **Payments** | Safaricom Daraja API |
+| **Payments** | PayHero STK contract (demo mode + sandbox-ready) |
 | **Build Tool** | Maven |
 | **Reverse Proxy** | Nginx |
 | **Containerization** | Docker & Docker Compose |
@@ -175,7 +177,7 @@ Integrated with the **Safaricom Daraja API**
                                   MariaDB Database
                                         │
                                         ▼
-                           Safaricom Daraja API
+                           PayHero / M-Pesa STK
                                         │
                                         ▼
                                    M-Pesa Network
@@ -249,8 +251,8 @@ akibahub/
 ## 🌟 Highlights
 
 ✔ Personal Savings Wallet &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Group Savings (Chamas) &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Democratic Voting
-✔ Proposal Management &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Harambee Campaigns &nbsp;&nbsp;·&nbsp;&nbsp; ✔ M‑Pesa Daraja Integration
-✔ Secure JWT Authentication &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Immutable Audit Logs &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Docker Deployment &nbsp;&nbsp;·&nbsp;&nbsp; ✔ GitHub Actions CI/CD
+✔ Proposal Management &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Harambee Campaigns &nbsp;&nbsp;·&nbsp;&nbsp; ✔ M‑Pesa STK (demo + PayHero-ready)
+✔ Secure JWT + Refresh Tokens &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Append-only Ledger &nbsp;&nbsp;·&nbsp;&nbsp; ✔ Docker Deployment &nbsp;&nbsp;·&nbsp;&nbsp; ✔ GitHub Actions CI/CD
 
 </div>
 
@@ -290,33 +292,29 @@ cd akibahub
 
 ## ⚙️ Environment Variables
 
-Create a `.env` file in the project root.
+Create a `.env` file in the project root (copy from [`.env.example`](.env.example)).
 
 ```env
-# Database
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=akibahub
-DB_USERNAME=root
-DB_PASSWORD=password
+# Database (Compose / Spring)
+MYSQL_ROOT_PASSWORD=change-me
+MYSQL_DATABASE=akibahub
+MYSQL_PORT=3306
+SPRING_DATASOURCE_USERNAME=root
+SPRING_DATASOURCE_PASSWORD=change-me
 
-# JWT
-JWT_SECRET=your-secret-key
-JWT_EXPIRATION=3600000
+# Backend
+APP_PORT=8080
+JWT_SECRET=replace-with-a-long-random-alphanumeric-string
 
-# Daraja API
-MPESA_ENVIRONMENT=sandbox
-MPESA_CONSUMER_KEY=
-MPESA_CONSUMER_SECRET=
-MPESA_SHORTCODE=
-MPESA_PASSKEY=
-MPESA_CALLBACK_URL=https://your-domain.com/api/payments/callback
-
-# Application
-SERVER_PORT=8080
+# Payments (demo by default — never collect M-Pesa PIN in-app)
+PAYMENTS_MODE=demo
+APP_BASE_URL=http://localhost:8080
+# Future live PayHero:
+# PAYHERO_AUTH_TOKEN=
+# PAYHERO_CHANNEL_ID=
 ```
 
-> ⚠️ Never commit your `.env` file to Git.
+> ⚠️ Never commit your `.env` file to Git. Production must set strong `JWT_SECRET` and DB passwords — the app fails closed without them.
 
 <div align="center"><img src="./assets/divider.svg" width="70%" alt="" /></div>
 
@@ -379,69 +377,41 @@ mvn surefire-report:report
 
 <div align="center"><img src="./assets/divider.svg" width="70%" alt="" /></div>
 
-## 📱 Daraja API Integration
+## 📱 M‑Pesa / PayHero Integration
 
-Akiba Hub uses the **Safaricom Daraja API** to process M‑Pesa payments.
+Akiba Hub uses a **PayHero-oriented STK Push contract**. Default mode is **`demo`** for presentation: initiate leaves a pending payment, the UI shows a labeled phone PIN simulator, and credit happens only after demo-complete (or a future verified IPN). See [docs/architecture/payhero-integration.md](docs/architecture/payhero-integration.md).
 
-- OAuth authentication
-- STK Push requests
-- Payment callback processing
-- Automatic wallet updates
-- Transaction recording
-- Sandbox testing
-- Production-ready configuration
-
-### Payment Flow
+### Payment Flow (demo)
 
 ```text
-User
+User (wallet UI)
  │
  ▼
-Frontend
+POST /api/wallets/me/personal/deposit  (+ Idempotency-Key)
  │
  ▼
-Spring Boot Backend
- │
- │ Request OAuth Token
- ▼
-Safaricom Daraja API
- │
- │ STK Push
- ▼
-Customer Phone
- │
- │ Enter M-Pesa PIN
- ▼
-Safaricom
- │
- │ Payment Callback
- ▼
-Backend Callback Endpoint
+PENDING payment (no credit yet)
  │
  ▼
-Wallet Service
+Waiting UI + SIMULATION STK PIN overlay
+ │  (PIN never sent to Akiba Hub)
+ ▼
+POST /api/payments/demo/complete
  │
  ▼
-Transaction Service
- │
- ▼
-Audit Log
+Ledger credit + COMPLETED
 ```
 
-### Daraja Configuration
+### PayHero configuration (live, future)
 
 ```text
-MPESA_CONSUMER_KEY
-MPESA_CONSUMER_SECRET
-MPESA_SHORTCODE
-MPESA_PASSKEY
-MPESA_CALLBACK_URL
-MPESA_ENVIRONMENT
+PAYMENTS_MODE=live
+PAYHERO_AUTH_TOKEN
+PAYHERO_CHANNEL_ID
+APP_BASE_URL
 ```
 
-Supported environments: `sandbox` · `production`
-
-Changing from sandbox to production only requires updating these values.
+Demo mode needs only `PAYMENTS_MODE=demo` (default). M-Pesa PIN is never collected by Akiba Hub.
 
 <div align="center"><img src="./assets/divider.svg" width="70%" alt="" /></div>
 
@@ -491,7 +461,7 @@ Spring Boot Application
 MariaDB
      │
      ▼
-Safaricom Daraja API
+PayHero / M-Pesa (when live)
 ```
 
 SSL certificates are managed using **Let's Encrypt**. Deployment is automated through **GitHub Actions**.
@@ -607,9 +577,10 @@ Errors follow the same format.
 
 | Method | Endpoint |
 |:---|:---|
-| POST | `/api/payments/stkpush` |
-| POST | `/api/payments/callback` |
+| POST | `/api/wallets/me/personal/deposit` (initiate PENDING) |
 | GET | `/api/payments/status/{reference}` |
+| POST | `/api/payments/demo/complete` (demo mode only) |
+| POST | `/api/payments/callback` (IPN stub / future live) |
 
 <div align="center"><img src="./assets/divider.svg" width="100%" alt="" /></div>
 
@@ -649,30 +620,31 @@ Every critical system event is permanently recorded — user registration, login
 
 Implemented protections include:
 
-- JWT Authentication
+- JWT Authentication + revocable refresh tokens
 - BCrypt password hashing
 - Spring Security
 - Protected REST APIs
-- Role-based authorization
-- Immutable audit logging
-- Transaction validation
+- Membership checks on group-scoped data
+- Append-only ledger + audit logging
+- Amount validation + Idempotency-Key on money ops
 - Input validation
-- Secure environment variables
-- Docker container isolation
+- Fail-closed environment secrets
+- Docker container isolation (non-root)
 
-**Planned enhancements:**
+**Planned enhancements (real-money launch):**
 
-- Two-Factor Authentication (2FA)
-- Device recognition
-- Login notifications
-- Account lockout
-- Refresh tokens
+- Multi-factor / step-up authentication (R-10)
+- KYC/AML (R-18)
+- Live PayHero STK + verified IPN
+- Broader automated test coverage and monitoring
+
+See [docs/security/SECURITY_POLICY.md](docs/security/SECURITY_POLICY.md).
 
 <div align="center"><img src="./assets/divider.svg" width="70%" alt="" /></div>
 
 ## 🧪 Testing
 
-Testing includes unit tests, integration tests, manual API testing, Docker testing, authentication testing, wallet transaction testing, proposal workflow testing, and Daraja sandbox testing.
+Testing includes unit tests for the deposit money path, manual API testing (see `docs/testing/functional_tests.md`), Docker testing, authentication testing, wallet transaction testing, and proposal workflow testing. Live PayHero sandbox testing remains pending merchant activation.
 
 ```bash
 mvn test
@@ -688,7 +660,7 @@ mvn test
 <tr><td width="20%"><b>Phase 2</b><br/>Governance 🚧</td>
 <td>Group Creation · Invitations · Withdrawal Proposals · Voting System · Dashboard · Notifications</td></tr>
 <tr><td width="20%"><b>Phase 3</b><br/>Payments 🚧</td>
-<td>Daraja OAuth · STK Push · Callback Processing · Wallet Synchronization · Transaction Reconciliation</td></tr>
+<td>Demo STK flow ✅ · Pending payments · Status poll · Callback contract · Live PayHero STK · Reconciliation</td></tr>
 <tr><td width="20%"><b>Phase 4</b><br/>Harambee 🚧</td>
 <td>Campaign Creation · Public Campaign Sharing · Community Contributions · Progress Tracking · Campaign Analytics</td></tr>
 <tr><td width="20%"><b>Phase 5</b><br/>Future ✨</td>
@@ -775,6 +747,6 @@ If you find this project useful — star the repository, fork the project, submi
 ![MariaDB](https://img.shields.io/badge/MariaDB-8A6D46?style=flat-square&logoColor=F7E7CE)
 ![Docker](https://img.shields.io/badge/Docker-A67C3D?style=flat-square&logoColor=F7E7CE)
 ![JWT](https://img.shields.io/badge/JWT-B8860B?style=flat-square&logoColor=F7E7CE)
-![Daraja API](https://img.shields.io/badge/Safaricom_Daraja_API-C9A15A?style=flat-square&logoColor=F7E7CE)
+![PayHero STK](https://img.shields.io/badge/PayHero_STK-C9A15A?style=flat-square&logoColor=F7E7CE)
 
 </div>

@@ -4,8 +4,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-    ports:
-      - "3306:3306"
+    # Intentionally no host port publish — MariaDB stays on akiba-net only.
     volumes:
       - db_data:/var/lib/mysql
     networks:
@@ -24,13 +23,24 @@ services:
       mariadb:
         condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/${MYSQL_DATABASE:-akibahub}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      PAYMENTS_MODE: ${PAYMENTS_MODE:-demo}
+      APP_BASE_URL: ${APP_BASE_URL:-https://akiba.unitybridge.dev}
+      PAYHERO_AUTH_TOKEN: ${PAYHERO_AUTH_TOKEN:-}
+      PAYHERO_CHANNEL_ID: ${PAYHERO_CHANNEL_ID:-}
     networks:
       - akiba-net
     restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
 networks:
   akiba-net:

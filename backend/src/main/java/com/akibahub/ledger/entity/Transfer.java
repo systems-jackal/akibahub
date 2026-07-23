@@ -37,9 +37,8 @@ public class Transfer {
 
     public enum Type { DEPOSIT, WITHDRAWAL, CONTRIBUTION, PROPOSAL_PAYOUT }
 
-    // COMPLETED is the only status this migration writes today - FAILED
-    // and REVERSED exist so the schema doesn't need to change again once
-    // the M-Pesa integration needs to represent a pending/failed
-    // transfer, or you need to record a manual reversal.
-    public enum Status { COMPLETED, FAILED, REVERSED }
+    // PENDING exists for future transfer-level pending states; deposit
+    // pending rows live in pending_payments. FAILED/REVERSED support
+    // failed PSP outcomes and manual reversals without another migration.
+    public enum Status { PENDING, COMPLETED, FAILED, REVERSED }
 }

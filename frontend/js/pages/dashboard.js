@@ -95,37 +95,13 @@ async function loadDashboard() {
   }
 }
 
-// Quick actions
-document.getElementById('quick-deposit').addEventListener('click', async () => {
-  const amount = prompt('Enter amount to deposit:');
-  const n = parseFloat(amount);
-  if (!amount) return;
-  if (!n || n <= 0) return showAlert('Please enter a valid amount.', 'error');
-  try {
-    await deposit(n);
-    showAlert('Deposit successful');
-    loadDashboard();
-  } catch (e) { showAlert(e.message, 'error'); }
-});
-
-document.getElementById('quick-withdraw').addEventListener('click', async () => {
-  const amount = prompt('Enter amount to withdraw:');
-  const n = parseFloat(amount);
-  if (!amount) return;
-  if (!n || n <= 0) return showAlert('Please enter a valid amount.', 'error');
-  try {
-    await withdraw(n);
-    showAlert('Withdrawal successful');
-    loadDashboard();
-  } catch (e) { showAlert(e.message, 'error'); }
-});
-
+// Money actions deep-link to wallet (STK sheet / ledger withdraw) — no prompt().
 document.getElementById('quick-join-group').addEventListener('click', async () => {
-  const code = prompt('Enter the 6-character invite code:');
+  const code = window.prompt('Enter the 6-character invite code:');
   if (!code) return;
   try {
     const group = await joinGroup(code.trim());
-    showAlert(`Joined ${group.name}!`);
+    showAlert(`Joined ${group.name}.`);
     window.location.href = `group.html?id=${group.id}`;
   } catch (e) {
     showAlert(e.message, 'error');

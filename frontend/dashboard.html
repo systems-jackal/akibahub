@@ -8,15 +8,15 @@
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
-    <div class="logo">🏦 Akiba<span>Hub</span></div>
+    <div class="logo">Akiba<span>Hub</span></div>
     <nav>
-      <a href="dashboard.html" class="active" title="Dashboard"><span class="icon">📊</span><span class="label">Dashboard</span></a>
-      <a href="wallet.html" title="My Wallet"><span class="icon">👛</span><span class="label">My Wallet</span></a>
-      <a href="groups.html" title="Groups"><span class="icon">👥</span><span class="label">Groups</span></a>
-      <a href="proposals.html" title="Proposals"><span class="icon">📋</span><span class="label">Proposals</span></a>
-      <a href="transactions.html" title="Transactions"><span class="icon">📈</span><span class="label">Transactions</span></a>
-      <a href="settings.html" title="Account"><span class="icon">👤</span><span class="label">Account</span></a>
-      <a href="#" id="logout-btn" title="Logout"><span class="icon">🚪</span><span class="label">Logout</span></a>
+      <a href="dashboard.html" class="active" title="Dashboard"><span class="icon">▦</span><span class="label">Dashboard</span></a>
+      <a href="wallet.html" title="My Wallet"><span class="icon">◇</span><span class="label">My Wallet</span></a>
+      <a href="groups.html" title="Groups"><span class="icon">◎</span><span class="label">Groups</span></a>
+      <a href="proposals.html" title="Proposals"><span class="icon">☰</span><span class="label">Proposals</span></a>
+      <a href="transactions.html" title="Transactions"><span class="icon">↕</span><span class="label">Transactions</span></a>
+      <a href="settings.html" title="Account"><span class="icon">○</span><span class="label">Account</span></a>
+      <a href="#" id="logout-btn" title="Logout"><span class="icon">×</span><span class="label">Logout</span></a>
     </nav>
   </aside>
 
@@ -34,20 +34,20 @@
     <p class="text-muted" id="dashboard-sub">Your savings overview</p>
 
     <div class="card personal-savings">
-      <h3>💳 Personal Savings</h3>
+      <h3>Personal savings</h3>
       <div class="stat-card">
         <div class="number" id="personal-balance">0.00</div>
         <div class="label">KES</div>
       </div>
       <div class="quick-actions">
-        <button id="quick-deposit" class="btn-primary"><span class="wrap">➕ Deposit</span></button>
-        <button id="quick-withdraw" class="btn-primary"><span class="wrap">➖ Withdraw</span></button>
-        <a href="wallet.html" class="btn-outline">View Wallet →</a>
+        <a href="wallet.html?action=topup" class="btn-primary" id="quick-deposit"><span class="wrap">Top up M-Pesa</span></a>
+        <a href="wallet.html?action=withdraw" class="btn-secondary" id="quick-withdraw"><span class="wrap">Withdraw</span></a>
+        <a href="wallet.html" class="btn-outline">Open wallet</a>
       </div>
     </div>
 
     <div class="card mt-20 analytics-panel">
-      <h3>📊 Asset Distribution</h3>
+      <h3>Asset distribution</h3>
       <div id="asset-distribution-chart" class="chart-container">
         <div class="loader-inline"><span class="matrix-loader"><span></span><span></span><span></span><span></span><span></span></span> LOADING_ANALYTICS</div>
       </div>
@@ -55,24 +55,24 @@
 
     <div id="groups-section" class="hidden">
       <div class="card mt-20">
-        <h3>👥 Savings Groups</h3>
+        <h3>Savings groups</h3>
         <div id="groups-summary"></div>
         <div class="mt-20">
-          <a href="groups.html" class="btn-primary"><span class="wrap">Manage Groups</span></a>
+          <a href="groups.html" class="btn-primary"><span class="wrap">Manage groups</span></a>
         </div>
       </div>
       <div class="card mt-20">
-        <h3>📋 Recent Proposals</h3>
+        <h3>Recent proposals</h3>
         <div id="recent-proposals"></div>
       </div>
     </div>
 
     <div id="solo-saver-prompt" class="card mt-20">
-      <h3>💪 You're saving solo!</h3>
-      <p>Want to save together with friends? Create or join a group now.</p>
+      <h3>Saving on your own</h3>
+      <p>Create or join a group when you are ready to save together.</p>
       <div class="welcome-actions">
-        <a href="groups.html" class="btn-primary"><span class="wrap">Create a Savings Group</span></a>
-        <button id="quick-join-group" class="btn-secondary">Join a Group</button>
+        <a href="groups.html" class="btn-primary"><span class="wrap">Create a group</span></a>
+        <button id="quick-join-group" type="button" class="btn-secondary">Join with code</button>
       </div>
     </div>
   </main>

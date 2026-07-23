@@ -55,6 +55,28 @@ New breakpoint (769px–1024px): sidebar collapses to a persistent icon rail (ra
 
 
 
+[0.4.0] - 2026-07-23 — Presentation cut + security rebuild
+
+Honest demo payments boundary and ops hardening for presentation / audit narration. Live PayHero HTTP, KYC/AML, and MFA remain out of scope.
+
+
+Added
+
+
+SECURITY.md and docs/security/SECURITY_POLICY.md (asset classes, payment modes, launch blockers).
+Pending payments path: POST /api/wallets/me/personal/deposit creates PENDING (no credit); GET /api/payments/status/{reference}; POST /api/payments/demo/complete (payments.mode=demo only) credits once via LedgerService; POST /api/payments/callback stub (501 until live verify).
+Flyway V5 pending_payments; Idempotency-Key required on deposit initiate and demo-complete; rate limit on payment initiate endpoints.
+Wallet STK presentation sheet: confirm → waiting → labeled Safaricom-style PIN simulator (SIMULATION) → receipt; dashboard money actions deep-link to wallet (no prompt() deposits).
+Minimal money-path unit tests (initiate does not credit; demo complete once; idempotency key required).
+
+
+Changed
+
+
+Fail-closed JWT/DB secrets (no checked-in root/root or JWT defaults); prod compose keeps MariaDB off the host network; CI OWASP dependency-check step; docs/README aligned to PayHero demo contract (not Daraja live).
+Withdraw remains ledger-demo with clear B2C-coming copy — no fake B2C.
+
+
 [Unreleased]
 
 Added

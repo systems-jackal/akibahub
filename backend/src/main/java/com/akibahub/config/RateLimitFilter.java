@@ -35,14 +35,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        // Only rate‑limit /api/auth/** endpoints
-        if (!request.getRequestURI().startsWith("/api/auth/")) {
+        String uri = request.getRequestURI();
+        boolean authLimited = uri.startsWith("/api/auth/");
+        boolean paymentLimited = isPaymentInitiatePath(uri, request.getMethod());
+
+        if (!authLimited && !paymentLimited) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String clientIp = getClientIP(request);
-        Bucket bucket = rateLimitConfig.resolveBucket(clientIp);
+        Bucket bucket = authLimited
+                ? rateLimitConfig.resolveAuthBucket(clientIp)
+                : rateLimitConfig.resolvePaymentBucket(clientIp);
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
         if (probe.isConsumed()) {
@@ -52,8 +57,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
             response.setHeader("X-Rate-Limit-Retry-After-Seconds", String.valueOf(waitForRefill));
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+            response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Too many requests. Try again later.\"}");
         }
+    }
+
+    private static boolean isPaymentInitiatePath(String uri, String method) {
+        if (!"POST".equalsIgnoreCase(method)) {
+            return false;
+        }
+        return "/api/wallets/me/personal/deposit".equals(uri)
+                || "/api/payments/demo/complete".equals(uri);
     }
 
     private String getClientIP(HttpServletRequest request) {

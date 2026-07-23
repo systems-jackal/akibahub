@@ -6,9 +6,11 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:3306/akibahub
-    username: root
-    password: root
+    # Fail closed: set via env (Compose injects SPRING_DATASOURCE_*).
+    # No checked-in root/root defaults — see docs/security/SECURITY_POLICY.md.
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3306/akibahub}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
@@ -19,11 +21,11 @@ spring:
       # created. If they don't match, the app fails to start instead of
       # silently drifting.
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     open-in-view: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -37,7 +39,8 @@ spring:
     baseline-version: 0
 
 jwt:
-  secret: change-this-to-a-very-long-random-secret-key!!
+  # Fail closed: must be supplied via JWT_SECRET. No checked-in default.
+  secret: ${JWT_SECRET}
   # Was a single 1-hour token with no way to revoke it early. Now that
   # refresh tokens exist (see RefreshTokenService) to cover renewing the
   # session, the access token itself can be short-lived - this limits how
@@ -50,6 +53,9 @@ rate-limit:
   auth:
     capacity: 10
     refill-period-seconds: 60
+  payments:
+    capacity: 20
+    refill-period-seconds: 60
 
 security:
   # Only requests whose IMMEDIATE TCP peer is one of these addresses are
@@ -58,6 +64,15 @@ security:
   # Backend sits behind nginx on the same host, so nginx's connection to
   # the backend arrives from localhost.
   trusted-proxies: ${TRUSTED_PROXIES:127.0.0.1,::1}
+
+payments:
+  # demo = presentation STK simulator (default). live = future PayHero HTTP.
+  mode: ${PAYMENTS_MODE:demo}
+  pending-ttl-seconds: ${PAYMENTS_PENDING_TTL_SECONDS:120}
+  app-base-url: ${APP_BASE_URL:http://localhost:8080}
+  payhero:
+    auth-token: ${PAYHERO_AUTH_TOKEN:}
+    channel-id: ${PAYHERO_CHANNEL_ID:}
 
 springdoc:
   api-docs:

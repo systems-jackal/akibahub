@@ -1,0 +1,16 @@
+# Activated with SPRING_PROFILES_ACTIVE=prod
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+payments:
+  mode: ${PAYMENTS_MODE:demo}

@@ -8,15 +8,15 @@
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
-    <div class="logo">🏦 Akiba<span>Hub</span></div>
+    <div class="logo">Akiba<span>Hub</span></div>
     <nav>
-      <a href="dashboard.html" title="Dashboard"><span class="icon">📊</span><span class="label">Dashboard</span></a>
-      <a href="wallet.html" class="active" title="My Wallet"><span class="icon">👛</span><span class="label">My Wallet</span></a>
-      <a href="groups.html" title="Groups"><span class="icon">👥</span><span class="label">Groups</span></a>
-      <a href="proposals.html" title="Proposals"><span class="icon">📋</span><span class="label">Proposals</span></a>
-      <a href="transactions.html" title="Transactions"><span class="icon">📈</span><span class="label">Transactions</span></a>
-      <a href="settings.html" title="Account"><span class="icon">👤</span><span class="label">Account</span></a>
-      <a href="#" id="logout-btn" title="Logout"><span class="icon">🚪</span><span class="label">Logout</span></a>
+      <a href="dashboard.html" title="Dashboard"><span class="icon">▦</span><span class="label">Dashboard</span></a>
+      <a href="wallet.html" class="active" title="My Wallet"><span class="icon">◇</span><span class="label">My Wallet</span></a>
+      <a href="groups.html" title="Groups"><span class="icon">◎</span><span class="label">Groups</span></a>
+      <a href="proposals.html" title="Proposals"><span class="icon">☰</span><span class="label">Proposals</span></a>
+      <a href="transactions.html" title="Transactions"><span class="icon">↕</span><span class="label">Transactions</span></a>
+      <a href="settings.html" title="Account"><span class="icon">○</span><span class="label">Account</span></a>
+      <a href="#" id="logout-btn" title="Logout"><span class="icon">×</span><span class="label">Logout</span></a>
     </nav>
   </aside>
 
@@ -28,27 +28,31 @@
       <span class="cursor-block"></span>
     </div>
 
-    <h1>👛 My Wallet</h1>
+    <h1>My Wallet</h1>
+    <p class="text-muted">Top up via M-Pesa STK (demo simulator). Withdraw stays on-ledger until B2C is live.</p>
 
-    <div class="card">
-      <h3>💰 Personal Balance</h3>
+    <div class="card card--accent-orange">
+      <h3>Personal balance</h3>
       <div class="stat-card">
         <div class="number" id="balance">0.00</div>
         <div class="label">KES</div>
       </div>
 
-      <div class="flex gap-10 mt-20" style="flex-wrap: wrap;">
-        <div class="input-wrapper" style="flex:1; min-width:160px;">
-          <div class="glow-ring"></div>
-          <input type="number" id="amount" placeholder="Amount (KES)" step="0.01" />
+      <div class="wallet-actions mt-20">
+        <button id="deposit-btn" type="button" class="btn-primary"><span class="wrap">Top up with M-Pesa</span></button>
+        <div class="withdraw-inline">
+          <div class="input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="number" id="withdraw-amount" placeholder="Withdraw amount (KES)" step="0.01" min="1" />
+          </div>
+          <button id="withdraw-btn" type="button" class="btn-secondary"><span class="wrap">Withdraw</span></button>
         </div>
-        <button id="deposit-btn" class="btn-primary"><span class="wrap">➕ Deposit</span></button>
-        <button id="withdraw-btn" class="btn-primary"><span class="wrap">➖ Withdraw</span></button>
+        <p class="text-muted small">Withdraw is ledger-demo only — M-Pesa B2C payout is not simulated here.</p>
       </div>
     </div>
 
     <div class="card mt-20">
-      <h3>📋 Recent Transactions</h3>
+      <h3>Recent transactions</h3>
       <div id="recent-transactions"></div>
     </div>
   </main>
@@ -56,6 +60,7 @@
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/payment-sheet.js"></script>
   <script src="js/pages/wallet.js"></script>
 </body>
 </html>

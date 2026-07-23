@@ -1,6 +1,9 @@
 package com.akibahub.wallet;
 
 import com.akibahub.idempotency.IdempotencyService;
+import com.akibahub.payments.PaymentController;
+import com.akibahub.payments.PaymentService;
+import com.akibahub.payments.dto.PaymentStatusResponse;
 import com.akibahub.shared.dto.ApiResponse;
 import com.akibahub.user.entity.User;
 import com.akibahub.wallet.dto.WalletResponse;
@@ -17,10 +20,14 @@ import java.util.Map;
 @RequestMapping("/api/wallets")
 public class WalletController {
     private final WalletService walletService;
+    private final PaymentService paymentService;
     private final IdempotencyService idempotencyService;
 
-    public WalletController(WalletService walletService, IdempotencyService idempotencyService) {
+    public WalletController(WalletService walletService,
+                            PaymentService paymentService,
+                            IdempotencyService idempotencyService) {
         this.walletService = walletService;
+        this.paymentService = paymentService;
         this.idempotencyService = idempotencyService;
     }
 
@@ -33,19 +40,26 @@ public class WalletController {
                 .build());
     }
 
+    /**
+     * Initiates an STK-style personal deposit. Does not credit the wallet;
+     * returns a PENDING payment reference for status polling / demo complete.
+     */
     @PostMapping("/me/personal/deposit")
-    public ResponseEntity<ApiResponse<WalletResponse>> depositToPersonal(
+    public ResponseEntity<ApiResponse<PaymentStatusResponse>> depositToPersonal(
             @AuthenticationPrincipal User user,
-            @RequestBody Map<String, BigDecimal> body,
+            @RequestBody Map<String, Object> body,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        PaymentController.requireIdempotencyKey(idempotencyKey);
         return idempotencyService.execute(idempotencyKey, user, body,
-                new TypeReference<ApiResponse<WalletResponse>>() {},
+                new TypeReference<ApiResponse<PaymentStatusResponse>>() {},
                 () -> {
-                    WalletResponse wallet = walletService.depositToPersonal(user, body.get("amount"));
-                    return ResponseEntity.ok(ApiResponse.<WalletResponse>builder()
+                    BigDecimal amount = parseAmount(body.get("amount"));
+                    String phone = body.get("phone") != null ? String.valueOf(body.get("phone")) : null;
+                    PaymentStatusResponse pending = paymentService.initiateDeposit(user, amount, phone);
+                    return ResponseEntity.ok(ApiResponse.<PaymentStatusResponse>builder()
                             .success(true)
-                            .message("Deposit successful")
-                            .data(wallet)
+                            .message("STK Push initiated. Enter your M-Pesa PIN on your phone to complete.")
+                            .data(pending)
                             .build());
                 });
     }
@@ -55,6 +69,7 @@ public class WalletController {
             @AuthenticationPrincipal User user,
             @RequestBody Map<String, BigDecimal> body,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        PaymentController.requireIdempotencyKey(idempotencyKey);
         return idempotencyService.execute(idempotencyKey, user, body,
                 new TypeReference<ApiResponse<WalletResponse>>() {},
                 () -> {
@@ -73,6 +88,7 @@ public class WalletController {
             @PathVariable Long groupId,
             @RequestBody Map<String, BigDecimal> body,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        PaymentController.requireIdempotencyKey(idempotencyKey);
         return idempotencyService.execute(idempotencyKey, user, body,
                 new TypeReference<ApiResponse<String>>() {},
                 () -> {
@@ -82,5 +98,18 @@ public class WalletController {
                             .message("Contribution successful")
                             .build());
                 });
+    }
+
+    private static BigDecimal parseAmount(Object raw) {
+        if (raw == null) {
+            return null;
+        }
+        if (raw instanceof BigDecimal bd) {
+            return bd;
+        }
+        if (raw instanceof Number n) {
+            return BigDecimal.valueOf(n.doubleValue());
+        }
+        return new BigDecimal(raw.toString());
     }
 }

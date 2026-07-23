@@ -1,5 +1,8 @@
 FROM eclipse-temurin:21-jre-alpine
 
+# curl for Compose healthchecks against /health
+RUN apk add --no-cache curl
+
 # Create a non‑root user and group
 RUN addgroup -S akibahub && adduser -S akibahub -G akibahub
 
