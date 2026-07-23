@@ -3,6 +3,10 @@
 -- database (baselined at version 0 via baseline-on-migrate), this
 -- migration is effectively a no-op check, and on a brand new database
 -- it creates everything from scratch.
+--
+-- NOTE: For a legacy DB that already has these tables, set
+-- spring.flyway.baseline-version=1 (instead of 0) on first migrate so
+-- Flyway marks V1 as already applied and does not re-run CREATE TABLE.
 
 CREATE TABLE users (
     id             BIGINT AUTO_INCREMENT PRIMARY KEY,

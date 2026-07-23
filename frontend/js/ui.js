@@ -1,20 +1,42 @@
-// Toggle password visibility
+// Toggle password visibility (show/hide). Bound once per button.
 function initPasswordToggles() {
   document.querySelectorAll('.toggle-password').forEach(btn => {
+    if (btn.dataset.toggleBound === '1') return;
+    btn.dataset.toggleBound = '1';
+    btn.setAttribute('aria-label', 'Show password');
+    btn.setAttribute('type', 'button');
     btn.addEventListener('click', function() {
-      const input = this.previousElementSibling;
-      const type = input.type === 'password' ? 'text' : 'password';
-      input.type = type;
-      this.textContent = type === 'password' ? '👁️' : '🙈';
+      const input = this.closest('.password-wrapper')?.querySelector('input');
+      if (!input) return;
+      const showing = input.type === 'password';
+      input.type = showing ? 'text' : 'password';
+      this.textContent = showing ? '🙈' : '👁️';
+      this.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+      this.setAttribute('aria-pressed', showing ? 'true' : 'false');
     });
   });
 }
 
-// Phone input formatting (simple mask)
+// Phone input formatting for fields that store the full +254 number.
+// Inputs inside .phone-input (with a visual +254 prefix) only hold local
+// digits — those must not be overwritten with "+254 ".
 function initPhoneInputs() {
   document.querySelectorAll('input[data-phone]').forEach(input => {
-    input.value = '+254 ';
-    input.addEventListener('input', function(e) {
+    const hasVisualPrefix = input.closest('.phone-input')?.querySelector('.prefix');
+    if (hasVisualPrefix) {
+      input.addEventListener('input', function() {
+        const digits = input.value.replace(/\D/g, '').replace(/^254/, '').slice(0, 9);
+        let formatted = '';
+        if (digits.length > 0) formatted = digits.substring(0, 3);
+        if (digits.length > 3) formatted += ' ' + digits.substring(3, 6);
+        if (digits.length > 6) formatted += ' ' + digits.substring(6, 9);
+        input.value = formatted;
+      });
+      return;
+    }
+
+    if (!input.value) input.value = '+254 ';
+    input.addEventListener('input', function() {
       let val = input.value.replace(/[^0-9+]/g, '');
       if (!val.startsWith('+254')) {
         val = '+254' + val.replace(/\+/g, '');

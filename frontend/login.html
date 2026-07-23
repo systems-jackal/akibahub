@@ -12,7 +12,7 @@
       <div class="logo">🏦 Akiba Hub</div>
       <h2>Welcome Back</h2>
 
-      <form id="login-form">
+      <form id="login-form" autocomplete="on">
         <div id="phone-login-group" class="form-group">
           <label for="phone-login">Phone Number</label>
           <div class="phone-input">
@@ -28,7 +28,7 @@
           <label for="id-login">ID Number</label>
           <div class="input-wrapper">
             <div class="glow-ring"></div>
-            <input type="text" id="id-login" placeholder="12345678" pattern="\d{8}" inputmode="numeric" />
+            <input type="text" id="id-login" placeholder="12345678" pattern="\d{8}" inputmode="numeric" autocomplete="username" />
           </div>
         </div>
 
@@ -40,14 +40,15 @@
           <label for="password">Password</label>
           <div class="password-wrapper input-wrapper">
             <div class="glow-ring"></div>
-            <input type="password" id="password" required />
-            <button type="button" class="toggle-password">👁️</button>
+            <input type="password" id="password" name="password" autocomplete="current-password" required />
+            <button type="button" class="toggle-password" aria-label="Show password">👁️</button>
           </div>
         </div>
 
         <button type="submit" class="btn-primary full-width"><span class="wrap">🔑 Login</span></button>
       </form>
 
+      <p class="text-center mt-10"><a href="forgot-password.html">Forgot password?</a></p>
       <p id="auth-message"></p>
       <p>Don't have an account? <a href="register.html">Register</a></p>
       <a href="index.html" class="btn-secondary full-width mt-20">← Back to Home</a>
@@ -58,14 +59,5 @@
   <script src="js/ui.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/login.js"></script>
-  <script>
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const input = this.closest('.password-wrapper').querySelector('input');
-        input.type = input.type === 'password' ? 'text' : 'password';
-        this.textContent = input.type === 'password' ? '👁️' : '🙈';
-      });
-    });
-  </script>
 </body>
 </html>

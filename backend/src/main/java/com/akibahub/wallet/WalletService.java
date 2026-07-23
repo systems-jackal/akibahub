@@ -10,6 +10,7 @@ import com.akibahub.shared.exception.BadRequestException;
 import com.akibahub.shared.exception.ForbiddenException;
 import com.akibahub.shared.exception.NotFoundException;
 import com.akibahub.user.entity.User;
+import com.akibahub.wallet.dto.WalletResponse;
 import com.akibahub.wallet.entity.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,14 +37,24 @@ public class WalletService {
         this.ledgerService = ledgerService;
     }
 
-    public List<Wallet> getUserWallets(User user) {
+    @Transactional(readOnly = true)
+    public List<WalletResponse> getUserWallets(User user) {
         List<Long> groupIds = memberRepo.findByUserId(user.getId())
                 .stream().map(m -> m.getGroup().getId()).toList();
-        return walletRepo.findByUserIdOrGroupIdIn(user.getId(), groupIds);
+        List<Wallet> wallets;
+        if (groupIds.isEmpty()) {
+            // Hibernate 6 rejects empty IN (:groupIds); personal-only path.
+            wallets = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
+                    .map(List::of)
+                    .orElse(List.of());
+        } else {
+            wallets = walletRepo.findByUserIdOrGroupIdIn(user.getId(), groupIds);
+        }
+        return wallets.stream().map(WalletResponse::from).toList();
     }
 
     @Transactional
-    public Wallet depositToPersonal(User user, BigDecimal amount) {
+    public WalletResponse depositToPersonal(User user, BigDecimal amount) {
         AmountValidator.requirePositive(amount);
         Wallet wallet = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
                 .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
@@ -52,18 +63,15 @@ public class WalletService {
         transactionRepo.save(Transaction.builder().wallet(wallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
                 .reference("Personal deposit").build());
 
-        // Ledger write happens after the balance is saved above, since
-        // LedgerService reads wallet.getBalance() as the post-transaction
-        // snapshot for this entry - see LedgerService's class comment.
         ledgerService.recordExternalMovement(Transfer.Type.DEPOSIT, user, "Personal deposit",
                 wallet, LedgerEntry.Direction.CREDIT, amount);
 
         auditLog.logEvent("PERSONAL_DEPOSIT", Map.of("user", user.getPhoneNumber(), "amount", amount));
-        return wallet;
+        return WalletResponse.from(wallet);
     }
 
     @Transactional
-    public Wallet withdrawFromPersonal(User user, BigDecimal amount) {
+    public WalletResponse withdrawFromPersonal(User user, BigDecimal amount) {
         AmountValidator.requirePositive(amount);
         Wallet wallet = walletRepo.findByUserIdAndType(user.getId(), Wallet.WalletType.PERSONAL)
                 .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
@@ -77,7 +85,7 @@ public class WalletService {
                 wallet, LedgerEntry.Direction.DEBIT, amount);
 
         auditLog.logEvent("PERSONAL_WITHDRAWAL", Map.of("user", user.getPhoneNumber(), "amount", amount));
-        return wallet;
+        return WalletResponse.from(wallet);
     }
 
     @Transactional
@@ -92,18 +100,22 @@ public class WalletService {
                 .orElseThrow(() -> new NotFoundException("Group wallet not found"));
 
         personal.setBalance(personal.getBalance().subtract(amount));
-        walletRepo.save(personal);
         groupWallet.setBalance(groupWallet.getBalance().add(amount));
-        walletRepo.save(groupWallet);
+
+        // Persist lower wallet id first (same order as proposal payout).
+        if (personal.getId() < groupWallet.getId()) {
+            walletRepo.save(personal);
+            walletRepo.save(groupWallet);
+        } else {
+            walletRepo.save(groupWallet);
+            walletRepo.save(personal);
+        }
 
         transactionRepo.save(Transaction.builder().wallet(personal).amount(amount).type(Transaction.TransactionType.WITHDRAWAL)
                 .reference("Contribution to group " + groupId).build());
         transactionRepo.save(Transaction.builder().wallet(groupWallet).amount(amount).type(Transaction.TransactionType.DEPOSIT)
                 .reference("Contribution from " + user.getPhoneNumber()).build());
 
-        // This one IS a genuine two-legged internal transfer - both
-        // wallets exist inside Akiba Hub, so this is real double-entry,
-        // not the single-leg approximation used for deposit/withdraw.
         ledgerService.recordInternalTransfer(Transfer.Type.CONTRIBUTION, user,
                 "Contribution to group " + groupId, personal, groupWallet, amount);
 

@@ -1,8 +1,6 @@
 const API_BASE = '';
 
 // ---------- token storage ----------
-// Centralized here so login.js, register.js, and the refresh flow below
-// all agree on the same storage keys.
 function getToken() {
   return localStorage.getItem('akiba_token');
 }
@@ -22,16 +20,24 @@ function clearTokens() {
   localStorage.removeItem('akiba_phone');
 }
 
-function authHeaders() {
+function authHeaders(extra = {}) {
   const token = getToken();
-  return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json', ...extra };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+/** Fresh UUID for Idempotency-Key on money-moving POSTs. */
+function newIdempotencyKey() {
+  if (crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 // ---------- silent token refresh ----------
-// Access tokens are short-lived (15 minutes - see backend
-// jwt.access-token-expiration-ms) on purpose. Without this, every user
-// gets bounced to the login page every 15 minutes. `refreshPromise`
-// de-dupes concurrent refresh attempts.
 let refreshPromise = null;
 
 async function refreshAccessToken() {
@@ -46,7 +52,12 @@ async function refreshAccessToken() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken })
     });
-    const json = await res.json();
+    let json;
+    try {
+      json = await res.json();
+    } catch (e) {
+      throw new Error('Session expired');
+    }
     if (!res.ok || !json.success) throw new Error('Session expired');
 
     setTokens(json.data.token, json.data.refreshToken);
@@ -60,12 +71,21 @@ async function refreshAccessToken() {
   }
 }
 
+function redirectToLogin(message) {
+  clearTokens();
+  window.location.href = 'login.html';
+  throw new Error(message || 'Your session has expired. Please log in again.');
+}
+
 // Generic API call that expects ApiResponse wrapper. Transparently
 // retries once on a 401, after a silent token refresh.
 async function apiFetch(url, options = {}) {
   let res = await fetch(url, options);
 
-  if (res.status === 401 && getRefreshToken()) {
+  if (res.status === 401) {
+    if (!getRefreshToken()) {
+      redirectToLogin();
+    }
     try {
       const newToken = await refreshAccessToken();
       const retryOptions = {
@@ -74,24 +94,40 @@ async function apiFetch(url, options = {}) {
       };
       res = await fetch(url, retryOptions);
     } catch (e) {
-      clearTokens();
-      window.location.href = 'login.html';
-      throw new Error('Your session has expired. Please log in again.');
+      redirectToLogin();
     }
   }
 
-  const data = await res.json();
+  if (res.status === 401) {
+    redirectToLogin();
+  }
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error(res.ok ? 'Unexpected server response' : `Request failed (${res.status})`);
+  }
   if (!res.ok || data.success === false) {
     throw new Error(data.message || 'Request failed');
   }
-  return data.data; // extract the payload
+  return data.data;
 }
 
-// Best-effort server-side logout (revokes refresh tokens). Local storage
-// is cleared regardless of whether this call succeeds.
+// Refresh if needed, then revoke refresh tokens server-side.
 async function apiLogout() {
   try {
-    await fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() });
+    let headers = authHeaders();
+    let res = await fetch('/api/auth/logout', { method: 'POST', headers });
+    if (res.status === 401 && getRefreshToken()) {
+      try {
+        await refreshAccessToken();
+        headers = authHeaders();
+        res = await fetch('/api/auth/logout', { method: 'POST', headers });
+      } catch (e) {
+        // Fall through — clear locally either way.
+      }
+    }
   } catch (e) {
     // not fatal - clear locally either way
   } finally {
@@ -99,7 +135,6 @@ async function apiLogout() {
   }
 }
 
-// Specific API functions
 async function fetchDashboard() {
   return apiFetch('/api/dashboard', { headers: authHeaders() });
 }
@@ -111,7 +146,7 @@ async function fetchMyWallets() {
 async function deposit(amount) {
   return apiFetch('/api/wallets/me/personal/deposit', {
     method: 'POST',
-    headers: authHeaders(),
+    headers: authHeaders({ 'Idempotency-Key': newIdempotencyKey() }),
     body: JSON.stringify({ amount })
   });
 }
@@ -119,7 +154,7 @@ async function deposit(amount) {
 async function withdraw(amount) {
   return apiFetch('/api/wallets/me/personal/withdraw', {
     method: 'POST',
-    headers: authHeaders(),
+    headers: authHeaders({ 'Idempotency-Key': newIdempotencyKey() }),
     body: JSON.stringify({ amount })
   });
 }
@@ -170,7 +205,7 @@ async function joinGroup(code) {
 async function contributeToGroup(groupId, amount) {
   return apiFetch(`/api/wallets/groups/${groupId}/contribute`, {
     method: 'POST',
-    headers: authHeaders(),
+    headers: authHeaders({ 'Idempotency-Key': newIdempotencyKey() }),
     body: JSON.stringify({ amount })
   });
 }
@@ -186,7 +221,7 @@ async function fetchProposalsForGroup(groupId) {
 async function createProposal(groupId, title, description, amount) {
   return apiFetch(`/api/groups/${groupId}/proposals`, {
     method: 'POST',
-    headers: authHeaders(),
+    headers: authHeaders({ 'Idempotency-Key': newIdempotencyKey() }),
     body: JSON.stringify({ title, description, amount })
   });
 }
@@ -194,7 +229,7 @@ async function createProposal(groupId, title, description, amount) {
 async function voteOnProposal(proposalId, vote) {
   return apiFetch(`/api/proposals/${proposalId}/vote`, {
     method: 'POST',
-    headers: authHeaders(),
+    headers: authHeaders({ 'Idempotency-Key': newIdempotencyKey() }),
     body: JSON.stringify({ vote })
   });
 }

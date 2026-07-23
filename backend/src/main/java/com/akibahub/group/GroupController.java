@@ -1,8 +1,9 @@
 package com.akibahub.group;
 
-import com.akibahub.group.entity.Group;
-import com.akibahub.group.entity.GroupMember;
+import com.akibahub.group.dto.GroupMemberResponse;
+import com.akibahub.group.dto.GroupResponse;
 import com.akibahub.shared.dto.ApiResponse;
+import com.akibahub.shared.exception.BadRequestException;
 import com.akibahub.user.entity.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,15 +22,15 @@ public class GroupController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Group>> createGroup(@RequestBody Map<String, String> body,
+    public ResponseEntity<ApiResponse<GroupResponse>> createGroup(@RequestBody Map<String, String> body,
                                                           @AuthenticationPrincipal User user) {
-        Group group = groupService.createGroup(
+        GroupResponse group = groupService.createGroup(
                 body.get("name"),
                 body.get("description"),
                 body.get("rules"),
                 user
         );
-        return ResponseEntity.ok(ApiResponse.<Group>builder()
+        return ResponseEntity.ok(ApiResponse.<GroupResponse>builder()
                 .success(true).message("Group created").data(group).build());
     }
 
@@ -38,7 +39,7 @@ public class GroupController {
                                                          @AuthenticationPrincipal User user) {
         String code = body.get("code");
         if (code == null || code.isBlank()) {
-            throw new RuntimeException("Invite code required");
+            throw new BadRequestException("Invite code required");
         }
         groupService.joinGroup(code.trim(), user);
         return ResponseEntity.ok(ApiResponse.<String>builder()
@@ -46,32 +47,32 @@ public class GroupController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<List<Group>>> getMyGroups(@AuthenticationPrincipal User user) {
-        List<Group> groups = groupService.getMyGroups(user);
-        return ResponseEntity.ok(ApiResponse.<List<Group>>builder()
+    public ResponseEntity<ApiResponse<List<GroupResponse>>> getMyGroups(@AuthenticationPrincipal User user) {
+        List<GroupResponse> groups = groupService.getMyGroups(user);
+        return ResponseEntity.ok(ApiResponse.<List<GroupResponse>>builder()
                 .success(true).data(groups).build());
     }
 
     @GetMapping("/{groupId}")
-    public ResponseEntity<ApiResponse<Group>> getGroup(@PathVariable Long groupId,
+    public ResponseEntity<ApiResponse<GroupResponse>> getGroup(@PathVariable Long groupId,
                                                         @AuthenticationPrincipal User user) {
-        Group group = groupService.getGroup(groupId, user);
-        return ResponseEntity.ok(ApiResponse.<Group>builder()
+        GroupResponse group = groupService.getGroup(groupId, user);
+        return ResponseEntity.ok(ApiResponse.<GroupResponse>builder()
                 .success(true).data(group).build());
     }
 
     @PutMapping("/{groupId}")
-    public ResponseEntity<ApiResponse<Group>> updateGroup(@PathVariable Long groupId,
+    public ResponseEntity<ApiResponse<GroupResponse>> updateGroup(@PathVariable Long groupId,
                                                           @RequestBody Map<String, String> body,
                                                           @AuthenticationPrincipal User user) {
-        Group updated = groupService.updateGroup(
-                groupId, 
-                body.get("name"), 
-                body.get("description"), 
-                body.get("rules"), 
+        GroupResponse updated = groupService.updateGroup(
+                groupId,
+                body.get("name"),
+                body.get("description"),
+                body.get("rules"),
                 user
         );
-        return ResponseEntity.ok(ApiResponse.<Group>builder()
+        return ResponseEntity.ok(ApiResponse.<GroupResponse>builder()
                 .success(true).message("Group updated").data(updated).build());
     }
 
@@ -100,10 +101,10 @@ public class GroupController {
     }
 
     @GetMapping("/{groupId}/members")
-    public ResponseEntity<ApiResponse<List<GroupMember>>> getMembers(@PathVariable Long groupId,
+    public ResponseEntity<ApiResponse<List<GroupMemberResponse>>> getMembers(@PathVariable Long groupId,
                                                                       @AuthenticationPrincipal User user) {
-        List<GroupMember> members = groupService.getGroupMembers(groupId, user);
-        return ResponseEntity.ok(ApiResponse.<List<GroupMember>>builder()
+        List<GroupMemberResponse> members = groupService.getGroupMembers(groupId, user);
+        return ResponseEntity.ok(ApiResponse.<List<GroupMemberResponse>>builder()
                 .success(true).data(members).build());
     }
 

@@ -1,5 +1,6 @@
 package com.akibahub.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public class User {
     @Column(unique = true, nullable = false, length = 8)
     private String idNumber;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String passwordHash;
 

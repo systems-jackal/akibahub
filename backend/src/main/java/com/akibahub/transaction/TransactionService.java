@@ -6,6 +6,7 @@ import com.akibahub.wallet.entity.Transaction;
 import com.akibahub.wallet.entity.TransactionRepository;
 import com.akibahub.wallet.entity.WalletRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,16 +27,14 @@ public class TransactionService {
         this.memberRepo = memberRepo;
     }
 
+    @Transactional(readOnly = true)
     public List<Transaction> getUserTransactions(User user, String type, Long groupId,
                                                  LocalDateTime start, LocalDateTime end) {
-        // Collect all wallet IDs the user can view
         List<Long> walletIds = new ArrayList<>();
 
-        // Personal wallet
         walletRepo.findByUserIdAndType(user.getId(), com.akibahub.wallet.entity.Wallet.WalletType.PERSONAL)
                 .ifPresent(w -> walletIds.add(w.getId()));
 
-        // Group wallets
         List<Long> groupIds = memberRepo.findByUserId(user.getId())
                 .stream().map(m -> m.getGroup().getId()).collect(Collectors.toList());
         for (Long gid : groupIds) {
@@ -47,7 +46,6 @@ public class TransactionService {
 
         List<Transaction> all = transactionRepo.findByWalletIdIn(walletIds);
 
-        // Filter in memory (can be optimized with a custom query later)
         return all.stream()
                 .filter(t -> type == null || t.getType().name().equalsIgnoreCase(type))
                 .filter(t -> groupId == null ||

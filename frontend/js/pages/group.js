@@ -27,15 +27,14 @@ async function loadGroup() {
     const user = await fetchCurrentUser();
     currentUserId = user.id;
 
-    // Async validation and resolution of invite infrastructure
-    if (group.createdBy && group.createdBy.id === currentUserId) {
+    // Creator sees invite code (createdById comes from GroupResponse DTO).
+    if (group.createdById === currentUserId) {
       const inviteSection = document.getElementById('invite-section');
       inviteSection.classList.remove('hidden');
 
-      const inviteCode = await fetchGroupInviteCode(groupId);
+      const inviteCode = group.inviteCode || await fetchGroupInviteCode(groupId);
       document.getElementById('invite-code-display').textContent = inviteCode;
 
-      // Single static attachment pattern to prevent duplication memory leaks
       const copyBtn = document.getElementById('copy-invite');
       copyBtn.onclick = () => {
         navigator.clipboard.writeText(inviteCode)
@@ -44,13 +43,9 @@ async function loadGroup() {
       };
     }
 
-    // Financial component evaluation
-    const wallets = await fetchMyWallets();
-    const groupWallet = wallets.find(w => w.group && w.group.id == groupId && w.type === 'GROUP');
-    document.getElementById('group-balance').textContent = formatCurrency(groupWallet?.balance || 0);
-
-    // Metadata & member calculations
+    // Balance from group stats (wallet.group is not serialized on the entity).
     const stats = await fetchGroupStats(groupId);
+    document.getElementById('group-balance').textContent = formatCurrency(stats.totalSavings || 0);
     document.getElementById('member-count').textContent = stats.members;
 
     // Dynamic proposal system tracking
@@ -88,11 +83,13 @@ async function loadGroup() {
               <span>${p.yesVotes + p.noVotes}/${total} voted</span>
             </div>
           </div>
-          ${isOpen ? `
+          ${isOpen && !p.myVote ? `
             <div class="dial-group" data-proposal-id="${p.id}">
               <div class="dial-option dial-yes" onclick="vote('${p.id}','YES')">YES</div>
               <div class="dial-option dial-no" onclick="vote('${p.id}','NO')">NO</div>
             </div>
+          ` : isOpen && p.myVote ? `
+            <p class="text-muted">You voted ${escapeHtml(p.myVote)}.</p>
           ` : ''}
         </div>
       `;

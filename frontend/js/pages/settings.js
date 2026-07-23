@@ -18,7 +18,10 @@ document.getElementById('update-profile').addEventListener('click', async () => 
   const fullName = document.getElementById('fullname').value.trim();
   let phone = document.getElementById('phone').value.replace(/\s/g, '');
   if (phone && !phone.startsWith('+254')) {
-    phone = '+254' + phone;
+    phone = '+254' + phone.replace(/^0+/, '');
+  }
+  if (phone && !/^\+254\d{9}$/.test(phone)) {
+    return showAlert('Enter a valid Kenyan phone number (9 digits after +254).', 'error');
   }
   try {
     await updateProfile({ fullName, phoneNumber: phone });
@@ -31,11 +34,16 @@ document.getElementById('update-profile').addEventListener('click', async () => 
 document.getElementById('change-password').addEventListener('click', async () => {
   const current = document.getElementById('current-password').value;
   const newPass = document.getElementById('new-password').value;
+  const confirmPass = document.getElementById('confirm-new-password').value;
   if (!current || !newPass) return showAlert('Both fields are required.', 'error');
   if (newPass.length < 6) return showAlert('New password must be at least 6 characters.', 'error');
+  if (newPass !== confirmPass) return showAlert('New passwords do not match.', 'error');
   try {
     await changePassword(current, newPass);
     showAlert('Your password has been changed.');
+    document.getElementById('current-password').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-new-password').value = '';
   } catch (e) {
     showAlert(e.message, 'error');
   }

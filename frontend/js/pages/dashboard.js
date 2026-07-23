@@ -70,24 +70,26 @@ async function loadDashboard() {
 // Quick actions
 document.getElementById('quick-deposit').addEventListener('click', async () => {
   const amount = prompt('Enter amount to deposit:');
-  if (amount) {
-    try {
-      await deposit(parseFloat(amount));
-      showAlert('Deposit successful');
-      loadDashboard();
-    } catch (e) { showAlert(e.message, 'error'); }
-  }
+  const n = parseFloat(amount);
+  if (!amount) return;
+  if (!n || n <= 0) return showAlert('Please enter a valid amount.', 'error');
+  try {
+    await deposit(n);
+    showAlert('Deposit successful');
+    loadDashboard();
+  } catch (e) { showAlert(e.message, 'error'); }
 });
 
 document.getElementById('quick-withdraw').addEventListener('click', async () => {
   const amount = prompt('Enter amount to withdraw:');
-  if (amount) {
-    try {
-      await withdraw(parseFloat(amount));
-      showAlert('Withdrawal successful');
-      loadDashboard();
-    } catch (e) { showAlert(e.message, 'error'); }
-  }
+  const n = parseFloat(amount);
+  if (!amount) return;
+  if (!n || n <= 0) return showAlert('Please enter a valid amount.', 'error');
+  try {
+    await withdraw(n);
+    showAlert('Withdrawal successful');
+    loadDashboard();
+  } catch (e) { showAlert(e.message, 'error'); }
 });
 
 document.getElementById('quick-join-group').addEventListener('click', async () => {

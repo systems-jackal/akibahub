@@ -30,7 +30,11 @@ public record ProposalResponse(
         GroupSummary group,
         long yesVotes,
         long noVotes,
-        long totalMembers
+        long totalMembers,
+        // null when the current user has not voted; "YES" / "NO" otherwise.
+        // Lets the UI hide dials instead of offering a vote that the
+        // backend will reject with "Already voted".
+        String myVote
 ) {
     public record GroupSummary(Long id, String name) {}
 }

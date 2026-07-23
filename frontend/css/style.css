@@ -518,8 +518,37 @@ input::placeholder { color: var(--text-faint); }
   border-radius: var(--radius-sm); padding: 12px 12px; color: var(--text-dim);
   font-family: var(--font-mono);
 }
-.password-wrapper { display: flex; align-items: center; }
-.toggle-password { background: none; border: none; cursor: pointer; margin-left: -40px; font-size: 16px; }
+.password-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.password-wrapper input {
+  padding-right: 44px;
+}
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px;
+  color: var(--text-dim);
+  opacity: 0.85;
+}
+.toggle-password:hover { opacity: 1; }
+.toggle-password:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+input.input-error { border-color: var(--red) !important; }
+input.input-ok { border-color: var(--green) !important; }
 
 /* ========== 12. AUTH PAGES ========== */
 .auth-container {
@@ -539,8 +568,15 @@ input::placeholder { color: var(--text-faint); }
   width: 100%; max-width: 420px;
 }
 .auth-card .logo { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; margin-bottom: 6px; }
-.auth-card h2 { margin-bottom: 22px; }
+.auth-card h2 { margin-bottom: 12px; }
+.auth-hint {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  line-height: 1.45;
+}
 #auth-message { font-family: var(--font-mono); font-size: 0.82rem; text-align: center; }
+.mt-10 { margin-top: 10px; }
 
 /* ========== 13. LANDING PAGE ========== */
 .navbar {

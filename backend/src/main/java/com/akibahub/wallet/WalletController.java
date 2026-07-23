@@ -3,7 +3,7 @@ package com.akibahub.wallet;
 import com.akibahub.idempotency.IdempotencyService;
 import com.akibahub.shared.dto.ApiResponse;
 import com.akibahub.user.entity.User;
-import com.akibahub.wallet.entity.Wallet;
+import com.akibahub.wallet.dto.WalletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,24 +25,24 @@ public class WalletController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<List<Wallet>>> getMyWallets(@AuthenticationPrincipal User user) {
-        List<Wallet> wallets = walletService.getUserWallets(user);
-        return ResponseEntity.ok(ApiResponse.<List<Wallet>>builder()
+    public ResponseEntity<ApiResponse<List<WalletResponse>>> getMyWallets(@AuthenticationPrincipal User user) {
+        List<WalletResponse> wallets = walletService.getUserWallets(user);
+        return ResponseEntity.ok(ApiResponse.<List<WalletResponse>>builder()
                 .success(true)
                 .data(wallets)
                 .build());
     }
 
     @PostMapping("/me/personal/deposit")
-    public ResponseEntity<ApiResponse<Wallet>> depositToPersonal(
+    public ResponseEntity<ApiResponse<WalletResponse>> depositToPersonal(
             @AuthenticationPrincipal User user,
             @RequestBody Map<String, BigDecimal> body,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         return idempotencyService.execute(idempotencyKey, user, body,
-                new TypeReference<ApiResponse<Wallet>>() {},
+                new TypeReference<ApiResponse<WalletResponse>>() {},
                 () -> {
-                    Wallet wallet = walletService.depositToPersonal(user, body.get("amount"));
-                    return ResponseEntity.ok(ApiResponse.<Wallet>builder()
+                    WalletResponse wallet = walletService.depositToPersonal(user, body.get("amount"));
+                    return ResponseEntity.ok(ApiResponse.<WalletResponse>builder()
                             .success(true)
                             .message("Deposit successful")
                             .data(wallet)
@@ -51,15 +51,15 @@ public class WalletController {
     }
 
     @PostMapping("/me/personal/withdraw")
-    public ResponseEntity<ApiResponse<Wallet>> withdrawFromPersonal(
+    public ResponseEntity<ApiResponse<WalletResponse>> withdrawFromPersonal(
             @AuthenticationPrincipal User user,
             @RequestBody Map<String, BigDecimal> body,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         return idempotencyService.execute(idempotencyKey, user, body,
-                new TypeReference<ApiResponse<Wallet>>() {},
+                new TypeReference<ApiResponse<WalletResponse>>() {},
                 () -> {
-                    Wallet wallet = walletService.withdrawFromPersonal(user, body.get("amount"));
-                    return ResponseEntity.ok(ApiResponse.<Wallet>builder()
+                    WalletResponse wallet = walletService.withdrawFromPersonal(user, body.get("amount"));
+                    return ResponseEntity.ok(ApiResponse.<WalletResponse>builder()
                             .success(true)
                             .message("Withdrawal successful")
                             .data(wallet)

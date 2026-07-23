@@ -2,8 +2,11 @@ package com.akibahub.auth;
 
 import com.akibahub.audit.AuditLogService;
 import com.akibahub.auth.dto.AuthResponse;
+import com.akibahub.auth.dto.ForgotPasswordRequest;
 import com.akibahub.auth.dto.LoginRequest;
 import com.akibahub.auth.dto.RegisterRequest;
+import com.akibahub.shared.exception.BadRequestException;
+import com.akibahub.shared.exception.ConflictException;
 import com.akibahub.shared.exception.ForbiddenException;
 import com.akibahub.user.entity.User;
 import com.akibahub.user.entity.UserRepository;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -38,10 +42,10 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepo.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new RuntimeException("Phone number already registered");
+            throw new ConflictException("Phone number already registered");
         }
         if (userRepo.existsByIdNumber(request.getIdNumber())) {
-            throw new RuntimeException("ID number already registered");
+            throw new ConflictException("ID number already registered");
         }
         User user = User.builder()
                 .phoneNumber(request.getPhoneNumber())
@@ -58,7 +62,9 @@ public class AuthService {
                 .build();
         walletRepo.save(wallet);
 
-        auditLog.logEvent("USER_REGISTERED", user);
+        // Never audit the raw User entity — Jackson would serialize
+        // passwordHash into audit_log.payload. toDto() is the safe shape.
+        auditLog.logEvent("USER_REGISTERED", user.toDto());
         return issueAuthResponse(user);
     }
 
@@ -66,13 +72,38 @@ public class AuthService {
         // try phone first, then ID
         User user = userRepo.findByPhoneNumber(request.getLogin())
                 .orElseGet(() -> userRepo.findByIdNumber(request.getLogin())
-                        .orElseThrow(() -> new RuntimeException("Invalid credentials")));
+                        .orElseThrow(() -> new BadRequestException("Invalid credentials")));
 
         if (!encoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new BadRequestException("Invalid credentials");
         }
-        auditLog.logEvent("USER_LOGGED_IN", user);
+        auditLog.logEvent("USER_LOGGED_IN", user.toDto());
         return issueAuthResponse(user);
+    }
+
+    /**
+     * Resets a password when the caller proves they know both unique
+     * identifiers collected at registration (phone + national ID).
+     * Both must match the same account — a generic error is returned
+     * otherwise so callers cannot probe which field was wrong.
+     * All refresh tokens are revoked so any stolen sessions die with
+     * the old password.
+     */
+    @Transactional
+    public void resetPassword(ForgotPasswordRequest request) {
+        User user = userRepo.findByPhoneNumber(request.getPhoneNumber())
+                .filter(u -> u.getIdNumber().equals(request.getIdNumber()))
+                .orElseThrow(() -> new BadRequestException(
+                        "Phone number and ID number do not match any account"));
+
+        if (encoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("New password must be different from your current password");
+        }
+
+        user.setPasswordHash(encoder.encode(request.getNewPassword()));
+        userRepo.save(user);
+        refreshTokenService.revokeAllForUser(user.getId());
+        auditLog.logEvent("PASSWORD_RESET", Map.of("userId", user.getId()));
     }
 
     /**
@@ -102,7 +133,7 @@ public class AuthService {
      */
     public void logout(User user) {
         refreshTokenService.revokeAllForUser(user.getId());
-        auditLog.logEvent("USER_LOGGED_OUT", user);
+        auditLog.logEvent("USER_LOGGED_OUT", user.toDto());
     }
 
     public User getUserByPhone(String phone) {

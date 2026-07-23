@@ -38,8 +38,13 @@ public class SecurityConfig {
                 // token at all - GET /api/auth/me with no Authorization
                 // header would reach the controller with a null user and
                 // throw an NPE instead of a clean 401.
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/health")
-                    .permitAll()
+                .requestMatchers(
+                        "/api/auth/register",
+                        "/api/auth/login",
+                        "/api/auth/refresh",
+                        "/api/auth/forgot-password",
+                        "/health"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             // Order matters, and addFilterBefore(X, Target) inserts X

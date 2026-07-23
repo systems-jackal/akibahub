@@ -68,13 +68,15 @@ async function loadProposals() {
                 </div>
 
                 ${
-                    p.status === "OPEN"
+                    p.status === "OPEN" && !p.myVote
                         ? `
                     <div class="dial-group">
                         <div class="dial-option dial-yes" onclick="vote('${escapeHtml(String(p.id))}','YES')">YES</div>
                         <div class="dial-option dial-no" onclick="vote('${escapeHtml(String(p.id))}','NO')">NO</div>
                     </div>
                 `
+                        : p.status === "OPEN" && p.myVote
+                        ? `<p class="text-muted">You voted ${escapeHtml(p.myVote)}.</p>`
                         : ""
                 }
             </div>

@@ -6,8 +6,10 @@ import com.akibahub.shared.exception.ConflictException;
 import com.akibahub.user.entity.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -17,26 +19,20 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Makes a POST endpoint safely retryable. The client generates a random
- * key (a UUID is fine) and sends it as the "Idempotency-Key" header on a
- * request. If that exact request is retried - a network timeout makes
- * the client resend it, a user double-taps "Contribute" before the first
- * tap's response comes back - the SAME response is replayed instead of
- * the action running twice.
+ * Makes a POST endpoint safely retryable via the Idempotency-Key header.
  *
- * This only wraps the success path. If the wrapped action throws (e.g.
- * insufficient balance), nothing is recorded, and the exception
- * propagates as normal - a request that failed for a business reason
- * should be evaluated fresh next time, not have that failure cached and
- * replayed forever.
- *
- * Callers that don't send a key at all still work exactly as before -
- * the key is opt-in from the client's side, not mandatory. Making it
- * mandatory is a reasonable next step once your frontend is updated to
- * always send one.
+ * Claim-then-execute: a placeholder row is inserted under the unique
+ * (key, user) constraint BEFORE the money-moving action runs. Concurrent
+ * retries with the same key hit the unique constraint and replay the
+ * stored response instead of double-charging. Previously the action
+ * committed first and the key was written afterward, so two parallel
+ * retries could both miss the lookup and both mutate balances.
  */
 @Service
 public class IdempotencyService {
+
+    private static final int PENDING_STATUS = 0;
+    private static final String PENDING_BODY = "";
 
     private final IdempotencyRecordRepository repo;
     private final ObjectMapper objectMapper;
@@ -46,21 +42,7 @@ public class IdempotencyService {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * @param idempotencyKey the client-supplied key, or null/blank if the
-     *                       client didn't send one (in which case the
-     *                       action just runs normally, no caching)
-     * @param user           whose request this is - keys are scoped per
-     *                       user, so two different users can't collide on
-     *                       the same client-generated key
-     * @param requestBody    the parsed request body, hashed to detect a
-     *                       key being reused for a genuinely different
-     *                       request
-     * @param responseType   Jackson TypeReference describing the response
-     *                       body's exact generic type, e.g.
-     *                       {@code new TypeReference<ApiResponse<Wallet>>() {}}
-     * @param action         the real work to perform on a cache miss
-     */
+    @Transactional
     public <T> ResponseEntity<T> execute(String idempotencyKey, User user, Object requestBody,
                                           TypeReference<T> responseType, Supplier<ResponseEntity<T>> action) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
@@ -71,35 +53,59 @@ public class IdempotencyService {
 
         Optional<IdempotencyRecord> existing = repo.findByIdempotencyKeyAndUserId(idempotencyKey, user.getId());
         if (existing.isPresent()) {
-            IdempotencyRecord record = existing.get();
-            if (!record.getRequestHash().equals(requestHash)) {
-                // Same key, different request body - this is a client bug
-                // (keys should be generated fresh per logical operation),
-                // not something safe to silently paper over by either
-                // replaying the old response or re-running the new one.
-                throw new ConflictException(
-                        "This Idempotency-Key was already used for a different request");
-            }
-            T cachedBody = deserialize(record.getResponseBody(), responseType);
-            return ResponseEntity.status(record.getResponseStatus()).body(cachedBody);
+            return replayOrWait(existing.get(), requestHash, responseType);
         }
 
-        ResponseEntity<T> response = action.get();
+        // Claim the key first so a concurrent retry cannot also run action.
+        IdempotencyRecord claim = IdempotencyRecord.builder()
+                .idempotencyKey(idempotencyKey)
+                .userId(user.getId())
+                .requestHash(requestHash)
+                .responseStatus(PENDING_STATUS)
+                .responseBody(PENDING_BODY)
+                .build();
+        try {
+            repo.saveAndFlush(claim);
+        } catch (DataIntegrityViolationException e) {
+            IdempotencyRecord winner = repo.findByIdempotencyKeyAndUserId(idempotencyKey, user.getId())
+                    .orElseThrow(() -> e);
+            return replayOrWait(winner, requestHash, responseType);
+        }
 
-        // Only cache clean, successful responses. A 2xx from here means
-        // the action fully committed, so it's safe to replay verbatim.
+        ResponseEntity<T> response;
+        try {
+            response = action.get();
+        } catch (RuntimeException e) {
+            // Outer @Transactional will roll the pending claim back with
+            // the failed money move; rethrow so GlobalExceptionHandler runs.
+            throw e;
+        }
+
         if (response.getStatusCode().is2xxSuccessful()) {
-            IdempotencyRecord record = IdempotencyRecord.builder()
-                    .idempotencyKey(idempotencyKey)
-                    .userId(user.getId())
-                    .requestHash(requestHash)
-                    .responseStatus(response.getStatusCode().value())
-                    .responseBody(serialize(response.getBody()))
-                    .build();
-            repo.save(record);
+            claim.setResponseStatus(response.getStatusCode().value());
+            claim.setResponseBody(serialize(response.getBody()));
+            repo.save(claim);
+        } else {
+            // Failed business responses should not be cached forever —
+            // drop the claim so a corrected retry can proceed.
+            repo.delete(claim);
         }
 
         return response;
+    }
+
+    private <T> ResponseEntity<T> replayOrWait(IdempotencyRecord record, String requestHash,
+                                                TypeReference<T> responseType) {
+        if (!record.getRequestHash().equals(requestHash)) {
+            throw new ConflictException(
+                    "This Idempotency-Key was already used for a different request");
+        }
+        if (record.getResponseStatus() == PENDING_STATUS) {
+            // Another request holds the claim and is still executing.
+            throw new ConflictException("A request with this Idempotency-Key is already in progress");
+        }
+        T cachedBody = deserialize(record.getResponseBody(), responseType);
+        return ResponseEntity.status(record.getResponseStatus()).body(cachedBody);
     }
 
     private String serialize(Object value) {
@@ -124,8 +130,6 @@ public class IdempotencyService {
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            // SHA-256 is always available on any standard JVM - this
-            // branch is unreachable in practice.
             throw new IllegalStateException(e);
         }
     }

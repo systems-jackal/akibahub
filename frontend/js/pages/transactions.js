@@ -31,8 +31,11 @@ async function loadTransactions(type, groupId, start, end) {
 document.getElementById('apply-filter').addEventListener('click', () => {
   const type = document.getElementById('filter-type').value.trim();
   const groupId = document.getElementById('filter-group').value;
-  const start = document.getElementById('filter-start').value;
-  const end = document.getElementById('filter-end').value;
+  // <input type="date"> yields YYYY-MM-DD; backend expects ISO date-time.
+  const startRaw = document.getElementById('filter-start').value;
+  const endRaw = document.getElementById('filter-end').value;
+  const start = startRaw ? `${startRaw}T00:00:00` : null;
+  const end = endRaw ? `${endRaw}T23:59:59` : null;
   loadTransactions(type, groupId, start, end);
 });
 

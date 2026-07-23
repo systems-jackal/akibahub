@@ -12,12 +12,12 @@
       <div class="logo">🏦 Akiba Hub</div>
       <h2>Create Account</h2>
 
-      <form id="register-form">
+      <form id="register-form" autocomplete="on">
         <div class="form-group">
           <label for="fullname">Full Name</label>
           <div class="input-wrapper">
             <div class="glow-ring"></div>
-            <input type="text" id="fullname" required />
+            <input type="text" id="fullname" name="name" autocomplete="name" required />
           </div>
         </div>
 
@@ -25,7 +25,7 @@
           <label for="idnumber">ID Number</label>
           <div class="input-wrapper">
             <div class="glow-ring"></div>
-            <input type="text" id="idnumber" placeholder="8 digits" pattern="\d{8}" required />
+            <input type="text" id="idnumber" name="idnumber" placeholder="8 digits" pattern="\d{8}" inputmode="numeric" required />
           </div>
         </div>
 
@@ -35,7 +35,7 @@
             <span class="prefix">+254</span>
             <div class="input-wrapper" style="flex:1;">
               <div class="glow-ring"></div>
-              <input type="tel" id="phone" data-phone required />
+              <input type="tel" id="phone" name="tel" data-phone placeholder="712 345 678" autocomplete="tel-national" required />
             </div>
           </div>
         </div>
@@ -44,8 +44,17 @@
           <label for="password">Password</label>
           <div class="password-wrapper input-wrapper">
             <div class="glow-ring"></div>
-            <input type="password" id="password" required minlength="6" />
-            <button type="button" class="toggle-password">👁️</button>
+            <input type="password" id="password" name="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters" />
+            <button type="button" class="toggle-password" aria-label="Show password">👁️</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password</label>
+          <div class="password-wrapper input-wrapper">
+            <div class="glow-ring"></div>
+            <input type="password" id="confirm-password" name="confirm-password" autocomplete="new-password" required minlength="6" placeholder="Re-enter your password" />
+            <button type="button" class="toggle-password" aria-label="Show password">👁️</button>
           </div>
         </div>
 
@@ -61,14 +70,5 @@
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/pages/register.js"></script>
-  <script>
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const input = this.closest('.password-wrapper').querySelector('input');
-        input.type = input.type === 'password' ? 'text' : 'password';
-        this.textContent = input.type === 'password' ? '👁️' : '🙈';
-      });
-    });
-  </script>
 </body>
 </html>

@@ -30,9 +30,9 @@ spring:
     # baseline-on-migrate lets Flyway adopt an existing database that was
     # previously managed by ddl-auto:update (i.e. your current dev/staging
     # DB) without erroring out because the tables "already exist" - it
-    # marks whatever's there as baseline version 0, then V1 below is
-    # written to match that existing schema exactly, so it's a no-op on
-    # an already-baselined DB and a real CREATE on a brand new one.
+    # marks whatever's there as baseline version 0, then V1 (CREATE TABLE
+    # IF NOT EXISTS) is a no-op on an already-populated DB and a real
+    # CREATE on a brand new one.
     baseline-on-migrate: true
     baseline-version: 0
 

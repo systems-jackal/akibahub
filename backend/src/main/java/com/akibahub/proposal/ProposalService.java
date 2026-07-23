@@ -44,25 +44,37 @@ public class ProposalService {
         this.ledgerService = ledgerService;
     }
 
-    // ---------- existing methods ----------
-
     @Transactional
     public ProposalResponse createProposal(Long groupId, String title, String description,
                                    BigDecimal amount, User creator) {
         AmountValidator.requirePositive(amount);
         var membership = memberRepo.findByGroupIdAndUserId(groupId, creator.getId())
                 .orElseThrow(() -> new ForbiddenException("Not a group member"));
+
+        Wallet groupWallet = walletRepo.findByGroupIdAndType(groupId, Wallet.WalletType.GROUP)
+                .orElseThrow(() -> new NotFoundException("Group wallet not found"));
+        if (groupWallet.getBalance().compareTo(amount) < 0) {
+            throw new BadRequestException("Proposal amount exceeds group balance");
+        }
+
         Proposal proposal = Proposal.builder().group(membership.getGroup()).title(title)
                 .description(description).amount(amount).createdBy(creator)
                 .status(Proposal.ProposalStatus.OPEN).build();
         proposal = proposalRepo.save(proposal);
-        auditLog.logEvent("PROPOSAL_CREATED", proposal);
-        return toResponse(proposal);
+        auditLog.logEvent("PROPOSAL_CREATED", Map.of(
+                "proposalId", proposal.getId(),
+                "groupId", groupId,
+                "amount", amount,
+                "createdBy", creator.getId()
+        ));
+        return toResponse(proposal, creator);
     }
 
     @Transactional
     public void vote(Long proposalId, User voter, Vote.VoteValue voteValue) {
-        Proposal proposal = proposalRepo.findById(proposalId)
+        // Pessimistic lock: concurrent tipping YES votes must serialize so
+        // only one transaction can transition OPEN → APPROVED and pay out.
+        Proposal proposal = proposalRepo.findByIdForUpdate(proposalId)
                 .orElseThrow(() -> new NotFoundException("Proposal not found"));
         if (!proposal.getStatus().equals(Proposal.ProposalStatus.OPEN))
             throw new ConflictException("Voting closed");
@@ -73,54 +85,68 @@ public class ProposalService {
 
         Vote vote = Vote.builder().proposal(proposal).user(voter).vote(voteValue).build();
         voteRepo.save(vote);
-        auditLog.logEvent("VOTE_CAST", vote);
+        auditLog.logEvent("VOTE_CAST", Map.of(
+                "proposalId", proposalId,
+                "userId", voter.getId(),
+                "vote", voteValue.name()
+        ));
 
         long totalMembers = memberRepo.countByGroupId(proposal.getGroup().getId());
         long yesVotes = voteRepo.countByProposalIdAndVote(proposalId, Vote.VoteValue.YES);
         long noVotes = voteRepo.countByProposalIdAndVote(proposalId, Vote.VoteValue.NO);
 
         if (yesVotes > totalMembers / 2) {
-            proposal.setStatus(Proposal.ProposalStatus.APPROVED);
-            proposalRepo.save(proposal);
-            executeWithdrawal(proposal);
-            auditLog.logEvent("PROPOSAL_APPROVED", proposal);
+            Wallet groupWallet = walletRepo.findByGroupIdAndType(proposal.getGroup().getId(), Wallet.WalletType.GROUP)
+                    .orElseThrow(() -> new NotFoundException("Group wallet not found"));
+            if (groupWallet.getBalance().compareTo(proposal.getAmount()) < 0) {
+                // Majority YES but funds are gone — reject rather than
+                // rolling back the deciding vote (which left the proposal
+                // stuck OPEN with a majority that could never settle).
+                proposal.setStatus(Proposal.ProposalStatus.REJECTED);
+                proposalRepo.save(proposal);
+                auditLog.logEvent("PROPOSAL_REJECTED_INSUFFICIENT_FUNDS", Map.of(
+                        "proposalId", proposalId,
+                        "amount", proposal.getAmount(),
+                        "balance", groupWallet.getBalance()
+                ));
+            } else {
+                proposal.setStatus(Proposal.ProposalStatus.APPROVED);
+                proposalRepo.save(proposal);
+                executeWithdrawal(proposal, groupWallet);
+                auditLog.logEvent("PROPOSAL_APPROVED", Map.of("proposalId", proposalId));
+            }
         } else if (noVotes > totalMembers / 2) {
             proposal.setStatus(Proposal.ProposalStatus.REJECTED);
             proposalRepo.save(proposal);
-            auditLog.logEvent("PROPOSAL_REJECTED", proposal);
+            auditLog.logEvent("PROPOSAL_REJECTED", Map.of("proposalId", proposalId));
         }
     }
 
-    private void executeWithdrawal(Proposal proposal) {
-        // Defense in depth: createProposal/updateProposal already validate
-        // the amount, but this is the method that actually moves money out
-        // of the group wallet. Re-checking here means this method is safe
-        // to call on its own, regardless of what validation ran (or didn't
-        // run) earlier in the call chain - money-moving code shouldn't have
-        // to trust that every caller upstream did the right thing.
+    private void executeWithdrawal(Proposal proposal, Wallet groupWallet) {
         AmountValidator.requirePositive(proposal.getAmount());
-        Wallet groupWallet = walletRepo.findByGroupIdAndType(proposal.getGroup().getId(), Wallet.WalletType.GROUP)
-                .orElseThrow(() -> new NotFoundException("Group wallet not found"));
-        if (groupWallet.getBalance().compareTo(proposal.getAmount()) < 0)
-            throw new BadRequestException("Insufficient group funds");
+        Wallet personal = walletRepo.findByUserIdAndType(proposal.getCreatedBy().getId(), Wallet.WalletType.PERSONAL)
+                .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
 
         groupWallet.setBalance(groupWallet.getBalance().subtract(proposal.getAmount()));
-        walletRepo.save(groupWallet);
+        personal.setBalance(personal.getBalance().add(proposal.getAmount()));
+
+        // Persist lower wallet id first so concurrent contribute (same
+        // ordering) cannot deadlock under InnoDB row locks.
+        if (groupWallet.getId() < personal.getId()) {
+            walletRepo.save(groupWallet);
+            walletRepo.save(personal);
+        } else {
+            walletRepo.save(personal);
+            walletRepo.save(groupWallet);
+        }
+
         transactionRepo.save(Transaction.builder().wallet(groupWallet).amount(proposal.getAmount())
                 .type(Transaction.TransactionType.WITHDRAWAL)
                 .reference("Approved proposal: " + proposal.getTitle()).build());
-
-        Wallet personal = walletRepo.findByUserIdAndType(proposal.getCreatedBy().getId(), Wallet.WalletType.PERSONAL)
-                .orElseThrow(() -> new NotFoundException("Personal wallet not found"));
-        personal.setBalance(personal.getBalance().add(proposal.getAmount()));
-        walletRepo.save(personal);
         transactionRepo.save(Transaction.builder().wallet(personal).amount(proposal.getAmount())
                 .type(Transaction.TransactionType.DEPOSIT)
                 .reference("Withdrawal from group " + proposal.getGroup().getId()).build());
 
-        // Both wallets exist inside Akiba Hub, so this is a genuine
-        // two-legged internal transfer, not the external-movement
-        // approximation used for personal deposit/withdraw.
         ledgerService.recordInternalTransfer(Transfer.Type.PROPOSAL_PAYOUT, proposal.getCreatedBy(),
                 "Approved proposal: " + proposal.getTitle(), groupWallet, personal, proposal.getAmount());
     }
@@ -129,7 +155,8 @@ public class ProposalService {
     public List<ProposalResponse> getProposalsForGroup(Long groupId, User user) {
         memberRepo.findByGroupIdAndUserId(groupId, user.getId())
                 .orElseThrow(() -> new ForbiddenException("Not a member of this group"));
-        return proposalRepo.findByGroupId(groupId).stream().map(this::toResponse).collect(Collectors.toList());
+        return proposalRepo.findByGroupId(groupId).stream()
+                .map(p -> toResponse(p, user)).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -137,10 +164,9 @@ public class ProposalService {
         List<Long> groupIds = memberRepo.findByUserId(user.getId())
                 .stream().map(m -> m.getGroup().getId()).collect(Collectors.toList());
         if (groupIds.isEmpty()) return List.of();
-        return proposalRepo.findByGroupIdIn(groupIds).stream().map(this::toResponse).collect(Collectors.toList());
+        return proposalRepo.findByGroupIdIn(groupIds).stream()
+                .map(p -> toResponse(p, user)).collect(Collectors.toList());
     }
-
-    // ---------- new methods ----------
 
     @Transactional(readOnly = true)
     public ProposalResponse getProposal(Long proposalId, User user) {
@@ -148,7 +174,7 @@ public class ProposalService {
                 .orElseThrow(() -> new NotFoundException("Proposal not found"));
         memberRepo.findByGroupIdAndUserId(proposal.getGroup().getId(), user.getId())
                 .orElseThrow(() -> new ForbiddenException("Not a member of this group"));
-        return toResponse(proposal);
+        return toResponse(proposal, user);
     }
 
     @Transactional
@@ -163,23 +189,32 @@ public class ProposalService {
         if (body.containsKey("title")) proposal.setTitle((String) body.get("title"));
         if (body.containsKey("description")) proposal.setDescription((String) body.get("description"));
         if (body.containsKey("amount")) {
+            // Changing the amount after anyone has voted would pay out a
+            // different figure than members approved.
+            if (voteRepo.countByProposalIdAndVote(proposalId, Vote.VoteValue.YES)
+                    + voteRepo.countByProposalIdAndVote(proposalId, Vote.VoteValue.NO) > 0) {
+                throw new ConflictException("Cannot change amount after votes have been cast");
+            }
             BigDecimal newAmount = new BigDecimal(body.get("amount").toString());
             AmountValidator.requirePositive(newAmount);
+            Wallet groupWallet = walletRepo.findByGroupIdAndType(proposal.getGroup().getId(), Wallet.WalletType.GROUP)
+                    .orElseThrow(() -> new NotFoundException("Group wallet not found"));
+            if (groupWallet.getBalance().compareTo(newAmount) < 0) {
+                throw new BadRequestException("Proposal amount exceeds group balance");
+            }
             proposal.setAmount(newAmount);
         }
 
-        return toResponse(proposalRepo.save(proposal));
+        return toResponse(proposalRepo.save(proposal), user);
     }
 
-    /**
-     * Builds the flattened API response for a proposal, including live
-     * vote tallies. Must run inside an active transaction (readOnly or
-     * not) since it touches proposal.getGroup(), a lazy association.
-     */
-    private ProposalResponse toResponse(Proposal proposal) {
+    private ProposalResponse toResponse(Proposal proposal, User viewer) {
         long totalMembers = memberRepo.countByGroupId(proposal.getGroup().getId());
         long yesVotes = voteRepo.countByProposalIdAndVote(proposal.getId(), Vote.VoteValue.YES);
         long noVotes = voteRepo.countByProposalIdAndVote(proposal.getId(), Vote.VoteValue.NO);
+        String myVote = voteRepo.findByProposalIdAndUserId(proposal.getId(), viewer.getId())
+                .map(v -> v.getVote().name())
+                .orElse(null);
         return new ProposalResponse(
                 proposal.getId(),
                 proposal.getTitle(),
@@ -190,7 +225,8 @@ public class ProposalService {
                 new ProposalResponse.GroupSummary(proposal.getGroup().getId(), proposal.getGroup().getName()),
                 yesVotes,
                 noVotes,
-                totalMembers
+                totalMembers,
+                myVote
         );
     }
 
@@ -205,6 +241,6 @@ public class ProposalService {
 
         voteRepo.deleteByProposalId(proposalId);
         proposalRepo.delete(proposal);
-        auditLog.logEvent("PROPOSAL_DELETED", proposal);
+        auditLog.logEvent("PROPOSAL_DELETED", Map.of("proposalId", proposalId));
     }
 }

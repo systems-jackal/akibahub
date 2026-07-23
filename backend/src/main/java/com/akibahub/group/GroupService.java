@@ -1,13 +1,17 @@
 package com.akibahub.group;
 
 import com.akibahub.audit.AuditLogService;
+import com.akibahub.group.dto.GroupMemberResponse;
+import com.akibahub.group.dto.GroupResponse;
 import com.akibahub.group.entity.*;
 import com.akibahub.ledger.entity.LedgerEntry;
 import com.akibahub.ledger.entity.LedgerEntryRepository;
+import com.akibahub.proposal.entity.ProposalRepository;
 import com.akibahub.shared.exception.ConflictException;
 import com.akibahub.shared.exception.ForbiddenException;
 import com.akibahub.shared.exception.NotFoundException;
 import com.akibahub.user.entity.User;
+import com.akibahub.wallet.entity.TransactionRepository;
 import com.akibahub.wallet.entity.Wallet;
 import com.akibahub.wallet.entity.WalletRepository;
 import org.springframework.stereotype.Service;
@@ -26,36 +30,43 @@ public class GroupService {
     private final GroupMemberRepository memberRepo;
     private final WalletRepository walletRepo;
     private final LedgerEntryRepository ledgerEntryRepo;
+    private final ProposalRepository proposalRepo;
+    private final TransactionRepository transactionRepo;
     private final AuditLogService auditLog;
-    
+
     private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
     public GroupService(GroupRepository groupRepo, GroupMemberRepository memberRepo,
                         WalletRepository walletRepo, LedgerEntryRepository ledgerEntryRepo,
+                        ProposalRepository proposalRepo, TransactionRepository transactionRepo,
                         AuditLogService auditLog) {
         this.groupRepo = groupRepo;
         this.memberRepo = memberRepo;
         this.walletRepo = walletRepo;
         this.ledgerEntryRepo = ledgerEntryRepo;
+        this.proposalRepo = proposalRepo;
+        this.transactionRepo = transactionRepo;
         this.auditLog = auditLog;
     }
 
     @Transactional(readOnly = true)
-    public Group getGroup(Long groupId, User user) {
+    public GroupResponse getGroup(Long groupId, User user) {
         Group group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
         requireMembership(groupId, user.getId());
-        return group;
+        return GroupResponse.from(group);
     }
 
     @Transactional(readOnly = true)
-    public List<Group> getMyGroups(User user) {
-        return groupRepo.findByMemberUserId(user.getId());
+    public List<GroupResponse> getMyGroups(User user) {
+        return groupRepo.findByMemberUserId(user.getId()).stream()
+                .map(GroupResponse::from)
+                .toList();
     }
 
     @Transactional
-    public Group createGroup(String name, String description, String rules, User creator) {
+    public GroupResponse createGroup(String name, String description, String rules, User creator) {
         String code = generateUniqueCode();
         Group group = Group.builder()
                 .name(name)
@@ -65,63 +76,80 @@ public class GroupService {
                 .createdBy(creator)
                 .build();
         group = groupRepo.save(group);
-        
+
         memberRepo.save(GroupMember.builder().group(group).user(creator).build());
         walletRepo.save(Wallet.builder().group(group).type(Wallet.WalletType.GROUP).balance(BigDecimal.ZERO).build());
-        
-        auditLog.logEvent("GROUP_CREATED", group);
-        return group;
+
+        auditLog.logEvent("GROUP_CREATED", Map.of(
+                "groupId", group.getId(),
+                "name", group.getName(),
+                "createdBy", creator.getId()
+        ));
+        return GroupResponse.from(group);
     }
 
     @Transactional
     public void joinGroup(String inviteCode, User user) {
         Group group = groupRepo.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new NotFoundException("Invalid invite code"));
-        
+
         if (memberRepo.findByGroupIdAndUserId(group.getId(), user.getId()).isPresent()) {
             throw new ConflictException("Already a member");
         }
-        
+
         memberRepo.save(GroupMember.builder().group(group).user(user).build());
         auditLog.logEvent("MEMBER_JOINED", Map.of("groupId", group.getId(), "user", user.getPhoneNumber()));
     }
 
     @Transactional
-    public Group updateGroup(Long groupId, String name, String description, String rules, User user) {
+    public GroupResponse updateGroup(Long groupId, String name, String description, String rules, User user) {
         Group group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
-        
+
         if (!group.getCreatedBy().getId().equals(user.getId())) {
             throw new ForbiddenException("Only the group creator can edit");
         }
-        
+
         if (name != null) group.setName(name);
         if (description != null) group.setDescription(description);
         if (rules != null) group.setRules(rules);
-        
-        return groupRepo.save(group);
+
+        return GroupResponse.from(groupRepo.save(group));
     }
 
     @Transactional
     public void deleteGroup(Long groupId, User user) {
         Group group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
-        
+
         if (!group.getCreatedBy().getId().equals(user.getId())) {
             throw new ForbiddenException("Only the group creator can delete");
         }
-        
+
         Wallet groupWallet = walletRepo.findByGroupIdAndType(groupId, Wallet.WalletType.GROUP)
                 .orElseThrow(() -> new NotFoundException("Group wallet not found"));
-        
+
         if (groupWallet.getBalance().compareTo(BigDecimal.ZERO) != 0) {
             throw new ConflictException("Group wallet must be empty before deletion");
         }
-        
+
+        if (proposalRepo.countByGroupId(groupId) > 0) {
+            throw new ConflictException("Cannot delete a group that has proposals");
+        }
+
+        List<Long> walletIds = List.of(groupWallet.getId());
+        if (!transactionRepo.findByWalletIdIn(walletIds).isEmpty()) {
+            throw new ConflictException("Cannot delete a group that has transaction history");
+        }
+
+        if (!ledgerEntryRepo.findByWalletIdOrderByCreatedAtAsc(groupWallet.getId()).isEmpty()) {
+            throw new ConflictException("Cannot delete a group that has ledger history");
+        }
+
         memberRepo.deleteByGroupId(groupId);
         walletRepo.delete(groupWallet);
         groupRepo.delete(group);
-        
+
         auditLog.logEvent("GROUP_DELETED", Map.of("groupId", groupId, "deletedBy", user.getId()));
     }
 
@@ -129,11 +157,11 @@ public class GroupService {
     public String generateInviteCode(Long groupId, User user) {
         Group group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
-        
+
         if (!group.getCreatedBy().getId().equals(user.getId())) {
             throw new ForbiddenException("Only the group creator can generate invite code");
         }
-        
+
         if (group.getInviteCode() == null || group.getInviteCode().isBlank()) {
             String code = generateUniqueCode();
             group.setInviteCode(code);
@@ -146,12 +174,12 @@ public class GroupService {
     public Map<String, Object> getGroupStats(Long groupId, User user) {
         groupRepo.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
-        
+
         requireMembership(groupId, user.getId());
-        
+
         Wallet groupWallet = walletRepo.findByGroupIdAndType(groupId, Wallet.WalletType.GROUP)
                 .orElseThrow(() -> new NotFoundException("Group wallet not found"));
-        
+
         long memberCount = memberRepo.countByGroupId(groupId);
         return Map.of(
             "totalSavings", groupWallet.getBalance(),
@@ -160,23 +188,13 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
-    public List<Group> getAllGroups() { 
-        return groupRepo.findAll(); 
-    }
-
-    @Transactional(readOnly = true)
-    public List<GroupMember> getGroupMembers(Long groupId, User user) {
+    public List<GroupMemberResponse> getGroupMembers(Long groupId, User user) {
         requireMembership(groupId, user.getId());
-        return memberRepo.findByGroupId(groupId);
+        return memberRepo.findByGroupId(groupId).stream()
+                .map(GroupMemberResponse::from)
+                .toList();
     }
 
-    /**
-     * Growth-over-time series for a group, derived directly from the
-     * ledger's point-in-time balance snapshots (LedgerEntry.balanceAfter)
-     * rather than recomputing anything - this is exactly the kind of
-     * query the double-entry ledger was introduced to make trivial. Each
-     * point is {label: formatted date/time, value: balance at that point}.
-     */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getGroupGrowth(Long groupId, User user) {
         requireMembership(groupId, user.getId());
@@ -196,13 +214,6 @@ public class GroupService {
         return series;
     }
 
-    // Shared by every group-scoped read that should only be visible to
-    // members of that group (getGroup, getGroupMembers, getGroupStats).
-    // Previously each method either duplicated this check inline
-    // (getGroupStats) or - in the case of getGroup and getGroupMembers -
-    // simply didn't have it at all, which meant any authenticated user
-    // could view any group's details or list every member's name and
-    // phone number, regardless of whether they'd ever joined that group.
     private void requireMembership(Long groupId, Long userId) {
         memberRepo.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(() -> new ForbiddenException("Not a member of this group"));
