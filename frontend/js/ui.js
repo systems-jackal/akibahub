@@ -67,7 +67,7 @@ function showAlert(message, type = 'success') {
 
 // Render sidebar active state
 function setActiveNav() {
-  const currentPage = location.pathname.split('/').pop();
+  const currentPage = location.pathname.split('/').pop() || '';
   document.querySelectorAll('.sidebar nav a').forEach(link => {
     const href = link.getAttribute('href');
     if (href === currentPage) {
@@ -76,10 +76,90 @@ function setActiveNav() {
   });
 }
 
+function initialsFromName(fullName) {
+  const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const USER_CACHE_KEY = 'akiba_user_cache';
+
+function cacheCurrentUser(user) {
+  if (!user) return;
+  try {
+    sessionStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+  } catch (e) { /* ignore quota */ }
+}
+
+function readCachedUser() {
+  try {
+    const raw = sessionStorage.getItem(USER_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearCachedUser() {
+  try { sessionStorage.removeItem(USER_CACHE_KEY); } catch (e) { /* ignore */ }
+}
+
+function renderSidebarProfileChip(user) {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar || !user) return;
+
+  const esc = (typeof escapeHtml === 'function')
+    ? escapeHtml
+    : (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  let chip = document.getElementById('sidebar-profile-chip');
+  if (!chip) {
+    chip = document.createElement('a');
+    chip.id = 'sidebar-profile-chip';
+    chip.className = 'sidebar-profile-chip';
+    chip.href = 'settings.html';
+    chip.title = 'Open account';
+    const logo = sidebar.querySelector('.logo');
+    const nav = sidebar.querySelector('nav');
+    if (nav) {
+      sidebar.insertBefore(chip, nav);
+    } else if (logo && logo.nextSibling) {
+      sidebar.insertBefore(chip, logo.nextSibling);
+    } else {
+      sidebar.appendChild(chip);
+    }
+  }
+
+  const name = user.fullName || 'Account';
+  chip.innerHTML = `
+    <span class="chip-avatar">${esc(initialsFromName(name))}</span>
+    <span class="chip-text">
+      <span class="chip-name">${esc(name)}</span>
+      <span class="chip-sub">My account</span>
+    </span>
+  `;
+}
+
+async function initSidebarProfile() {
+  if (!document.querySelector('.sidebar') || !getToken()) return;
+
+  const cached = readCachedUser();
+  if (cached) renderSidebarProfileChip(cached);
+
+  try {
+    const user = await fetchCurrentUser();
+    cacheCurrentUser(user);
+    renderSidebarProfileChip(user);
+  } catch (e) {
+    // Keep cached chip if present; auth redirect handled elsewhere on 401.
+  }
+}
+
 // Load sidebar into page (if using dynamic load, otherwise sidebar is inline)
 function loadSidebar() {
-  // Sidebar is already hardcoded in each page, so just set active
   setActiveNav();
+  initSidebarProfile();
 }
 
 // Check auth and redirect if not logged in

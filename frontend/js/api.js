@@ -18,6 +18,7 @@ function clearTokens() {
   localStorage.removeItem('akiba_token');
   localStorage.removeItem('akiba_refresh_token');
   localStorage.removeItem('akiba_phone');
+  try { sessionStorage.removeItem('akiba_user_cache'); } catch (e) { /* ignore */ }
 }
 
 function authHeaders(extra = {}) {

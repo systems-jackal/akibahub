@@ -1,8 +1,32 @@
 requireAuth();
 
+function greetingForNow() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function firstNameFrom(fullName) {
+  const parts = String(fullName || '').trim().split(/\s+/).filter(Boolean);
+  return parts[0] || 'there';
+}
+
 async function loadDashboard() {
   try {
-    const data = await fetchDashboard();
+    const [data, user] = await Promise.all([
+      fetchDashboard(),
+      fetchCurrentUser().catch(() => readCachedUser())
+    ]);
+
+    if (user) {
+      cacheCurrentUser(user);
+      const greet = document.getElementById('dashboard-greeting');
+      const sub = document.getElementById('dashboard-sub');
+      if (greet) greet.textContent = `${greetingForNow()}, ${firstNameFrom(user.fullName)}`;
+      if (sub) sub.textContent = "Here's your savings overview";
+    }
+
     document.getElementById('personal-balance').textContent = formatCurrency(data.personalBalance);
 
     const tickerBalance = document.getElementById('ticker-balance');

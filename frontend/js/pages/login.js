@@ -91,6 +91,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
     if (json.success) {
       setTokens(json.data.token, json.data.refreshToken);
       localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
+      if (typeof cacheCurrentUser === 'function') cacheCurrentUser(json.data.user);
       window.location.href = 'dashboard.html';
     } else {
       msgEl.textContent = json.message || 'Login failed';
