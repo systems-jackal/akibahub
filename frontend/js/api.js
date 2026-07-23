@@ -227,28 +227,3 @@ async function changePassword(currentPassword, newPassword) {
 async function fetchCurrentUser() {
   return apiFetch('/api/auth/me', { headers: authHeaders() });
 }
-
-// ---------- Admin ----------
-async function fetchAdminStats() {
-  return apiFetch('/api/admin/stats', { headers: authHeaders() });
-}
-
-async function fetchAdminUsers() {
-  return apiFetch('/api/admin/users', { headers: authHeaders() });
-}
-
-async function fetchAdminGroups() {
-  return apiFetch('/api/admin/groups', { headers: authHeaders() });
-}
-
-async function fetchAdminAuditLog() {
-  return apiFetch('/api/admin/audit-log', { headers: authHeaders() });
-}
-
-async function updateUserStatus(userId, status) {
-  return apiFetch(`/api/admin/users/${userId}/status`, {
-    method: 'PUT',
-    headers: authHeaders(),
-    body: JSON.stringify({ status })
-  });
-}

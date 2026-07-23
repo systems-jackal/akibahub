@@ -71,9 +71,6 @@ public class AuthService {
         if (!encoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
-        if (user.getStatus() == User.AccountStatus.SUSPENDED) {
-            throw new ForbiddenException("This account has been suspended. Please contact support.");
-        }
         auditLog.logEvent("USER_LOGGED_IN", user);
         return issueAuthResponse(user);
     }

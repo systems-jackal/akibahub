@@ -62,45 +62,6 @@ function requireAuth() {
     return;
   }
   initInactivityTimer();
-  applyRoleBasedNav();
-}
-
-// Shows the "Admin" nav link only for ADMIN accounts, and bounces a
-// non-admin away from admin.html itself. The REAL enforcement is
-// server-side (@PreAuthorize("hasRole('ADMIN')") on every /api/admin/**
-// endpoint) - this is just about not showing a link or a page that would
-// immediately 403 anyway, not a security boundary in itself.
-async function applyRoleBasedNav() {
-  try {
-    const user = await fetchCurrentUser();
-    const isAdmin = user.role === 'ADMIN';
-    const currentPage = location.pathname.split('/').pop();
-
-    if (currentPage === 'admin.html' && !isAdmin) {
-      window.location.href = 'dashboard.html';
-      return;
-    }
-
-    if (isAdmin && !document.getElementById('admin-nav-link')) {
-      const logoutLink = document.getElementById('logout-btn');
-      if (logoutLink) {
-        const adminLink = document.createElement('a');
-        adminLink.href = 'admin.html';
-        adminLink.id = 'admin-nav-link';
-        adminLink.title = 'Admin';
-        adminLink.innerHTML = '<span class="icon">🛡️</span><span class="label">Admin</span>';
-        if (currentPage === 'admin.html') adminLink.classList.add('active');
-        logoutLink.parentElement.insertBefore(adminLink, logoutLink);
-      }
-    }
-  } catch (e) {
-    // If this fails (e.g. token mid-refresh), fail closed on admin.html
-    // specifically - never leave an unverified user sitting on the
-    // admin page - but don't disrupt normal pages over it.
-    if (location.pathname.split('/').pop() === 'admin.html') {
-      window.location.href = 'dashboard.html';
-    }
-  }
 }
 
 // Logout
