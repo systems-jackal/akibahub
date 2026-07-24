@@ -95,11 +95,22 @@
           clearTimers();
           state.failReason = status.status;
           setStep('fail');
-        } else if (state.expiresAt && new Date(state.expiresAt).getTime() < Date.now()) {
-          clearTimers();
-          state.failReason = 'EXPIRED';
-          setStep('fail');
         }
+        // No client-side "is expiresAt in the past?" check here on purpose.
+        // expiresAt comes from the backend as a plain LocalDateTime with no
+        // timezone offset attached (e.g. "2025-07-24T15:32:00"). When the
+        // browser does new Date(thatString), JS parses a timezone-less
+        // datetime as the BROWSER'S OWN local time, not the server's. If
+        // the server runs in a different zone than whoever's testing (very
+        // likely here — server clock vs. Nairobi time), that misreads the
+        // real expiry by the zone offset. With only a 120s TTL, even a
+        // 1-hour mismatch makes the client think it's already expired
+        // before the STK screen has even finished appearing. The backend
+        // already flips PENDING -> EXPIRED itself once the real TTL
+        // elapses (PaymentService.expireIfNeeded(), checked on every
+        // status poll) using only its own clock — no cross-machine time
+        // comparison needed. Polling that status, which this loop already
+        // does every 2s, is the correct and only source of truth here.
       } catch (e) {
         // Keep waiting; transient poll errors are non-fatal.
       }
