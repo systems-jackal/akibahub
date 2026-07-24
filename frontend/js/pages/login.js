@@ -81,24 +81,41 @@ document.getElementById('login-form').addEventListener('submit', async function(
     return;
   }
 
+  let res;
   try {
-    const res = await fetch('/api/auth/login', {
+    res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ login, password })
     });
-    const json = await res.json();
-    if (json.success) {
-      setTokens(json.data.token, json.data.refreshToken);
-      localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
-      if (typeof cacheCurrentUser === 'function') cacheCurrentUser(json.data.user);
-      window.location.href = 'dashboard.html';
-    } else {
-      msgEl.textContent = json.message || 'Login failed';
-      msgEl.style.color = 'var(--red)';
-    }
   } catch (err) {
-    msgEl.textContent = 'Network error. Please try again.';
+    // fetch() rejected before we ever got a response - backend unreachable
+    // or blocked by CORS, not a login failure. Don't call it "Login failed".
+    msgEl.textContent = 'Could not reach the server. Check your connection and try again.';
+    msgEl.style.color = 'var(--red)';
+    return;
+  }
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (err) {
+    // Response came back but wasn't JSON (proxy/HTML error page, etc).
+    msgEl.textContent = `Request failed (${res.status}). Please try again.`;
+    msgEl.style.color = 'var(--red)';
+    return;
+  }
+
+  if (json.success) {
+    setTokens(json.data.token, json.data.refreshToken);
+    localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
+    if (typeof cacheCurrentUser === 'function') cacheCurrentUser(json.data.user);
+    window.location.href = 'dashboard.html';
+  } else {
+    // buildErrorMessage (api.js) pulls field-level validation detail out of
+    // json.data when present, instead of only ever showing the generic
+    // top-level "Validation failed" message.
+    msgEl.textContent = buildErrorMessage(json) || 'Login failed';
     msgEl.style.color = 'var(--red)';
   }
 });

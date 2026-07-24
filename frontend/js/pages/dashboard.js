@@ -12,19 +12,39 @@ function firstNameFrom(fullName) {
   return parts[0] || 'there';
 }
 
-async function loadDashboard() {
-  try {
-    const [data, user] = await Promise.all([
-      fetchDashboard(),
-      fetchCurrentUser().catch(() => readCachedUser())
-    ]);
+function applyGreeting(user) {
+  const greet = document.getElementById('dashboard-greeting');
+  const sub = document.getElementById('dashboard-sub');
+  if (greet) greet.textContent = `Welcome back, ${firstNameFrom(user.fullName)}`;
+  if (sub) sub.textContent = `${greetingForNow()} — here's your savings overview`;
+}
 
+async function loadDashboard() {
+  let data, user;
+  try {
+    [data, user] = await Promise.all([
+      fetchDashboard(),
+      // Cache first (instant, no network) so a slow/failed /api/auth/me
+      // doesn't leave the greeting on its generic default even briefly.
+      // If there's no cache either (e.g. a brand-new session) this still
+      // makes one real attempt rather than giving up immediately - a
+      // transient failure here (including a rate-limited /api/auth/me,
+      // see RateLimitFilter) used to mean the page silently never showed
+      // the user's name at all, with no error and no retry.
+      Promise.resolve(readCachedUser()).then(cached => cached || fetchCurrentUser().catch(() => null))
+    ]);
+  } catch (err) {
+    // fetchDashboard() failed. Left alone, personal-balance stays on its
+    // HTML default of "0.00" — indistinguishable from a real zero balance.
+    // A load failure needs to look like a load failure, not like data.
+    showPersistentError(err.message || 'Could not load your dashboard. Refresh to try again.');
+    return;
+  }
+
+  try {
     if (user) {
       cacheCurrentUser(user);
-      const greet = document.getElementById('dashboard-greeting');
-      const sub = document.getElementById('dashboard-sub');
-      if (greet) greet.textContent = `${greetingForNow()}, ${firstNameFrom(user.fullName)}`;
-      if (sub) sub.textContent = "Here's your savings overview";
+      applyGreeting(user);
     }
 
     document.getElementById('personal-balance').textContent = formatCurrency(data.personalBalance);
@@ -40,7 +60,16 @@ async function loadDashboard() {
       renderBlockBarChart(chartEl, data.assetDistribution.map(d => ({ label: d.label, value: parseFloat(d.value) })));
     }
 
-    const groups = await fetchMyGroups();
+    // Groups fetched separately from the core dashboard data above: if this
+    // one call fails, the balance/chart already rendered should stay put
+    // rather than the whole page bailing out on an unrelated error.
+    let groups = [];
+    try {
+      groups = await fetchMyGroups();
+    } catch (err) {
+      showAlert('Could not load your groups. Refresh to try again.', 'error');
+      return;
+    }
 
     if (groups.length === 0) {
       // Solo saver – hide group sections, show prompt

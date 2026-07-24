@@ -25,24 +25,36 @@ document.getElementById('register-form').addEventListener('submit', async functi
     return;
   }
 
+  let res;
   try {
-    const res = await fetch('/api/auth/register', {
+    res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fullName: fullname, idNumber: idnumber, phoneNumber: phone, password })
     });
-    const json = await res.json();
-    if (json.success) {
-      setTokens(json.data.token, json.data.refreshToken);
-      localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
-      if (typeof cacheCurrentUser === 'function') cacheCurrentUser(json.data.user);
-      window.location.href = 'dashboard.html';
-    } else {
-      msgEl.textContent = json.message || 'Registration failed';
-      msgEl.style.color = 'var(--red)';
-    }
   } catch (err) {
-    msgEl.textContent = 'Network error. Please try again.';
+    msgEl.textContent = 'Could not reach the server. Check your connection and try again.';
+    msgEl.style.color = 'var(--red)';
+    return;
+  }
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (err) {
+    msgEl.textContent = `Request failed (${res.status}). Please try again.`;
+    msgEl.style.color = 'var(--red)';
+    return;
+  }
+
+  if (json.success) {
+    setTokens(json.data.token, json.data.refreshToken);
+    localStorage.setItem('akiba_phone', json.data.user.phoneNumber);
+    if (typeof cacheCurrentUser === 'function') cacheCurrentUser(json.data.user);
+    window.location.href = 'dashboard.html';
+  } else {
+    // e.g. "Phone must be +254xxxxxxxxx" instead of just "Validation failed"
+    msgEl.textContent = buildErrorMessage(json) || 'Registration failed';
     msgEl.style.color = 'var(--red)';
   }
 });

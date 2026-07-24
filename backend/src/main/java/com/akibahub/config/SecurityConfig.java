@@ -1,5 +1,6 @@
 package com.akibahub.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,13 +13,27 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
     private final RateLimitFilter rateLimitFilter;
+
+    // Configurable so a local/demo run (frontend opened on a different
+    // origin/port than the backend, e.g. via `python -m http.server` or the
+    // VS Code Live Server extension) isn't silently blocked by CORS. This
+    // used to be hard-coded to only "https://akiba.unitybridge.dev" - any
+    // other origin got no Access-Control-Allow-Origin header at all, so the
+    // browser threw a CORS error, fetch() rejected with a generic
+    // "Failed to fetch"/"NetworkError", and every page's catch block showed
+    // that raw, unhelpful message via showAlert(). Defaults below keep prod
+    // locked down while covering common local dev origins out of the box.
+    @Value("${security.cors.allowed-origins:https://akiba.unitybridge.dev,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5500,http://127.0.0.1:5500}")
+    private String allowedOriginsCsv;
 
     public SecurityConfig(JwtAuthenticationFilter jwtFilter, RateLimitFilter rateLimitFilter) {
         this.jwtFilter = jwtFilter;
@@ -70,8 +85,13 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> allowedOrigins = Arrays.stream(allowedOriginsCsv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://akiba.unitybridge.dev"));
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

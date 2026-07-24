@@ -36,7 +36,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String uri = request.getRequestURI();
-        boolean authLimited = uri.startsWith("/api/auth/");
+        boolean authLimited = isAuthLimitedPath(uri);
         boolean paymentLimited = isPaymentInitiatePath(uri, request.getMethod());
 
         if (!authLimited && !paymentLimited) {
@@ -58,8 +58,38 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setHeader("X-Rate-Limit-Retry-After-Seconds", String.valueOf(waitForRefill));
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"Too many requests. Try again later.\"}");
+            // Must match the { success, message, data } shape every other
+            // endpoint returns via ApiResponse (see GlobalExceptionHandler).
+            // This filter runs before any @RestControllerAdvice, so it was
+            // previously hand-writing a different shape ({"error": "..."}).
+            // The frontend's apiFetch only ever reads data.message, so a
+            // 429 silently fell back to the generic "Request failed" text
+            // instead of telling the user they were rate-limited.
+            response.getWriter().write(
+                    "{\"success\":false,\"message\":\"Too many requests. Please wait a moment and try again.\"}");
         }
+    }
+
+    // Only endpoints where a request carries an arbitrary, guessable
+    // credential (a password, or a refresh token someone might be
+    // brute-forcing) belong in the auth bucket. This used to be
+    // uri.startsWith("/api/auth/"), which also caught GET /api/auth/me -
+    // an authenticated, read-only "who am I" check that every page calls
+    // at least twice (the sidebar profile chip, plus that page's own data
+    // load). With a 10-requests-per-60s bucket SHARED across all of
+    // /api/auth/* per IP, a few page navigations - or a few people testing
+    // from the same network - burned through the budget on /me traffic
+    // alone, and it started 429ing. Since fetchCurrentUser() failures are
+    // handled gracefully (silently degrade rather than error), the visible
+    // symptom was confusing: the settings page profile section quietly
+    // staying blank, and the dashboard greeting quietly not personalizing
+    // with the user's name - no error shown either way, just missing data.
+    // /logout is excluded for the same reason: it requires a valid access
+    // token already, so it isn't a credential-guessing surface either.
+    private static boolean isAuthLimitedPath(String uri) {
+        return "/api/auth/login".equals(uri)
+                || "/api/auth/register".equals(uri)
+                || "/api/auth/refresh".equals(uri);
     }
 
     private static boolean isPaymentInitiatePath(String uri, String method) {

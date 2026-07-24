@@ -15,7 +15,7 @@ async function loadTransactions(type, groupId, start, end) {
           ${txns.map(t => `
             <tr>
               <td>${formatDate(t.timestamp)}</td>
-              <td>${t.type}</td>
+              <td>${escapeHtml(t.type)}</td>
               <td>KES ${formatCurrency(t.amount)}</td>
               <td>${escapeHtml(t.reference) || '—'}</td>
             </tr>

@@ -81,7 +81,19 @@ function redirectToLogin(message) {
 // Generic API call that expects ApiResponse wrapper. Transparently
 // retries once on a 401, after a silent token refresh.
 async function apiFetch(url, options = {}) {
-  let res = await fetch(url, options);
+  let res;
+  try {
+    res = await fetch(url, options);
+  } catch (e) {
+    // fetch() itself rejects (not a 4xx/5xx) when the request never made it
+    // to the server at all — most commonly the backend being down, or the
+    // browser blocking the request because this page's origin isn't in the
+    // backend's CORS allow-list. Left uncaught, the browser's own message
+    // ("Failed to fetch" / "NetworkError when attempting to fetch resource")
+    // bubbled straight up into showAlert(), which read as a cryptic,
+    // unrelated error to anyone using the app.
+    throw new Error('Could not reach the server. Check your connection and try again.');
+  }
 
   if (res.status === 401) {
     if (!getRefreshToken()) {
@@ -110,9 +122,27 @@ async function apiFetch(url, options = {}) {
     throw new Error(res.ok ? 'Unexpected server response' : `Request failed (${res.status})`);
   }
   if (!res.ok || data.success === false) {
-    throw new Error(data.message || 'Request failed');
+    throw new Error(buildErrorMessage(data));
   }
   return data.data;
+}
+
+// The backend's field-validation errors (@Valid on a request DTO) come back
+// as { success:false, message:"Validation failed", data:{ field: "reason" } }
+// — a deliberately generic top-level message plus the real, useful detail
+// tucked away in `data`. Every caller of apiFetch only ever read
+// err.message, which meant the useful part was silently thrown away and
+// the user always saw the same unhelpful "Validation failed" alert no
+// matter which field was wrong. This stitches the field messages back in.
+function buildErrorMessage(data) {
+  const base = data && data.message ? data.message : 'Request failed';
+  if (data && data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+    const fieldMessages = Object.values(data.data).filter(v => typeof v === 'string' && v.trim());
+    if (fieldMessages.length > 0) {
+      return fieldMessages.join(' ');
+    }
+  }
+  return base;
 }
 
 // Refresh if needed, then revoke refresh tokens server-side.

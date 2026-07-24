@@ -64,24 +64,52 @@ function applyHero(user) {
 }
 
 async function loadAccount() {
-  try {
-    const [user, wallets, groups] = await Promise.all([
-      fetchCurrentUser(),
-      fetchMyWallets(),
-      fetchMyGroups()
-    ]);
+  // Previously this was one Promise.all([...]) — if ANY of the three calls
+  // failed (a transient blip on /api/wallets/me, say), applyHero() never
+  // ran at all, so the profile name/avatar/ID stayed on their raw HTML
+  // placeholders ("Loading…", "—") forever. The only feedback was a toast
+  // that auto-removes itself after 3 seconds, so the page was left looking
+  // permanently broken with no visible explanation. Promise.allSettled lets
+  // the profile render even if the wallet/group snapshot fails (and vice
+  // versa), and a failed critical profile fetch now shows a persistent,
+  // dismiss-yourself error instead of leaving stale placeholder text with
+  // no explanation.
+  const [userResult, walletsResult, groupsResult] = await Promise.allSettled([
+    fetchCurrentUser(),
+    fetchMyWallets(),
+    fetchMyGroups()
+  ]);
 
-    applyHero(user);
+  if (userResult.status === 'fulfilled') {
+    applyHero(userResult.value);
+  } else {
+    document.getElementById('profile-name').textContent = 'Could not load profile';
+    showPersistentError(userResult.reason?.message || 'Could not load your account. Refresh to try again.');
+  }
 
-    const personal = (wallets || []).find(w => w.type === 'PERSONAL');
-    const groupWallets = (wallets || []).filter(w => w.type === 'GROUP');
-    const groupTotal = groupWallets.reduce((sum, w) => sum + parseFloat(w.balance || 0), 0);
+  const wallets = walletsResult.status === 'fulfilled' ? walletsResult.value : [];
+  const groups = groupsResult.status === 'fulfilled' ? groupsResult.value : [];
 
+  const personal = (wallets || []).find(w => w.type === 'PERSONAL');
+  const groupWallets = (wallets || []).filter(w => w.type === 'GROUP');
+  const groupTotal = groupWallets.reduce((sum, w) => sum + parseFloat(w.balance || 0), 0);
+
+  if (walletsResult.status === 'fulfilled') {
     document.getElementById('snap-personal').textContent = formatCurrency(personal?.balance || 0);
-    document.getElementById('snap-groups').textContent = String((groups || []).length);
     document.getElementById('snap-group-bal').textContent = formatCurrency(groupTotal);
-  } catch (err) {
-    showAlert(err.message || 'Could not load your account.', 'error');
+  } else {
+    document.getElementById('snap-personal').textContent = '—';
+    document.getElementById('snap-group-bal').textContent = '—';
+  }
+
+  if (groupsResult.status === 'fulfilled') {
+    document.getElementById('snap-groups').textContent = String((groups || []).length);
+  } else {
+    document.getElementById('snap-groups').textContent = '—';
+  }
+
+  if (walletsResult.status === 'rejected' || groupsResult.status === 'rejected') {
+    showAlert('Some account details could not be loaded. Refresh to try again.', 'error');
   }
 }
 

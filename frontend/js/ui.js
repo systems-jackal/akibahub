@@ -65,6 +65,31 @@ function showAlert(message, type = 'success') {
   setTimeout(() => alertDiv.remove(), 3000);
 }
 
+// For "this page failed to load" rather than "your last action failed".
+// showAlert() above auto-dismisses after 3s, which is right for a toast
+// confirming an action - but wrong for a load failure: if the numbers on
+// screen are still just their unloaded HTML defaults ("0.00", "Loading…"),
+// a toast that vanishes after 3s leaves the page looking normal-but-wrong
+// (or, worse, looking like real zero-balance data) with no visible
+// explanation. This stays up until the user dismisses it.
+function showPersistentError(message) {
+  const container = document.querySelector('.main-content');
+  if (!container) return;
+  const existing = document.getElementById('page-load-error');
+  if (existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.id = 'page-load-error';
+  banner.className = 'alert alert-error';
+  banner.textContent = message;
+  const dismiss = document.createElement('button');
+  dismiss.type = 'button';
+  dismiss.textContent = '✕';
+  dismiss.style.marginLeft = '12px';
+  dismiss.addEventListener('click', () => banner.remove());
+  banner.appendChild(dismiss);
+  container.prepend(banner);
+}
+
 // Render sidebar active state
 function setActiveNav() {
   const currentPage = location.pathname.split('/').pop() || '';

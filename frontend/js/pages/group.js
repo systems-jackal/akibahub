@@ -186,9 +186,17 @@ async function loadGroup() {
 
     initStaticListeners();
   } catch (err) {
-    showAlert(err.message, 'error');
-    if (/not a member|not found|forbidden/i.test(err.message || '')) {
+    const isAuthOrMembershipError = /not a member|not found|forbidden/i.test(err.message || '');
+    if (isAuthOrMembershipError) {
+      // Genuinely can't show this group to this user — redirecting away is
+      // the right call, a toast is enough since the destination changes.
+      showAlert(err.message, 'error');
       setTimeout(() => { window.location.href = 'groups.html'; }, 1500);
+    } else {
+      // Any other failure (timeout, 500, rate limit, CORS) leaves the page
+      // on its unloaded HTML placeholders with no redirect — a 3s toast
+      // isn't enough warning that the numbers on screen aren't real data.
+      showPersistentError(err.message || 'Could not load this group. Refresh to try again.');
     }
   }
 }
